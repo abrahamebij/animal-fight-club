@@ -6,13 +6,11 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { 
   FiCrosshair, 
-  FiShield, 
   FiZap, 
   FiClock, 
   FiActivity, 
   FiTrendingUp, 
   FiExternalLink, 
-  FiCheckCircle, 
   FiArrowLeft,
   FiTerminal
 } from 'react-icons/fi';
@@ -45,13 +43,13 @@ export default function BattleViewPage() {
   };
 
   return (
-    <div className="flex flex-col w-full bg-[#FAFAF8] min-h-screen text-[#0A0A0B] pb-24">
+    <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Top Breadcrumb & Status Bar */}
-      <div className="border-b border-[#0A0A0B] bg-[#FAFAF8]">
+      <div className="border-b border-primary bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
           <Link
             href="/arena"
-            className="flex items-center gap-1.5 text-[#5D5F5D] hover:text-[#0A0A0B] transition-colors"
+            className="flex items-center gap-1.5 text-secondary hover:text-primary transition-colors"
           >
             <FiArrowLeft className="w-4 h-4" />
             <span>BACK TO ARENA</span>
@@ -59,13 +57,13 @@ export default function BattleViewPage() {
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 ${isLive ? 'bg-[#DC2626] animate-pulse' : isPending ? 'bg-[#F59E0B]' : 'bg-[#0A0A0B]'}`} />
+              <span className={`w-2.5 h-2.5 ${isLive ? 'bg-danger animate-pulse' : isPending ? 'bg-warning' : 'bg-primary'}`} />
               <span className="font-bold uppercase">
                 {isLive ? 'LIVE COMBAT FEED' : isPending ? 'PENDING BETTING WINDOW' : 'COMBAT CONCLUDED'}
               </span>
             </div>
-            <span className="text-[#E5E5E1]">|</span>
-            <span className="text-[#5D5F5D]">BATTLE ID: {battle.id}</span>
+            <span className="text-neutral">|</span>
+            <span className="text-secondary">BATTLE ID: {battle.id}</span>
           </div>
         </div>
       </div>
@@ -75,14 +73,14 @@ export default function BattleViewPage() {
         {/* 1. Combatants Visual Duel Stage */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           {/* Fighter A Panel (4 cols) */}
-          <div className="lg:col-span-4 border-2 border-[#0A0A0B] p-6 bg-[#FAFAF8] flex flex-col justify-between gap-6">
+          <div className="lg:col-span-4 border-2 border-primary p-6 bg-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-[#0A0A0B] pb-2">
-                <span className="font-mono text-xs text-[#DC2626] font-bold">COMBATANT 01 // RED</span>
-                <span className="font-mono text-xs text-[#5D5F5D]">{battle.beastA.ownerAddress}</span>
+              <div className="flex items-center justify-between border-b border-primary pb-2">
+                <span className="font-mono text-xs text-secondary font-bold">COMBATANT 01 // ALPHA</span>
+                <span className="font-mono text-xs text-secondary">{battle.beastA.ownerAddress}</span>
               </div>
 
-              <div className="relative aspect-square w-full border border-[#0A0A0B] overflow-hidden bg-zinc-900">
+              <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
                 <Image
                   src={battle.beastA.avatarUrl}
                   alt={battle.beastA.name}
@@ -91,62 +89,62 @@ export default function BattleViewPage() {
                   priority
                 />
                 {battle.beastA.boundAsset && (
-                  <div className="absolute top-2 right-2 bg-[#0A0A0B] text-[#FAFAF8] font-mono text-[11px] font-bold px-2.5 py-1">
+                  <div className="absolute top-2 right-2 bg-primary text-background font-mono text-[11px] font-bold px-2.5 py-1">
                     {battle.beastA.boundAsset} BOUND
                   </div>
                 )}
               </div>
 
               <div>
-                <h2 className="font-headline font-extrabold text-3xl uppercase tracking-tight text-[#0A0A0B]">
+                <h2 className="font-headline font-extrabold text-3xl uppercase tracking-tight text-primary">
                   {battle.beastA.name}
                 </h2>
-                <div className="font-mono text-xs text-[#5D5F5D]">
+                <div className="font-mono text-xs text-secondary">
                   RECORD: {battle.beastA.record.wins}W - {battle.beastA.record.losses}L
                 </div>
               </div>
 
-              {/* HP Bar */}
+              {/* HP Bar (Danger context) */}
               <div className="space-y-1.5 font-mono text-xs">
                 <div className="flex justify-between font-bold">
                   <span>HEALTH INTEGRITY</span>
-                  <span className="text-[#DC2626]">{hpA} / 100 HP</span>
+                  <span className="text-danger">{hpA} / 100 HP</span>
                 </div>
-                <div className="w-full h-3.5 bg-[#E5E5E1] border border-[#0A0A0B] p-0.5">
+                <div className="w-full h-3.5 bg-neutral border border-primary p-0.5">
                   <div 
-                    className="h-full bg-[#DC2626] transition-all duration-500" 
+                    className="h-full bg-danger transition-all duration-500" 
                     style={{ width: `${Math.max(0, hpA)}%` }} 
                   />
                 </div>
               </div>
 
               {/* Stats & Market Modifier */}
-              <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs border-t border-[#E5E5E1] pt-3">
-                <div className="bg-[#F4F4F0] p-1.5">
-                  <div className="text-[10px] text-[#5D5F5D]">PWR</div>
+              <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs border-t border-neutral pt-3">
+                <div className="bg-surface-container-low p-1.5">
+                  <div className="text-[10px] text-secondary">PWR</div>
                   <div className="font-bold">{battle.beastA.stats.power}</div>
                 </div>
-                <div className="bg-[#F4F4F0] p-1.5">
-                  <div className="text-[10px] text-[#5D5F5D]">DEF</div>
+                <div className="bg-surface-container-low p-1.5">
+                  <div className="text-[10px] text-secondary">DEF</div>
                   <div className="font-bold">{battle.beastA.stats.defense}</div>
                 </div>
-                <div className="bg-[#F4F4F0] p-1.5">
-                  <div className="text-[10px] text-[#5D5F5D]">SPD</div>
+                <div className="bg-surface-container-low p-1.5">
+                  <div className="text-[10px] text-secondary">SPD</div>
                   <div className="font-bold">{battle.beastA.stats.speed}</div>
                 </div>
-                <div className="bg-[#F4F4F0] p-1.5">
-                  <div className="text-[10px] text-[#5D5F5D]">SPC</div>
+                <div className="bg-surface-container-low p-1.5">
+                  <div className="text-[10px] text-secondary">SPC</div>
                   <div className="font-bold">{battle.beastA.stats.special}</div>
                 </div>
               </div>
 
               {battle.marketPulseA && (
-                <div className="border border-[#DC2626] bg-[#DC2626]/5 p-3 font-mono text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 text-[#DC2626] font-bold uppercase">
+                <div className="border border-primary bg-surface-container-low p-3 font-mono text-xs space-y-1">
+                  <div className="flex items-center gap-1.5 text-primary font-bold uppercase">
                     <FiTrendingUp className="w-3.5 h-3.5" />
                     <span>LOCKED MARKET PULSE:</span>
                   </div>
-                  <div className="text-[#0A0A0B] font-bold">
+                  <div className="text-primary font-bold">
                     {battle.marketPulseA.modifier.description}
                   </div>
                 </div>
@@ -155,14 +153,14 @@ export default function BattleViewPage() {
           </div>
 
           {/* Center Live Combat Log & Reasoner Feed (4 cols) */}
-          <div className="lg:col-span-4 border-2 border-[#0A0A0B] p-6 bg-[#0A0A0B] text-[#FAFAF8] flex flex-col justify-between gap-6">
+          <div className="lg:col-span-4 border-2 border-primary p-6 bg-primary text-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-[#FAFAF8]/20 pb-2 font-mono text-xs">
-                <div className="flex items-center gap-2 text-[#FAFAF8]/80">
-                  <FiTerminal className="w-4 h-4 text-[#DC2626]" />
+              <div className="flex items-center justify-between border-b border-background/20 pb-2 font-mono text-xs">
+                <div className="flex items-center gap-2 text-background/80">
+                  <FiTerminal className="w-4 h-4 text-secondary" />
                   <span>LLM COMBAT REASONER</span>
                 </div>
-                <span className="text-[#F59E0B] font-bold">
+                <span className="text-warning font-bold">
                   {isLive ? `ROUND ${battle.combatLog.length}` : isPending ? 'WINDOW OPEN' : 'CONCLUDED'}
                 </span>
               </div>
@@ -170,23 +168,23 @@ export default function BattleViewPage() {
               {/* Combat narrative output */}
               <div className="space-y-4 min-h-[220px]">
                 {lastTurn ? (
-                  <div className="space-y-3 bg-[#FAFAF8]/5 p-4 border border-[#FAFAF8]/10 font-mono text-xs">
-                    <div className="flex items-center justify-between text-[#DC2626] font-bold">
-                      <span>TURN {lastTurn.turnNumber}: {lastTurn.actionName}</span>
-                      <span>-{lastTurn.damageDealt} HP</span>
+                  <div className="space-y-3 bg-background/5 p-4 border border-background/10 font-mono text-xs">
+                    <div className="flex items-center justify-between font-bold">
+                      <span className="text-background">TURN {lastTurn.turnNumber}: {lastTurn.actionName}</span>
+                      <span className="text-danger">-{lastTurn.damageDealt} HP</span>
                     </div>
-                    <p className="text-[#FAFAF8] text-sm leading-relaxed font-sans">
+                    <p className="text-background text-sm leading-relaxed font-sans">
                       {lastTurn.combatNarrative}
                     </p>
-                    <div className="text-[#FAFAF8]/60 text-[11px] border-t border-[#FAFAF8]/10 pt-2">
-                      <span className="text-[#F59E0B] font-bold">AGENT REASONING: </span>
+                    <div className="text-background/60 text-[11px] border-t border-background/10 pt-2">
+                      <span className="text-warning font-bold">AGENT REASONING: </span>
                       {lastTurn.reasoning}
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12 font-mono text-xs text-[#FAFAF8]/60 space-y-2">
-                    <FiClock className="w-8 h-8 mx-auto text-[#F59E0B]" />
-                    <p className="text-sm font-bold text-[#FAFAF8]">Awaiting Window Expiry</p>
+                  <div className="text-center py-12 font-mono text-xs text-background/60 space-y-2">
+                    <FiClock className="w-8 h-8 mx-auto text-warning" />
+                    <p className="text-sm font-bold text-background">Awaiting Window Expiry</p>
                     <p>Combat will execute turn-by-turn with LLM reasoning when betting window closes.</p>
                   </div>
                 )}
@@ -194,15 +192,15 @@ export default function BattleViewPage() {
             </div>
 
             {/* Battle Log History list */}
-            <div className="border-t border-[#FAFAF8]/20 pt-3 space-y-2">
-              <div className="font-mono text-[11px] text-[#FAFAF8]/40 uppercase">
+            <div className="border-t border-background/20 pt-3 space-y-2">
+              <div className="font-mono text-[11px] text-background/40 uppercase">
                 COMBAT EVENT LOG ({battle.combatLog.length} TURNS)
               </div>
               <div className="max-h-36 overflow-y-auto space-y-1.5 font-mono text-[11px] pr-2">
                 {battle.combatLog.map((turn) => (
-                  <div key={turn.turnNumber} className="flex justify-between text-[#FAFAF8]/70 border-b border-[#FAFAF8]/5 pb-1">
+                  <div key={turn.turnNumber} className="flex justify-between text-background/70 border-b border-background/5 pb-1">
                     <span>T{turn.turnNumber} [{turn.actor === 'beastA' ? battle.beastA.name.split(' ')[0] : battle.beastB.name.split(' ')[0]}]: {turn.actionName}</span>
-                    <span className="text-[#DC2626] font-bold">-{turn.damageDealt} HP</span>
+                    <span className="text-danger font-bold">-{turn.damageDealt} HP</span>
                   </div>
                 ))}
               </div>
@@ -210,14 +208,14 @@ export default function BattleViewPage() {
           </div>
 
           {/* Fighter B Panel (4 cols) */}
-          <div className="lg:col-span-4 border-2 border-[#0A0A0B] p-6 bg-[#FAFAF8] flex flex-col justify-between gap-6">
+          <div className="lg:col-span-4 border-2 border-primary p-6 bg-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-[#0A0A0B] pb-2">
-                <span className="font-mono text-xs text-[#0A0A0B] font-bold">COMBATANT 02 // BLUE</span>
-                <span className="font-mono text-xs text-[#5D5F5D]">{battle.beastB.ownerAddress}</span>
+              <div className="flex items-center justify-between border-b border-primary pb-2">
+                <span className="font-mono text-xs text-secondary font-bold">COMBATANT 02 // BRAVO</span>
+                <span className="font-mono text-xs text-secondary">{battle.beastB.ownerAddress}</span>
               </div>
 
-              <div className="relative aspect-square w-full border border-[#0A0A0B] overflow-hidden bg-zinc-900">
+              <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
                 <Image
                   src={battle.beastB.avatarUrl}
                   alt={battle.beastB.name}
@@ -226,62 +224,62 @@ export default function BattleViewPage() {
                   priority
                 />
                 {battle.beastB.boundAsset && (
-                  <div className="absolute top-2 right-2 bg-[#0A0A0B] text-[#FAFAF8] font-mono text-[11px] font-bold px-2.5 py-1">
+                  <div className="absolute top-2 right-2 bg-primary text-background font-mono text-[11px] font-bold px-2.5 py-1">
                     {battle.beastB.boundAsset} BOUND
                   </div>
                 )}
               </div>
 
               <div>
-                <h2 className="font-headline font-extrabold text-3xl uppercase tracking-tight text-[#0A0A0B]">
+                <h2 className="font-headline font-extrabold text-3xl uppercase tracking-tight text-primary">
                   {battle.beastB.name}
                 </h2>
-                <div className="font-mono text-xs text-[#5D5F5D]">
+                <div className="font-mono text-xs text-secondary">
                   RECORD: {battle.beastB.record.wins}W - {battle.beastB.record.losses}L
                 </div>
               </div>
 
-              {/* HP Bar */}
+              {/* HP Bar (Danger context) */}
               <div className="space-y-1.5 font-mono text-xs">
                 <div className="flex justify-between font-bold">
                   <span>HEALTH INTEGRITY</span>
-                  <span className="text-[#DC2626]">{hpB} / 100 HP</span>
+                  <span className="text-danger">{hpB} / 100 HP</span>
                 </div>
-                <div className="w-full h-3.5 bg-[#E5E5E1] border border-[#0A0A0B] p-0.5">
+                <div className="w-full h-3.5 bg-neutral border border-primary p-0.5">
                   <div 
-                    className="h-full bg-[#DC2626] transition-all duration-500" 
+                    className="h-full bg-danger transition-all duration-500" 
                     style={{ width: `${Math.max(0, hpB)}%` }} 
                   />
                 </div>
               </div>
 
               {/* Stats & Market Modifier */}
-              <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs border-t border-[#E5E5E1] pt-3">
-                <div className="bg-[#F4F4F0] p-1.5">
-                  <div className="text-[10px] text-[#5D5F5D]">PWR</div>
+              <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs border-t border-neutral pt-3">
+                <div className="bg-surface-container-low p-1.5">
+                  <div className="text-[10px] text-secondary">PWR</div>
                   <div className="font-bold">{battle.beastB.stats.power}</div>
                 </div>
-                <div className="bg-[#F4F4F0] p-1.5">
-                  <div className="text-[10px] text-[#5D5F5D]">DEF</div>
+                <div className="bg-surface-container-low p-1.5">
+                  <div className="text-[10px] text-secondary">DEF</div>
                   <div className="font-bold">{battle.beastB.stats.defense}</div>
                 </div>
-                <div className="bg-[#F4F4F0] p-1.5">
-                  <div className="text-[10px] text-[#5D5F5D]">SPD</div>
+                <div className="bg-surface-container-low p-1.5">
+                  <div className="text-[10px] text-secondary">SPD</div>
                   <div className="font-bold">{battle.beastB.stats.speed}</div>
                 </div>
-                <div className="bg-[#F4F4F0] p-1.5">
-                  <div className="text-[10px] text-[#5D5F5D]">SPC</div>
+                <div className="bg-surface-container-low p-1.5">
+                  <div className="text-[10px] text-secondary">SPC</div>
                   <div className="font-bold">{battle.beastB.stats.special}</div>
                 </div>
               </div>
 
               {battle.marketPulseB && (
-                <div className="border border-[#0A0A0B] bg-[#F4F4F0] p-3 font-mono text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 text-[#0A0A0B] font-bold uppercase">
+                <div className="border border-primary bg-surface-container-low p-3 font-mono text-xs space-y-1">
+                  <div className="flex items-center gap-1.5 text-primary font-bold uppercase">
                     <FiTrendingUp className="w-3.5 h-3.5" />
                     <span>LOCKED MARKET PULSE:</span>
                   </div>
-                  <div className="text-[#0A0A0B] font-bold">
+                  <div className="text-primary font-bold">
                     {battle.marketPulseB.modifier.description}
                   </div>
                 </div>
@@ -293,55 +291,55 @@ export default function BattleViewPage() {
         {/* 2. Market Pulse Terminal & Spectator Wagering Split Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Market Pulse Panel (7 cols) */}
-          <div className="lg:col-span-7 border border-[#0A0A0B] p-6 bg-[#FAFAF8] space-y-6">
-            <div className="flex items-center justify-between border-b border-[#0A0A0B] pb-3">
+          <div className="lg:col-span-7 border border-primary p-6 bg-background space-y-6">
+            <div className="flex items-center justify-between border-b border-primary pb-3">
               <div className="flex items-center gap-2">
-                <FiActivity className="w-5 h-5 text-[#DC2626]" />
+                <FiActivity className="w-5 h-5 text-primary" />
                 <h3 className="font-headline font-bold text-2xl uppercase tracking-tight">
                   DREAMDEX MARKET PULSE INTEGRATION
                 </h3>
               </div>
-              <span className="font-mono text-xs px-2.5 py-0.5 bg-[#0A0A0B] text-[#FAFAF8]">
+              <span className="font-mono text-xs px-2.5 py-0.5 bg-primary text-background">
                 READ-ONLY SDK
               </span>
             </div>
 
-            <p className="font-sans text-xs text-[#5D5F5D] leading-relaxed">
+            <p className="font-sans text-xs text-secondary leading-relaxed">
               This panel verifies real-time order book odds from DreamDEX Event Contracts on Somnia Shannon. The locked-in probability generates an in-combat attribute modifier for bound beasts.
             </p>
 
             <div className="space-y-4">
               {/* Asset A Pulse */}
               {battle.marketPulseA && (
-                <div className="border border-[#E5E5E1] p-4 bg-[#F4F4F0] space-y-3 font-mono text-xs">
+                <div className="border border-neutral p-4 bg-surface-container-low space-y-3 font-mono text-xs">
                   <div className="flex items-center justify-between">
-                    <div className="font-bold uppercase text-[#0A0A0B]">
+                    <div className="font-bold uppercase text-primary">
                       {battle.beastA.name} // {battle.marketPulseA.symbol}
                     </div>
-                    <span className="text-[#DC2626] font-bold">
+                    <span className="text-primary font-bold">
                       UP PROBABILITY: {Math.round(battle.marketPulseA.upProbability * 100)}%
                     </span>
                   </div>
 
-                  <div className="w-full h-3 bg-[#E5E5E1] flex overflow-hidden">
+                  <div className="w-full h-3 bg-neutral flex overflow-hidden border border-primary">
                     <div 
-                      className="h-full bg-[#0A0A0B]" 
+                      className="h-full bg-primary" 
                       style={{ width: `${battle.marketPulseA.upProbability * 100}%` }} 
                     />
                     <div 
-                      className="h-full bg-[#DC2626]" 
+                      className="h-full bg-secondary" 
                       style={{ width: `${(1 - battle.marketPulseA.upProbability) * 100}%` }} 
                     />
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-[#5D5F5D]">
+                  <div className="flex items-center justify-between text-[11px] text-secondary">
                     <span>BEST BID: {battle.marketPulseA.bestBid} // BEST ASK: {battle.marketPulseA.bestAsk}</span>
                     {battle.marketPulseA.oracleQuestionId && (
                       <a
                         href={`https://prd.oracle.somnia.host/questions/${battle.marketPulseA.oracleQuestionId}?view=graph`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-[#0A0A0B] underline inline-flex items-center gap-1 hover:text-[#DC2626]"
+                        className="text-primary underline inline-flex items-center gap-1 hover:text-secondary"
                       >
                         <span>Audit Oracle Resolution</span>
                         <FiExternalLink className="w-3 h-3" />
@@ -353,29 +351,29 @@ export default function BattleViewPage() {
 
               {/* Asset B Pulse */}
               {battle.marketPulseB ? (
-                <div className="border border-[#E5E5E1] p-4 bg-[#F4F4F0] space-y-3 font-mono text-xs">
+                <div className="border border-neutral p-4 bg-surface-container-low space-y-3 font-mono text-xs">
                   <div className="flex items-center justify-between">
-                    <div className="font-bold uppercase text-[#0A0A0B]">
+                    <div className="font-bold uppercase text-primary">
                       {battle.beastB.name} // {battle.marketPulseB.symbol}
                     </div>
-                    <span className="text-[#0A0A0B] font-bold">
+                    <span className="text-primary font-bold">
                       UP PROBABILITY: {Math.round(battle.marketPulseB.upProbability * 100)}%
                     </span>
                   </div>
 
-                  <div className="w-full h-3 bg-[#E5E5E1] flex overflow-hidden">
+                  <div className="w-full h-3 bg-neutral flex overflow-hidden border border-primary">
                     <div 
-                      className="h-full bg-[#0A0A0B]" 
+                      className="h-full bg-primary" 
                       style={{ width: `${battle.marketPulseB.upProbability * 100}%` }} 
                     />
                     <div 
-                      className="h-full bg-[#DC2626]" 
+                      className="h-full bg-secondary" 
                       style={{ width: `${(1 - battle.marketPulseB.upProbability) * 100}%` }} 
                     />
                   </div>
                 </div>
               ) : (
-                <div className="border border-dashed border-[#C7C6CA] p-4 text-center font-mono text-xs text-[#5D5F5D]">
+                <div className="border border-dashed border-outline-variant p-4 text-center font-mono text-xs text-secondary">
                   {battle.beastB.name} is UNBOUND — No DreamDEX Market Pulse applied.
                 </div>
               )}
@@ -383,27 +381,27 @@ export default function BattleViewPage() {
           </div>
 
           {/* Spectator Wagering Panel (5 cols) */}
-          <div className="lg:col-span-5 border-2 border-[#0A0A0B] p-6 bg-[#FAFAF8] space-y-6">
-            <div className="flex items-center justify-between border-b border-[#0A0A0B] pb-3">
+          <div className="lg:col-span-5 border-2 border-primary p-6 bg-background space-y-6">
+            <div className="flex items-center justify-between border-b border-primary pb-3">
               <div className="flex items-center gap-2">
-                <FiZap className="w-5 h-5 text-[#F59E0B]" />
+                <FiZap className="w-5 h-5 text-warning" />
                 <h3 className="font-headline font-bold text-2xl uppercase tracking-tight">
                   SPECTATOR WAGERING
                 </h3>
               </div>
-              <span className="font-mono text-xs font-bold text-[#0A0A0B]">
+              <span className="font-mono text-xs font-bold text-primary">
                 ESCROW POOL
               </span>
             </div>
 
             {/* Total Pools */}
             <div className="grid grid-cols-2 gap-4 font-mono text-xs">
-              <div className="border border-[#0A0A0B] p-3 bg-[#F4F4F0]">
-                <span className="text-[#5D5F5D] block text-[10px] uppercase">{battle.beastA.name} POOL</span>
+              <div className="border border-primary p-3 bg-surface-container-low">
+                <span className="text-secondary block text-[10px] uppercase">{battle.beastA.name} POOL</span>
                 <span className="font-bold text-base">{battle.totalPoolA} STT</span>
               </div>
-              <div className="border border-[#0A0A0B] p-3 bg-[#F4F4F0]">
-                <span className="text-[#5D5F5D] block text-[10px] uppercase">{battle.beastB.name} POOL</span>
+              <div className="border border-primary p-3 bg-surface-container-low">
+                <span className="text-secondary block text-[10px] uppercase">{battle.beastB.name} POOL</span>
                 <span className="font-bold text-base">{battle.totalPoolB} STT</span>
               </div>
             </div>
@@ -411,7 +409,7 @@ export default function BattleViewPage() {
             {/* Form */}
             <form onSubmit={handlePlaceBet} className="space-y-4">
               <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-[#0A0A0B] mb-2 font-bold">
+                <label className="block font-mono text-xs uppercase tracking-wider text-primary mb-2 font-bold">
                   SELECT PREDICTED VICTOR
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -420,8 +418,8 @@ export default function BattleViewPage() {
                     onClick={() => setSelectedSide('beastA')}
                     className={`p-3 font-headline font-bold text-sm uppercase tracking-wider border text-left transition-colors ${
                       selectedSide === 'beastA'
-                        ? 'bg-[#0A0A0B] text-[#FAFAF8] border-[#0A0A0B]'
-                        : 'bg-[#F4F4F0] text-[#0A0A0B] border-[#E5E5E1]'
+                        ? 'bg-primary text-background border-primary'
+                        : 'bg-surface-container-low text-primary border-neutral'
                     }`}
                   >
                     {battle.beastA.name}
@@ -432,8 +430,8 @@ export default function BattleViewPage() {
                     onClick={() => setSelectedSide('beastB')}
                     className={`p-3 font-headline font-bold text-sm uppercase tracking-wider border text-left transition-colors ${
                       selectedSide === 'beastB'
-                        ? 'bg-[#0A0A0B] text-[#FAFAF8] border-[#0A0A0B]'
-                        : 'bg-[#F4F4F0] text-[#0A0A0B] border-[#E5E5E1]'
+                        ? 'bg-primary text-background border-primary'
+                        : 'bg-surface-container-low text-primary border-neutral'
                     }`}
                   >
                     {battle.beastB.name}
@@ -442,7 +440,7 @@ export default function BattleViewPage() {
               </div>
 
               <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-[#0A0A0B] mb-1.5 font-bold">
+                <label className="block font-mono text-xs uppercase tracking-wider text-primary mb-1.5 font-bold">
                   WAGER AMOUNT (STT)
                 </label>
                 <input
@@ -450,7 +448,7 @@ export default function BattleViewPage() {
                   min="1"
                   value={betAmount}
                   onChange={(e) => setBetAmount(e.target.value)}
-                  className="w-full bg-[#F4F4F0] border border-[#0A0A0B] p-3 font-mono font-bold text-base text-[#0A0A0B] focus:outline-none"
+                  className="w-full bg-surface-container-low border border-primary p-3 font-mono font-bold text-base text-primary focus:outline-none"
                   placeholder="50"
                 />
               </div>
@@ -458,7 +456,7 @@ export default function BattleViewPage() {
               <button
                 type="submit"
                 disabled={!isPending && !isLive}
-                className="w-full py-4 bg-[#0A0A0B] text-[#FAFAF8] font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-[#DC2626] transition-colors border border-[#0A0A0B] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <FiZap className="w-4 h-4" />
                 <span>{betPlaced ? 'WAGER SUBMITTED TO ESCROW' : 'CONFIRM SPECTATOR WAGER'}</span>

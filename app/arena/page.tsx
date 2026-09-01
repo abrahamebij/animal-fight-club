@@ -9,10 +9,6 @@ import {
   FiClock, 
   FiCheckCircle, 
   FiPlusSquare, 
-  FiActivity, 
-  FiTrendingUp, 
-  FiFilter,
-  FiShield
 } from 'react-icons/fi';
 import { MOCK_BATTLES } from '@/lib/mockData';
 import { BattleStatus } from '@/lib/types';
@@ -30,20 +26,20 @@ export default function ArenaPage() {
   const completedCount = MOCK_BATTLES.filter((b) => b.status === 'completed').length;
 
   return (
-    <div className="flex flex-col w-full bg-[#FAFAF8] min-h-screen text-[#0A0A0B] pb-24">
+    <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header Banner */}
-      <section className="border-b border-[#0A0A0B] bg-[#FAFAF8] pt-12 pb-8">
+      <section className="border-b border-primary bg-background pt-12 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-[#0A0A0B] text-[#FAFAF8] font-mono text-[11px] uppercase tracking-wider">
-                <span className="w-2 h-2 bg-[#DC2626]" />
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider">
+                <span className="w-2 h-2 bg-secondary" />
                 <span>ARENA DISPATCH GRID</span>
               </div>
-              <h1 className="font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-[#0A0A0B]">
+              <h1 className="font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
                 THE COMBAT ARENA
               </h1>
-              <p className="font-sans text-sm sm:text-base text-[#5D5F5D] max-w-2xl leading-relaxed">
+              <p className="font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
                 Live agentic combat encounters and pending wagering windows on Somnia Shannon. Spectators can bet on beast outcomes during active 1-hour windows.
               </p>
             </div>
@@ -51,14 +47,14 @@ export default function ArenaPage() {
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href="/create"
-                className="px-6 py-3 bg-[#0A0A0B] text-[#FAFAF8] font-headline font-bold text-sm uppercase tracking-wider hover:bg-[#FAFAF8] hover:text-[#0A0A0B] border border-[#0A0A0B] transition-colors inline-flex items-center gap-2"
+                className="px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors inline-flex items-center gap-2"
               >
                 <FiPlusSquare className="w-4 h-4" />
                 <span>Create Beast</span>
               </Link>
               <button
                 disabled
-                className="px-6 py-3 bg-[#E5E5E1] text-[#5D5F5D] font-headline font-bold text-sm uppercase tracking-wider border border-[#C7C6CA] cursor-not-allowed inline-flex items-center gap-2"
+                className="px-6 py-3 bg-neutral text-secondary font-headline font-bold text-sm uppercase tracking-wider border border-outline-variant cursor-not-allowed inline-flex items-center gap-2"
                 title="Auto-matchmaking coming soon"
               >
                 <FiCrosshair className="w-4 h-4" />
@@ -70,15 +66,15 @@ export default function ArenaPage() {
       </section>
 
       {/* Filter Tabs */}
-      <section className="border-b border-[#0A0A0B] bg-[#FAFAF8] sticky top-16 z-30">
+      <section className="border-b border-primary bg-background sticky top-16 z-30">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 flex items-center justify-between overflow-x-auto">
           <div className="flex items-center gap-2 py-3">
             <button
               onClick={() => setFilter('all')}
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border transition-colors ${
                 filter === 'all'
-                  ? 'bg-[#0A0A0B] text-[#FAFAF8] border-[#0A0A0B]'
-                  : 'bg-transparent text-[#5D5F5D] border-transparent hover:border-[#0A0A0B] hover:text-[#0A0A0B]'
+                  ? 'bg-primary text-background border-primary'
+                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
               }`}
             >
               ALL BATTLES ({MOCK_BATTLES.length})
@@ -88,11 +84,11 @@ export default function ArenaPage() {
               onClick={() => setFilter('live')}
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border flex items-center gap-2 transition-colors ${
                 filter === 'live'
-                  ? 'bg-[#DC2626] text-white border-[#DC2626]'
-                  : 'bg-transparent text-[#DC2626] border-transparent hover:border-[#DC2626]'
+                  ? 'bg-danger text-white border-danger'
+                  : 'bg-transparent text-danger border-transparent hover:border-danger'
               }`}
             >
-              <span className="w-2 h-2 bg-[#DC2626] rounded-none animate-pulse" />
+              <span className="w-2 h-2 bg-danger rounded-none animate-pulse" />
               <span>LIVE COMBAT ({liveCount})</span>
             </button>
 
@@ -100,8 +96,8 @@ export default function ArenaPage() {
               onClick={() => setFilter('pending')}
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border flex items-center gap-2 transition-colors ${
                 filter === 'pending'
-                  ? 'bg-[#F59E0B] text-[#0A0A0B] font-bold border-[#F59E0B]'
-                  : 'bg-transparent text-[#5D5F5D] border-transparent hover:border-[#0A0A0B] hover:text-[#0A0A0B]'
+                  ? 'bg-warning text-primary font-bold border-warning'
+                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
               }`}
             >
               <FiClock className="w-3.5 h-3.5" />
@@ -112,8 +108,8 @@ export default function ArenaPage() {
               onClick={() => setFilter('completed')}
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border flex items-center gap-2 transition-colors ${
                 filter === 'completed'
-                  ? 'bg-[#0A0A0B] text-[#FAFAF8] border-[#0A0A0B]'
-                  : 'bg-transparent text-[#5D5F5D] border-transparent hover:border-[#0A0A0B] hover:text-[#0A0A0B]'
+                  ? 'bg-primary text-background border-primary'
+                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
               }`}
             >
               <FiCheckCircle className="w-3.5 h-3.5" />
@@ -134,41 +130,41 @@ export default function ArenaPage() {
             return (
               <div 
                 key={battle.id}
-                className={`border p-6 flex flex-col justify-between gap-6 bg-[#FAFAF8] ${
+                className={`border p-6 flex flex-col justify-between gap-6 bg-background ${
                   isLive 
-                    ? 'border-2 border-[#DC2626]' 
-                    : 'border-[#0A0A0B]'
+                    ? 'border-2 border-danger' 
+                    : 'border-primary'
                 }`}
               >
                 {/* Header Status */}
-                <div className="flex items-center justify-between border-b border-[#0A0A0B] pb-3">
+                <div className="flex items-center justify-between border-b border-primary pb-3">
                   <div className="flex items-center gap-2">
                     {isLive && (
                       <>
-                        <span className="w-2.5 h-2.5 bg-[#DC2626] animate-pulse" />
-                        <span className="font-headline font-bold text-base uppercase text-[#DC2626]">
+                        <span className="w-2.5 h-2.5 bg-danger animate-pulse" />
+                        <span className="font-headline font-bold text-base uppercase text-danger">
                           LIVE COMBAT
                         </span>
                       </>
                     )}
                     {isPending && (
                       <>
-                        <span className="w-2.5 h-2.5 bg-[#F59E0B]" />
-                        <span className="font-headline font-bold text-base uppercase text-[#0A0A0B]">
+                        <span className="w-2.5 h-2.5 bg-warning" />
+                        <span className="font-headline font-bold text-base uppercase text-primary">
                           WAGERING OPEN
                         </span>
                       </>
                     )}
                     {isCompleted && (
                       <>
-                        <FiCheckCircle className="w-4 h-4 text-[#5D5F5D]" />
-                        <span className="font-headline font-bold text-base uppercase text-[#5D5F5D]">
+                        <FiCheckCircle className="w-4 h-4 text-secondary" />
+                        <span className="font-headline font-bold text-base uppercase text-secondary">
                           CONCLUDED
                         </span>
                       </>
                     )}
                   </div>
-                  <span className="font-mono text-xs text-[#5D5F5D]">
+                  <span className="font-mono text-xs text-secondary">
                     ID: {battle.id.slice(0, 10)}
                   </span>
                 </div>
@@ -177,7 +173,7 @@ export default function ArenaPage() {
                 <div className="grid grid-cols-5 items-center gap-2 py-2">
                   {/* Beast A */}
                   <div className="col-span-2 text-center space-y-2">
-                    <div className="relative aspect-square w-20 mx-auto border border-[#0A0A0B] overflow-hidden bg-zinc-900">
+                    <div className="relative aspect-square w-20 mx-auto border border-primary overflow-hidden bg-zinc-900">
                       <Image
                         src={battle.beastA.avatarUrl}
                         alt={battle.beastA.name}
@@ -188,19 +184,19 @@ export default function ArenaPage() {
                     <div className="font-headline font-bold text-sm leading-tight uppercase truncate">
                       {battle.beastA.name}
                     </div>
-                    <div className="font-mono text-[10px] text-[#5D5F5D]">
+                    <div className="font-mono text-[10px] text-secondary">
                       {battle.beastA.boundAsset ? `${battle.beastA.boundAsset} BOUND` : 'UNBOUND'}
                     </div>
                   </div>
 
                   {/* VS */}
-                  <div className="col-span-1 text-center font-headline font-extrabold text-2xl text-[#5D5F5D]">
+                  <div className="col-span-1 text-center font-headline font-extrabold text-2xl text-secondary">
                     VS
                   </div>
 
                   {/* Beast B */}
                   <div className="col-span-2 text-center space-y-2">
-                    <div className="relative aspect-square w-20 mx-auto border border-[#0A0A0B] overflow-hidden bg-zinc-900">
+                    <div className="relative aspect-square w-20 mx-auto border border-primary overflow-hidden bg-zinc-900">
                       <Image
                         src={battle.beastB.avatarUrl}
                         alt={battle.beastB.name}
@@ -211,26 +207,26 @@ export default function ArenaPage() {
                     <div className="font-headline font-bold text-sm leading-tight uppercase truncate">
                       {battle.beastB.name}
                     </div>
-                    <div className="font-mono text-[10px] text-[#5D5F5D]">
+                    <div className="font-mono text-[10px] text-secondary">
                       {battle.beastB.boundAsset ? `${battle.beastB.boundAsset} BOUND` : 'UNBOUND'}
                     </div>
                   </div>
                 </div>
 
                 {/* Market Pulse Info */}
-                <div className="bg-[#F4F4F0] p-3 border border-[#E5E5E1] font-mono text-xs space-y-1">
-                  <div className="flex justify-between text-[#5D5F5D]">
+                <div className="bg-surface-container-low p-3 border border-neutral font-mono text-xs space-y-1">
+                  <div className="flex justify-between text-secondary">
                     <span>WAGER POOL</span>
-                    <span className="font-bold text-[#0A0A0B]">{battle.totalPoolA + battle.totalPoolB} STT</span>
+                    <span className="font-bold text-primary">{battle.totalPoolA + battle.totalPoolB} STT</span>
                   </div>
                   {battle.marketPulseA && (
-                    <div className="flex justify-between text-[11px] text-[#DC2626]">
+                    <div className="flex justify-between text-[11px] text-secondary">
                       <span>{battle.beastA.name.split(' ')[0]}</span>
-                      <span>{battle.marketPulseA.modifier.description}</span>
+                      <span className="font-bold">{battle.marketPulseA.modifier.description}</span>
                     </div>
                   )}
                   {battle.winner && (
-                    <div className="flex justify-between text-[11px] font-bold text-[#0A0A0B]">
+                    <div className="flex justify-between text-[11px] font-bold text-primary">
                       <span>WINNER</span>
                       <span>{battle.winner === 'beastA' ? battle.beastA.name : battle.beastB.name}</span>
                     </div>
@@ -242,8 +238,8 @@ export default function ArenaPage() {
                   href={`/battle/${battle.id}`}
                   className={`w-full py-3 font-headline font-bold text-sm text-center uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
                     isLive
-                      ? 'bg-[#DC2626] text-white hover:bg-[#B91C1C]'
-                      : 'bg-[#0A0A0B] text-[#FAFAF8] hover:bg-[#FAFAF8] hover:text-[#0A0A0B] border border-[#0A0A0B]'
+                      ? 'bg-danger text-white hover:bg-red-700'
+                      : 'bg-primary text-background hover:bg-background hover:text-primary border border-primary'
                   }`}
                 >
                   {isLive && (

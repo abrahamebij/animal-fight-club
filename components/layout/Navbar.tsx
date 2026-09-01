@@ -9,7 +9,6 @@ import {
   FiAward, 
   FiGrid, 
   FiUser, 
-  FiActivity,
   FiShield
 } from 'react-icons/fi';
 
@@ -24,7 +23,7 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#FAFAF8] border-b border-[#0A0A0B]">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-primary">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-16 flex items-center justify-between">
         {/* Brand & Wordmark */}
         <div className="flex items-center gap-10">
@@ -32,10 +31,10 @@ export function Navbar() {
             href="/" 
             className="flex items-center gap-2 group"
           >
-            <div className="w-8 h-8 bg-[#0A0A0B] flex items-center justify-center text-[#FAFAF8] font-headline font-bold text-lg group-hover:bg-[#DC2626] transition-colors">
+            <div className="w-8 h-8 bg-primary flex items-center justify-center text-background font-headline font-bold text-lg group-hover:bg-secondary transition-colors">
               <FiShield className="w-4 h-4" />
             </div>
-            <span className="font-headline font-extrabold text-2xl tracking-tighter uppercase text-[#0A0A0B]">
+            <span className="font-headline font-extrabold text-2xl tracking-tighter uppercase text-primary">
               ANIMAL FIGHT CLUB
             </span>
           </Link>
@@ -51,8 +50,8 @@ export function Navbar() {
                   href={item.href}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors border ${
                     isActive 
-                      ? 'bg-[#0A0A0B] text-[#FAFAF8] border-[#0A0A0B]' 
-                      : 'text-[#5D5F5D] border-transparent hover:text-[#0A0A0B] hover:border-[#0A0A0B]'
+                      ? 'bg-primary text-background border-primary' 
+                      : 'text-secondary border-transparent hover:text-primary hover:border-primary'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -65,14 +64,14 @@ export function Navbar() {
 
         {/* Action / Wallet Status Area */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 border border-[#E5E5E1] bg-[#F4F4F0] text-[11px] font-mono text-[#5D5F5D]">
-            <div className="w-2 h-2 bg-[#F59E0B]" />
+          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 border border-neutral bg-surface-container-low text-[11px] font-mono text-secondary">
+            <div className="w-2 h-2 bg-warning" />
             <span>SOMNIA 50312</span>
           </div>
 
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 px-4 py-2 bg-[#0A0A0B] text-[#FAFAF8] font-headline font-bold text-sm uppercase tracking-wider hover:bg-[#FAFAF8] hover:text-[#0A0A0B] border border-[#0A0A0B] transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors"
           >
             <FiUser className="w-3.5 h-3.5" />
             <span>TERMINAL</span>

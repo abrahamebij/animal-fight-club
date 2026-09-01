@@ -38,7 +38,7 @@ export default function RootLayout({
       lang="en"
       className={`${barlowCondensed.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#FAFAF8] text-[#0A0A0B] font-sans selection:bg-[#0A0A0B] selection:text-[#FAFAF8]">
+      <body className="min-h-full flex flex-col bg-background text-foreground font-sans selection:bg-primary selection:text-background">
         <Navbar />
         <div className="flex-1 pt-16 flex flex-col">
           {children}

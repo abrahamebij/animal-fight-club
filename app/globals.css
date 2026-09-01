@@ -4,6 +4,7 @@
   --background: #FAFAF8;
   --foreground: #0A0A0B;
   --primary: #0A0A0B;
+  --primary-container: #1C1B1C;
   --surface: #FAFAF8;
   --surface-container: #EEEEEA;
   --surface-container-low: #F4F4F0;
@@ -20,6 +21,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
+  --color-primary-container: var(--primary-container);
   --color-surface: var(--surface);
   --color-surface-container: var(--surface-container);
   --color-surface-container-low: var(--surface-container-low);
@@ -56,22 +58,22 @@
 }
 
 .sharp-card {
-  border: 1px solid #0A0A0B;
-  background-color: #FAFAF8;
+  border: 1px solid var(--primary);
+  background-color: var(--background);
   border-radius: 0px;
 }
 
 .sharp-card-dark {
   border: 1px solid rgba(250, 250, 248, 0.2);
-  background-color: #0A0A0B;
-  color: #FAFAF8;
+  background-color: var(--primary);
+  color: var(--background);
   border-radius: 0px;
 }
 
 .sharp-btn-primary {
-  background-color: #0A0A0B;
-  color: #FAFAF8;
-  border: 1px solid #0A0A0B;
+  background-color: var(--primary);
+  color: var(--background);
+  border: 1px solid var(--primary);
   font-family: var(--font-barlow-condensed), sans-serif;
   text-transform: uppercase;
   font-weight: 700;
@@ -81,14 +83,14 @@
 }
 
 .sharp-btn-primary:hover {
-  background-color: #FAFAF8;
-  color: #0A0A0B;
+  background-color: var(--background);
+  color: var(--primary);
 }
 
 .sharp-btn-secondary {
   background-color: transparent;
-  color: #0A0A0B;
-  border: 1px solid #0A0A0B;
+  color: var(--primary);
+  border: 1px solid var(--primary);
   font-family: var(--font-barlow-condensed), sans-serif;
   text-transform: uppercase;
   font-weight: 700;
@@ -98,14 +100,14 @@
 }
 
 .sharp-btn-secondary:hover {
-  background-color: #0A0A0B;
-  color: #FAFAF8;
+  background-color: var(--primary);
+  color: var(--background);
 }
 
 .sharp-btn-danger {
-  background-color: #DC2626;
+  background-color: var(--danger);
   color: #FFFFFF;
-  border: 1px solid #DC2626;
+  border: 1px solid var(--danger);
   font-family: var(--font-barlow-condensed), sans-serif;
   text-transform: uppercase;
   font-weight: 700;
