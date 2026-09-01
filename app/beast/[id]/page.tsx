@@ -3,16 +3,19 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { 
   FiCrosshair, 
   FiArrowLeft,
 } from 'react-icons/fi';
+import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { MOCK_BEASTS, MOCK_BATTLES } from '@/lib/mockData';
 import { AVAILABLE_PERKS } from '@/lib/constants/game';
 
 export default function BeastProfilePage() {
   const params = useParams();
+  const router = useRouter();
+  const { requireAuth } = useWalletGate();
   const beastId = (params?.id as string) || 'beast_kong_01';
 
   const beast = MOCK_BEASTS.find((b) => b.id === beastId) || MOCK_BEASTS[0];
@@ -80,13 +83,20 @@ export default function BeastProfilePage() {
                 </div>
               </div>
 
-              <Link
-                href="/arena"
+              <button
+                onClick={() => {
+                  requireAuth({
+                    actionTitle: `challenge ${beast.name} to an arena duel`,
+                    onSuccess: () => {
+                      router.push(`/arena?challenge=${beast.id}`);
+                    },
+                  });
+                }}
                 className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg text-center uppercase tracking-wider hover:bg-secondary transition-colors border border-primary flex items-center justify-center gap-2 block"
               >
                 <FiCrosshair className="w-5 h-5" />
                 <span>CHALLENGE TO DUEL</span>
-              </Link>
+              </button>
             </div>
           </div>
 

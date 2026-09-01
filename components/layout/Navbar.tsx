@@ -11,6 +11,7 @@ import {
   FiUser, 
   FiShield
 } from 'react-icons/fi';
+import { ConnectButton } from '@/components/wallet/ConnectButton';
 
 const NAV_ITEMS = [
   { label: 'ARENA', href: '/arena', icon: FiCrosshair },
@@ -64,18 +65,12 @@ export function Navbar() {
 
         {/* Action / Wallet Status Area */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 border border-neutral bg-surface-container-low text-[11px] font-mono text-secondary">
-            <div className="w-2 h-2 bg-warning" />
+          {/* <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 border border-neutral bg-surface-container-low text-[11px] font-mono text-secondary">
+            <div className="w-2 h-2 bg-secondary" />
             <span>SOMNIA 50312</span>
-          </div>
+          </div> */}
 
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors"
-          >
-            <FiUser className="w-3.5 h-3.5" />
-            <span>TERMINAL</span>
-          </Link>
+          <ConnectButton />
         </div>
       </div>
     </header>

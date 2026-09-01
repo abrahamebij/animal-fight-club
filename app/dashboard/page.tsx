@@ -8,9 +8,18 @@ import {
   FiShield, 
   FiZap, 
 } from 'react-icons/fi';
+import { useAccount, useBalance } from 'wagmi';
+import { somniaShannon } from '@/lib/config/wagmi';
+import { formatBalance } from '@/lib/utils/format';
 import { MOCK_BEASTS } from '@/lib/mockData';
 
 export default function DashboardPage() {
+  const { address, isConnected } = useAccount();
+  const { data: balance } = useBalance({ 
+    address, 
+    chainId: somniaShannon.id 
+  });
+
   const myBeasts = MOCK_BEASTS.slice(0, 2);
   const myActiveBets = [
     {
@@ -30,6 +39,10 @@ export default function DashboardPage() {
       status: 'pending',
     },
   ];
+
+  const displayAddress = isConnected && address
+    ? `${address.slice(0, 6)}...${address.slice(-4)}`
+    : 'NOT CONNECTED';
 
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
@@ -67,7 +80,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-xs">
             <div className="border border-primary p-4 bg-surface-container-low">
               <span className="text-secondary block text-[10px] uppercase">CONNECTED ADDRESS</span>
-              <span className="font-bold text-sm text-primary">0x38F2...91C4</span>
+              <span className="font-bold text-sm text-primary">{displayAddress}</span>
             </div>
 
             <div className="border border-primary p-4 bg-surface-container-low">
@@ -81,8 +94,10 @@ export default function DashboardPage() {
             </div>
 
             <div className="border border-primary p-4 bg-surface-container-low">
-              <span className="text-secondary block text-[10px] uppercase">TOTAL NET PURSE</span>
-              <span className="font-headline font-extrabold text-2xl text-primary">+840 STT</span>
+              <span className="text-secondary block text-[10px] uppercase">NATIVE BALANCE</span>
+              <span className="font-headline font-extrabold text-2xl text-primary">
+                {formatBalance(balance, 2)}
+              </span>
             </div>
           </div>
         </div>

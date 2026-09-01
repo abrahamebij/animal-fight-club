@@ -28,6 +28,9 @@ export const metadata: Metadata = {
   description: "Create AI-agent beasts, battle in LLM-reasoned combat, and wager with live DreamDEX Event Contract market odds on Somnia Shannon testnet.",
 };
 
+import { Web3Provider } from "@/components/providers/Web3Provider";
+import { WalletGateProvider } from "@/components/wallet/useWalletGate";
+
 export default function RootLayout({
   children,
 }: {
@@ -39,11 +42,15 @@ export default function RootLayout({
       className={`${barlowCondensed.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans selection:bg-primary selection:text-background">
-        <Navbar />
-        <div className="flex-1 pt-16 flex flex-col">
-          {children}
-        </div>
-        <Footer />
+        <Web3Provider>
+          <WalletGateProvider>
+            <Navbar />
+            <div className="flex-1 pt-16 flex flex-col">
+              {children}
+            </div>
+            <Footer />
+          </WalletGateProvider>
+        </Web3Provider>
       </body>
     </html>
   );

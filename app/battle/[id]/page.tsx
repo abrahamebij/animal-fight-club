@@ -14,6 +14,7 @@ import {
   FiArrowLeft,
   FiTerminal
 } from 'react-icons/fi';
+import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { MOCK_BATTLES } from '@/lib/mockData';
 import { Battle, CombatTurn } from '@/lib/types';
 import gsap from 'gsap';
@@ -148,18 +149,26 @@ export default function BattleViewPage() {
     prevLogLength.current = currentLength;
   }, [battle.combatLog.length]);
 
+  const { requireAuth } = useWalletGate();
+
   const handlePlaceBet = (e: React.FormEvent) => {
     e.preventDefault();
-    setBetPlaced(true);
-    // Bounce animation on the button
-    if (betBtnRef.current) {
-      gsap.fromTo(
-        betBtnRef.current,
-        { scale: 0.94 },
-        { scale: 1, duration: 0.45, ease: 'elastic.out(1.3, 0.5)' }
-      );
-    }
-    setTimeout(() => setBetPlaced(false), 3000);
+
+    requireAuth({
+      actionTitle: `place a ${betAmount} STT wager on ${selectedSide === 'beastA' ? battle.beastA.name : battle.beastB.name}`,
+      onSuccess: () => {
+        setBetPlaced(true);
+        // Bounce animation on the button
+        if (betBtnRef.current) {
+          gsap.fromTo(
+            betBtnRef.current,
+            { scale: 0.94 },
+            { scale: 1, duration: 0.45, ease: 'elastic.out(1.3, 0.5)' }
+          );
+        }
+        setTimeout(() => setBetPlaced(false), 3000);
+      },
+    });
   };
 
   return (

@@ -7,6 +7,7 @@ import {
   FiPlusSquare, 
   FiCheck, 
 } from 'react-icons/fi';
+import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { STAT_BUDGET, AVAILABLE_PERKS, AVATAR_PRESETS } from '@/lib/constants/game';
 import { BeastStats, BoundAsset } from '@/lib/types';
 import gsap from 'gsap';
@@ -122,24 +123,32 @@ export default function CreateBeastPage() {
     );
   };
 
+  const { requireAuth } = useWalletGate();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (remainingPoints < 0) return;
-    setIsSubmitting(true);
 
-    // Pulse the submit button
-    if (submitBtnRef.current) {
-      gsap.fromTo(
-        submitBtnRef.current,
-        { scale: 0.96 },
-        { scale: 1, duration: 0.5, ease: 'elastic.out(1.2, 0.5)' }
-      );
-    }
+    requireAuth({
+      actionTitle: 'mint this beast to the on-chain arena',
+      onSuccess: () => {
+        setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      router.push('/dashboard');
-    }, 800);
+        // Pulse the submit button
+        if (submitBtnRef.current) {
+          gsap.fromTo(
+            submitBtnRef.current,
+            { scale: 0.96 },
+            { scale: 1, duration: 0.5, ease: 'elastic.out(1.2, 0.5)' }
+          );
+        }
+
+        setTimeout(() => {
+          setIsSubmitting(false);
+          router.push('/dashboard');
+        }, 800);
+      },
+    });
   };
 
   return (

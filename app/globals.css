@@ -50,6 +50,9 @@
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
   }
+  button {
+    cursor:pointer
+  }
 }
 
 .font-data-mono {
