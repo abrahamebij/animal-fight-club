@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
@@ -11,6 +11,8 @@ import {
 import { useAccount, useBalance } from 'wagmi';
 import { somniaShannon } from '@/lib/config/wagmi';
 import { formatBalance } from '@/lib/utils/format';
+import { getBeastsByOwner } from '@/lib/services/beastService';
+import { Beast } from '@/lib/types';
 import { MOCK_BEASTS } from '@/lib/mockData';
 
 export default function DashboardPage() {
@@ -20,7 +22,26 @@ export default function DashboardPage() {
     chainId: somniaShannon.id 
   });
 
-  const myBeasts = MOCK_BEASTS.slice(0, 2);
+  const [myBeasts, setMyBeasts] = useState<Beast[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadUserBeasts() {
+      setLoading(true);
+      const targetOwner = address || '0x38F2...91C4';
+      const beasts = await getBeastsByOwner(targetOwner);
+      if (mounted) {
+        setMyBeasts(beasts.length > 0 ? beasts : MOCK_BEASTS.slice(0, 2));
+        setLoading(false);
+      }
+    }
+    loadUserBeasts();
+    return () => {
+      mounted = false;
+    };
+  }, [address]);
+
   const myActiveBets = [
     {
       id: 'bet_01',

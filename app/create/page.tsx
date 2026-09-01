@@ -7,13 +7,16 @@ import {
   FiPlusSquare, 
   FiCheck, 
 } from 'react-icons/fi';
+import { useAccount } from 'wagmi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { STAT_BUDGET, AVAILABLE_PERKS, AVATAR_PRESETS } from '@/lib/constants/game';
 import { BeastStats, BoundAsset } from '@/lib/types';
+import { createBeast } from '@/lib/services/beastService';
 import gsap from 'gsap';
 
 export default function CreateBeastPage() {
   const router = useRouter();
+  const { address } = useAccount();
 
   const [name, setName] = useState('CYBER VENOM');
   const [description, setDescription] = useState('Genetically augmented apex predator forged for aggressive close-quarters combat.');
@@ -127,11 +130,11 @@ export default function CreateBeastPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (remainingPoints < 0) return;
+    if (remainingPoints < 0 || isSubmitting) return;
 
     requireAuth({
       actionTitle: 'mint this beast to the on-chain arena',
-      onSuccess: () => {
+      onSuccess: async () => {
         setIsSubmitting(true);
 
         // Pulse the submit button
@@ -143,10 +146,24 @@ export default function CreateBeastPage() {
           );
         }
 
-        setTimeout(() => {
+        try {
+          const owner = address || '0x38F2...91C4';
+          const createdBeast = await createBeast({
+            ownerAddress: owner,
+            name: name.trim() || 'UNTITLED BEAST',
+            description: description.trim() || 'No tactical lore entered.',
+            avatarUrl: selectedAvatar,
+            stats,
+            perks: selectedPerks,
+            boundAsset,
+          });
+
+          // Navigate directly to the newly forged beast profile
+          router.push(`/beast/${createdBeast.id}`);
+        } catch (err) {
+          console.error('Failed to create beast:', err);
           setIsSubmitting(false);
-          router.push('/dashboard');
-        }, 800);
+        }
       },
     });
   };

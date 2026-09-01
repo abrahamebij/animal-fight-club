@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -9,6 +9,8 @@ import {
   FiArrowLeft,
 } from 'react-icons/fi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
+import { getBeastById } from '@/lib/services/beastService';
+import { Beast } from '@/lib/types';
 import { MOCK_BEASTS, MOCK_BATTLES } from '@/lib/mockData';
 import { AVAILABLE_PERKS } from '@/lib/constants/game';
 
@@ -18,13 +20,33 @@ export default function BeastProfilePage() {
   const { requireAuth } = useWalletGate();
   const beastId = (params?.id as string) || 'beast_kong_01';
 
-  const beast = MOCK_BEASTS.find((b) => b.id === beastId) || MOCK_BEASTS[0];
+  const [beast, setBeast] = useState<Beast | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadBeast() {
+      setLoading(true);
+      const data = await getBeastById(beastId);
+      if (mounted) {
+        setBeast(data || MOCK_BEASTS[0]);
+        setLoading(false);
+      }
+    }
+    loadBeast();
+    return () => {
+      mounted = false;
+    };
+  }, [beastId]);
+
+  const activeBeast = beast || MOCK_BEASTS[0];
+
   const beastBattles = MOCK_BATTLES.filter(
-    (b) => b.beastA.id === beast.id || b.beastB.id === beast.id
+    (b) => b.beastA.id === activeBeast.id || b.beastB.id === activeBeast.id
   );
 
-  const winRate = beast.record.wins + beast.record.losses > 0
-    ? Math.round((beast.record.wins / (beast.record.wins + beast.record.losses)) * 100)
+  const winRate = activeBeast.record.wins + activeBeast.record.losses > 0
+    ? Math.round((activeBeast.record.wins / (activeBeast.record.wins + activeBeast.record.losses)) * 100)
     : 0;
 
   return (
@@ -39,7 +61,7 @@ export default function BeastProfilePage() {
             <FiArrowLeft className="w-4 h-4" />
             <span>BACK TO LEADERBOARD</span>
           </Link>
-          <span className="text-secondary">GENETIC IDENTITY // {beast.id}</span>
+          <span className="text-secondary">GENETIC IDENTITY // {activeBeast.id}</span>
         </div>
       </div>
 
@@ -50,45 +72,45 @@ export default function BeastProfilePage() {
             <div className="border-2 border-primary p-6 bg-background space-y-6">
               <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
                 <Image
-                  src={beast.avatarUrl}
-                  alt={beast.name}
+                  src={activeBeast.avatarUrl}
+                  alt={activeBeast.name}
                   fill
                   className="object-cover"
                   priority
                 />
-                {beast.boundAsset && (
+                {activeBeast.boundAsset && (
                   <div className="absolute top-3 right-3 bg-primary text-background font-mono text-xs font-bold px-3 py-1 border border-background/30">
-                    {beast.boundAsset} BOUND
+                    {activeBeast.boundAsset} BOUND
                   </div>
                 )}
               </div>
 
               <div>
                 <h1 className="font-headline font-extrabold text-4xl uppercase tracking-tight text-primary">
-                  {beast.name}
+                  {activeBeast.name}
                 </h1>
                 <p className="font-sans text-sm text-secondary mt-2 leading-relaxed">
-                  {beast.description}
+                  {activeBeast.description}
                 </p>
               </div>
 
               <div className="border-t border-primary pt-4 font-mono text-xs space-y-2">
                 <div className="flex justify-between">
                   <span className="text-secondary">OWNER:</span>
-                  <span className="font-bold">{beast.ownerAddress}</span>
+                  <span className="font-bold">{activeBeast.ownerAddress}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary">CREATED:</span>
-                  <span>{new Date(beast.createdAt).toLocaleDateString()}</span>
+                  <span>{new Date(activeBeast.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
 
               <button
                 onClick={() => {
                   requireAuth({
-                    actionTitle: `challenge ${beast.name} to an arena duel`,
+                    actionTitle: `challenge ${activeBeast.name} to an arena duel`,
                     onSuccess: () => {
-                      router.push(`/arena?challenge=${beast.id}`);
+                      router.push(`/arena?challenge=${activeBeast.id}`);
                     },
                   });
                 }}
@@ -117,16 +139,16 @@ export default function BeastProfilePage() {
               <div className="grid grid-cols-3 gap-4 font-mono text-xs text-center">
                 <div className="border border-primary p-3 bg-surface-container-low">
                   <span className="text-secondary block text-[10px]">VICTORIES</span>
-                  <span className="font-headline font-extrabold text-2xl text-primary">{beast.record.wins}</span>
+                  <span className="font-headline font-extrabold text-2xl text-primary">{activeBeast.record.wins}</span>
                 </div>
                 <div className="border border-primary p-3 bg-surface-container-low">
                   <span className="text-secondary block text-[10px]">DEFEATS</span>
-                  <span className="font-headline font-extrabold text-2xl text-secondary">{beast.record.losses}</span>
+                  <span className="font-headline font-extrabold text-2xl text-secondary">{activeBeast.record.losses}</span>
                 </div>
                 <div className="border border-primary p-3 bg-surface-container-low">
                   <span className="text-secondary block text-[10px]">TOTAL DUELS</span>
                   <span className="font-headline font-extrabold text-2xl text-primary">
-                    {beast.record.wins + beast.record.losses}
+                    {activeBeast.record.wins + activeBeast.record.losses}
                   </span>
                 </div>
               </div>
@@ -134,7 +156,7 @@ export default function BeastProfilePage() {
               {/* Stat Progress Bars */}
               <div className="space-y-4 font-mono text-xs border-t border-neutral pt-4">
                 {(['power', 'defense', 'speed', 'special'] as const).map((statKey) => {
-                  const val = beast.stats[statKey];
+                  const val = activeBeast.stats[statKey];
                   return (
                     <div key={statKey} className="space-y-1">
                       <div className="flex justify-between font-bold uppercase">
@@ -163,7 +185,7 @@ export default function BeastProfilePage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {beast.perks.map((perkId) => {
+                {activeBeast.perks.map((perkId) => {
                   const perk = AVAILABLE_PERKS.find((p) => p.id === perkId);
                   if (!perk) return null;
                   return (
@@ -203,7 +225,7 @@ export default function BeastProfilePage() {
                     <div key={b.id} className="border border-neutral p-3 flex items-center justify-between bg-surface-container-low">
                       <div className="space-y-0.5">
                         <div className="font-bold text-primary">
-                          VS {b.beastA.id === beast.id ? b.beastB.name : b.beastA.name}
+                          VS {b.beastA.id === activeBeast.id ? b.beastB.name : b.beastA.name}
                         </div>
                         <div className="text-[11px] text-secondary">
                           STATUS: {b.status.toUpperCase()}
