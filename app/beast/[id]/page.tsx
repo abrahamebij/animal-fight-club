@@ -13,6 +13,7 @@ import { getBeastById } from '@/lib/services/beastService';
 import { Beast } from '@/lib/types';
 import { MOCK_BEASTS, MOCK_BATTLES } from '@/lib/mockData';
 import { AVAILABLE_PERKS } from '@/lib/constants/game';
+import { formatDate } from '@/lib/utils/timer';
 
 export default function BeastProfilePage() {
   const params = useParams();
@@ -101,7 +102,7 @@ export default function BeastProfilePage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-secondary">CREATED:</span>
-                  <span>{new Date(activeBeast.createdAt).toLocaleDateString()}</span>
+                  <span>{formatDate(activeBeast.createdAt, 'YYYY-MM-DD')}</span>
                 </div>
               </div>
 

@@ -12,7 +12,8 @@ import { useAccount, useBalance } from 'wagmi';
 import { somniaShannon } from '@/lib/config/wagmi';
 import { formatBalance } from '@/lib/utils/format';
 import { getBeastsByOwner } from '@/lib/services/beastService';
-import { Beast } from '@/lib/types';
+import { getBetsByBettor } from '@/lib/services/battleService';
+import { Beast, Bet } from '@/lib/types';
 import { MOCK_BEASTS } from '@/lib/mockData';
 
 export default function DashboardPage() {
@@ -23,43 +24,29 @@ export default function DashboardPage() {
   });
 
   const [myBeasts, setMyBeasts] = useState<Beast[]>([]);
+  const [myActiveBets, setMyActiveBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    async function loadUserBeasts() {
+    async function loadUserData() {
       setLoading(true);
       const targetOwner = address || '0x38F2...91C4';
-      const beasts = await getBeastsByOwner(targetOwner);
+      const [beasts, bets] = await Promise.all([
+        getBeastsByOwner(targetOwner),
+        getBetsByBettor(targetOwner),
+      ]);
       if (mounted) {
         setMyBeasts(beasts.length > 0 ? beasts : MOCK_BEASTS.slice(0, 2));
+        setMyActiveBets(bets);
         setLoading(false);
       }
     }
-    loadUserBeasts();
+    loadUserData();
     return () => {
       mounted = false;
     };
   }, [address]);
-
-  const myActiveBets = [
-    {
-      id: 'bet_01',
-      battleId: 'battle_live_01',
-      beastPicked: MOCK_BEASTS[0].name,
-      amount: 150,
-      odds: '1.85x',
-      status: 'active',
-    },
-    {
-      id: 'bet_02',
-      battleId: 'battle_pending_02',
-      beastPicked: MOCK_BEASTS[3].name,
-      amount: 80,
-      odds: '2.10x',
-      status: 'pending',
-    },
-  ];
 
   const displayAddress = isConnected && address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -236,28 +223,36 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral">
-                {myActiveBets.map((bet) => (
-                  <tr key={bet.id} className="hover:bg-surface-container-low transition-colors">
-                    <td className="p-4 font-bold">{bet.id}</td>
-                    <td className="p-4">{bet.battleId}</td>
-                    <td className="p-4 font-bold text-primary uppercase">{bet.beastPicked}</td>
-                    <td className="p-4">{bet.amount} STT</td>
-                    <td className="p-4 text-primary font-bold">{bet.odds}</td>
-                    <td className="p-4">
-                      <span className="px-2 py-0.5 bg-primary text-background font-bold text-[10px] uppercase">
-                        {bet.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <Link
-                        href={`/battle/${bet.battleId}`}
-                        className="px-3 py-1.5 bg-primary text-background font-headline font-bold uppercase hover:bg-secondary transition-colors inline-block"
-                      >
-                        Spectate
-                      </Link>
+                {myActiveBets.length > 0 ? (
+                  myActiveBets.map((bet) => (
+                    <tr key={bet.id} className="hover:bg-surface-container-low transition-colors">
+                      <td className="p-4 font-bold">{bet.id}</td>
+                      <td className="p-4">{bet.battleId}</td>
+                      <td className="p-4 font-bold text-primary uppercase">{bet.beastPicked}</td>
+                      <td className="p-4">{bet.amount} STT</td>
+                      <td className="p-4 text-primary font-bold">1.85x</td>
+                      <td className="p-4">
+                        <span className="px-2 py-0.5 bg-primary text-background font-bold text-[10px] uppercase">
+                          {bet.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <Link
+                          href={`/battle/${bet.battleId}`}
+                          className="px-3 py-1.5 bg-primary text-background font-headline font-bold uppercase hover:bg-secondary transition-colors inline-block"
+                        >
+                          Spectate
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-secondary font-mono text-xs">
+                      No active wagers placed yet. Explore the Arena to place spectator bets during 1-hour windows.
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { 
   FiCrosshair, 
   FiZap, 
@@ -10,21 +11,66 @@ import {
   FiCheckCircle, 
   FiPlusSquare, 
 } from 'react-icons/fi';
-import { MOCK_BATTLES } from '@/lib/mockData';
-import { BattleStatus } from '@/lib/types';
+import { getAllBattles } from '@/lib/services/battleService';
+import { getBeastById } from '@/lib/services/beastService';
+import { Battle, BattleStatus, Beast } from '@/lib/types';
+import { ChallengeModal } from '@/components/arena/ChallengeModal';
+import { formatTimeRemaining } from '@/lib/utils/timer';
 import gsap from 'gsap';
 
-export default function ArenaPage() {
-  const [filter, setFilter] = useState<'all' | BattleStatus>('all');
+function ArenaContent() {
+  const searchParams = useSearchParams();
+  const challengeParam = searchParams.get('challenge');
 
-  const filteredBattles = MOCK_BATTLES.filter((battle) => {
+  const [battles, setBattles] = useState<Battle[]>([]);
+  const [filter, setFilter] = useState<'all' | BattleStatus>('all');
+  const [challengeModalOpen, setChallengeModalOpen] = useState(false);
+  const [targetOpponent, setTargetOpponent] = useState<Beast | null>(null);
+  const [timeNow, setTimeNow] = useState(Date.now());
+
+  // Interval timer for pending battle countdowns
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeNow(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fetch live battles
+  useEffect(() => {
+    let mounted = true;
+    async function loadBattles() {
+      const data = await getAllBattles();
+      if (mounted) {
+        setBattles(data);
+      }
+    }
+    loadBattles();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Open challenge modal if URL has ?challenge=beast_id
+  useEffect(() => {
+    if (challengeParam) {
+      getBeastById(challengeParam).then((beast) => {
+        if (beast) {
+          setTargetOpponent(beast);
+          setChallengeModalOpen(true);
+        }
+      });
+    }
+  }, [challengeParam]);
+
+  const filteredBattles = battles.filter((battle) => {
     if (filter === 'all') return true;
     return battle.status === filter;
   });
 
-  const liveCount = MOCK_BATTLES.filter((b) => b.status === 'live').length;
-  const pendingCount = MOCK_BATTLES.filter((b) => b.status === 'pending').length;
-  const completedCount = MOCK_BATTLES.filter((b) => b.status === 'completed').length;
+  const liveCount = battles.filter((b) => b.status === 'live').length;
+  const pendingCount = battles.filter((b) => b.status === 'pending').length;
+  const completedCount = battles.filter((b) => b.status === 'completed').length;
 
   const headerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -38,21 +84,6 @@ export default function ArenaPage() {
       gsap.from('.arena-desc', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out', delay: 0.25 });
       gsap.from('.arena-actions', { opacity: 0, y: 16, duration: 0.45, ease: 'power2.out', delay: 0.35 });
     }, headerRef);
-    return () => ctx.revert();
-  }, []);
-
-  // Animate battle cards on mount (initial load)
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from('.battle-card', {
-        opacity: 0,
-        y: 28,
-        duration: 0.5,
-        stagger: 0.08,
-        ease: 'power2.out',
-        delay: 0.5,
-      });
-    }, gridRef);
     return () => ctx.revert();
   }, []);
 
@@ -90,21 +121,24 @@ export default function ArenaPage() {
             </div>
 
             <div className="arena-actions flex flex-wrap items-center gap-3">
-              <Link
-                href="/create"
+              <button
+                onClick={() => {
+                  setTargetOpponent(null);
+                  setChallengeModalOpen(true);
+                }}
                 className="px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors inline-flex items-center gap-2"
               >
-                <FiPlusSquare className="w-4 h-4" />
-                <span>Create Beast</span>
-              </Link>
-              <button
-                disabled
-                className="px-6 py-3 bg-neutral text-secondary font-headline font-bold text-sm uppercase tracking-wider border border-outline-variant cursor-not-allowed inline-flex items-center gap-2"
-                title="Auto-matchmaking coming soon"
-              >
                 <FiCrosshair className="w-4 h-4" />
-                <span>Auto-Match (Coming Soon)</span>
+                <span>Initiate Challenge</span>
               </button>
+
+              <Link
+                href="/create"
+                className="px-6 py-3 bg-surface-container-low text-primary font-headline font-bold text-sm uppercase tracking-wider hover:bg-primary hover:text-background border border-primary transition-colors inline-flex items-center gap-2"
+              >
+                <FiPlusSquare className="w-4 h-4" />
+                <span>Forge Beast</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -122,14 +156,14 @@ export default function ArenaPage() {
                   : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
               }`}
             >
-              ALL BATTLES ({MOCK_BATTLES.length})
+              ALL BATTLES ({battles.length})
             </button>
 
             <button
               onClick={() => setFilter('live')}
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border flex items-center gap-2 transition-colors ${
                 filter === 'live'
-                  ? 'bg-danger text-background border-danger'
+                  ? 'bg-primary text-background border-primary'
                   : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
               }`}
             >
@@ -172,6 +206,10 @@ export default function ArenaPage() {
             const isPending = battle.status === 'pending';
             const isCompleted = battle.status === 'completed';
 
+            const countdown = isPending && battle.bettingWindowClosesAt
+              ? formatTimeRemaining(battle.bettingWindowClosesAt)
+              : null;
+
             return (
               <div 
                 key={battle.id}
@@ -182,7 +220,7 @@ export default function ArenaPage() {
                   <div className="flex items-center gap-2">
                     {isLive && (
                       <>
-                        <span className="w-2.5 h-2.5 bg-danger animate-pulse" />
+                        <span className="w-2.5 h-2.5 bg-secondary animate-pulse" />
                         <span className="font-headline font-bold text-base uppercase text-primary">
                           LIVE COMBAT
                         </span>
@@ -192,7 +230,7 @@ export default function ArenaPage() {
                       <>
                         <span className="w-2.5 h-2.5 bg-warning" />
                         <span className="font-headline font-bold text-base uppercase text-primary">
-                          WAGERING OPEN
+                          WAGERING OPEN ({countdown?.formatted || '60:00'})
                         </span>
                       </>
                     )}
@@ -258,7 +296,7 @@ export default function ArenaPage() {
                 <div className="bg-surface-container-low p-3 border border-neutral font-mono text-xs space-y-1">
                   <div className="flex justify-between text-secondary">
                     <span>WAGER POOL</span>
-                    <span className="font-bold text-primary">{battle.totalPoolA + battle.totalPoolB} STT</span>
+                    <span className="font-bold text-primary">{(battle.totalPoolA || 0) + (battle.totalPoolB || 0)} STT</span>
                   </div>
                   {battle.marketPulseA && (
                     <div className="flex justify-between text-[11px] text-secondary">
@@ -283,7 +321,7 @@ export default function ArenaPage() {
                 {/* Action CTA */}
                 <Link
                   href={`/battle/${battle.id}`}
-                  className={`w-full py-3 ${isLive ? "bg-danger border-danger hover:border-primary": "bg-primary border-primary"} text-background font-headline font-bold text-sm text-center uppercase tracking-wider hover:bg-background hover:text-primary border transition-colors flex items-center justify-center gap-2`}
+                  className="w-full py-3 bg-primary text-background font-headline font-bold text-sm text-center uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors flex items-center justify-center gap-2"
                 >
                   {isLive && (
                     <>
@@ -294,7 +332,7 @@ export default function ArenaPage() {
                   {isPending && (
                     <>
                       <FiZap className="w-4 h-4" />
-                      <span>Place Wager // 40m Left</span>
+                      <span>Place Wager // {countdown?.formatted || '40:00'} Left</span>
                     </>
                   )}
                   {isCompleted && (
@@ -309,6 +347,21 @@ export default function ArenaPage() {
           })}
         </div>
       </section>
+
+      {/* Challenge Modal */}
+      <ChallengeModal
+        isOpen={challengeModalOpen}
+        onClose={() => setChallengeModalOpen(false)}
+        targetOpponent={targetOpponent}
+      />
     </div>
+  );
+}
+
+export default function ArenaPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background p-10 font-mono text-xs text-secondary">LOADING ARENA...</div>}>
+      <ArenaContent />
+    </Suspense>
   );
 }

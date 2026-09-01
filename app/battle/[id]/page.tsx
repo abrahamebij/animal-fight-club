@@ -14,27 +14,62 @@ import {
   FiArrowLeft,
   FiTerminal
 } from 'react-icons/fi';
+import { useAccount } from 'wagmi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
+import { getBattleById, placeBet } from '@/lib/services/battleService';
 import { MOCK_BATTLES } from '@/lib/mockData';
 import { Battle, CombatTurn } from '@/lib/types';
+import { formatTimeRemaining } from '@/lib/utils/timer';
 import gsap from 'gsap';
 
 export default function BattleViewPage() {
   const params = useParams();
   const battleId = (params?.id as string) || 'battle_live_01';
+  const { address } = useAccount();
 
-  const battle: Battle = MOCK_BATTLES.find((b) => b.id === battleId) || MOCK_BATTLES[0];
+  const [battle, setBattle] = useState<Battle | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [timeNow, setTimeNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeNow(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadBattle() {
+      setLoading(true);
+      const data = await getBattleById(battleId);
+      if (mounted) {
+        setBattle(data || MOCK_BATTLES[0]);
+        setLoading(false);
+      }
+    }
+    loadBattle();
+    return () => {
+      mounted = false;
+    };
+  }, [battleId]);
+
+  const activeBattle: Battle = battle || MOCK_BATTLES[0];
 
   // Betting state for spectators
   const [selectedSide, setSelectedSide] = useState<'beastA' | 'beastB'>('beastA');
   const [betAmount, setBetAmount] = useState<string>('50');
   const [betPlaced, setBetPlaced] = useState<boolean>(false);
 
-  const isLive = battle.status === 'live';
-  const isPending = battle.status === 'pending';
-  const isCompleted = battle.status === 'completed';
+  const isLive = activeBattle.status === 'live';
+  const isPending = activeBattle.status === 'pending';
+  const isCompleted = activeBattle.status === 'completed';
 
-  const lastTurn: CombatTurn | undefined = battle.combatLog[battle.combatLog.length - 1];
+  const countdown = isPending && activeBattle.bettingWindowClosesAt
+    ? formatTimeRemaining(activeBattle.bettingWindowClosesAt)
+    : null;
+
+  const lastTurn: CombatTurn | undefined = activeBattle.combatLog[activeBattle.combatLog.length - 1];
   const hpA = lastTurn?.beastAHp ?? 100;
   const hpB = lastTurn?.beastBHp ?? 100;
 
@@ -153,20 +188,40 @@ export default function BattleViewPage() {
 
   const handlePlaceBet = (e: React.FormEvent) => {
     e.preventDefault();
+    const amountNum = Number(betAmount);
+    if (isNaN(amountNum) || amountNum <= 0) return;
 
     requireAuth({
-      actionTitle: `place a ${betAmount} STT wager on ${selectedSide === 'beastA' ? battle.beastA.name : battle.beastB.name}`,
-      onSuccess: () => {
-        setBetPlaced(true);
-        // Bounce animation on the button
-        if (betBtnRef.current) {
-          gsap.fromTo(
-            betBtnRef.current,
-            { scale: 0.94 },
-            { scale: 1, duration: 0.45, ease: 'elastic.out(1.3, 0.5)' }
-          );
+      actionTitle: `place a ${betAmount} STT wager on ${selectedSide === 'beastA' ? activeBattle.beastA.name : activeBattle.beastB.name}`,
+      onSuccess: async () => {
+        try {
+          const bettor = address || '0x38F2...91C4';
+          await placeBet(activeBattle.id, bettor, selectedSide, amountNum);
+
+          // Update local battle pool state
+          setBattle((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              totalPoolA: selectedSide === 'beastA' ? (prev.totalPoolA || 0) + amountNum : prev.totalPoolA,
+              totalPoolB: selectedSide === 'beastB' ? (prev.totalPoolB || 0) + amountNum : prev.totalPoolB,
+            };
+          });
+
+          setBetPlaced(true);
+
+          // Bounce animation on the button
+          if (betBtnRef.current) {
+            gsap.fromTo(
+              betBtnRef.current,
+              { scale: 0.94 },
+              { scale: 1, duration: 0.45, ease: 'elastic.out(1.3, 0.5)' }
+            );
+          }
+          setTimeout(() => setBetPlaced(false), 3000);
+        } catch (err) {
+          console.error('Failed to place bet:', err);
         }
-        setTimeout(() => setBetPlaced(false), 3000);
       },
     });
   };
@@ -188,11 +243,11 @@ export default function BattleViewPage() {
             <div className="flex items-center gap-2">
               <span className={`w-2.5 h-2.5 ${isLive ? 'bg-secondary animate-pulse' : isPending ? 'bg-warning' : 'bg-primary'}`} />
               <span className="font-bold uppercase">
-                {isLive ? 'LIVE COMBAT FEED' : isPending ? 'PENDING BETTING WINDOW' : 'COMBAT CONCLUDED'}
+                {isLive ? 'LIVE COMBAT FEED' : isPending ? `PENDING BETTING WINDOW (${countdown?.formatted || '60:00'})` : 'COMBAT CONCLUDED'}
               </span>
             </div>
             <span className="text-neutral">|</span>
-            <span className="text-secondary">BATTLE ID: {battle.id}</span>
+            <span className="text-secondary">BATTLE ID: {activeBattle.id}</span>
           </div>
         </div>
       </div>
@@ -206,30 +261,30 @@ export default function BattleViewPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-primary pb-2">
                 <span className="font-mono text-xs text-secondary font-bold">COMBATANT 01 // ALPHA</span>
-                <span className="font-mono text-xs text-secondary">{battle.beastA.ownerAddress}</span>
+                <span className="font-mono text-xs text-secondary">{activeBattle.beastA.ownerAddress}</span>
               </div>
 
               <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
                 <Image
-                  src={battle.beastA.avatarUrl}
-                  alt={battle.beastA.name}
+                  src={activeBattle.beastA.avatarUrl}
+                  alt={activeBattle.beastA.name}
                   fill
                   className="object-cover"
                   priority
                 />
-                {battle.beastA.boundAsset && (
+                {activeBattle.beastA.boundAsset && (
                   <div className="absolute top-2 right-2 bg-primary text-background font-mono text-[11px] font-bold px-2.5 py-1">
-                    {battle.beastA.boundAsset} BOUND
+                    {activeBattle.beastA.boundAsset} BOUND
                   </div>
                 )}
               </div>
 
               <div>
                 <h2 className="font-headline font-extrabold text-3xl uppercase tracking-tight text-primary">
-                  {battle.beastA.name}
+                  {activeBattle.beastA.name}
                 </h2>
                 <div className="font-mono text-xs text-secondary">
-                  RECORD: {battle.beastA.record.wins}W - {battle.beastA.record.losses}L
+                  RECORD: {activeBattle.beastA.record.wins}W - {activeBattle.beastA.record.losses}L
                 </div>
               </div>
 
@@ -252,30 +307,30 @@ export default function BattleViewPage() {
               <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs border-t border-neutral pt-3">
                 <div className="bg-surface-container-low p-1.5">
                   <div className="text-[10px] text-secondary">PWR</div>
-                  <div className="font-bold">{battle.beastA.stats.power}</div>
+                  <div className="font-bold">{activeBattle.beastA.stats.power}</div>
                 </div>
                 <div className="bg-surface-container-low p-1.5">
                   <div className="text-[10px] text-secondary">DEF</div>
-                  <div className="font-bold">{battle.beastA.stats.defense}</div>
+                  <div className="font-bold">{activeBattle.beastA.stats.defense}</div>
                 </div>
                 <div className="bg-surface-container-low p-1.5">
                   <div className="text-[10px] text-secondary">SPD</div>
-                  <div className="font-bold">{battle.beastA.stats.speed}</div>
+                  <div className="font-bold">{activeBattle.beastA.stats.speed}</div>
                 </div>
                 <div className="bg-surface-container-low p-1.5">
                   <div className="text-[10px] text-secondary">SPC</div>
-                  <div className="font-bold">{battle.beastA.stats.special}</div>
+                  <div className="font-bold">{activeBattle.beastA.stats.special}</div>
                 </div>
               </div>
 
-              {battle.marketPulseA && (
+              {activeBattle.marketPulseA && (
                 <div className="border border-primary bg-surface-container-low p-3 font-mono text-xs space-y-1">
                   <div className="flex items-center gap-1.5 text-primary font-bold uppercase">
                     <FiTrendingUp className="w-3.5 h-3.5" />
                     <span>LOCKED MARKET PULSE:</span>
                   </div>
                   <div className="text-primary font-bold">
-                    {battle.marketPulseA.modifier.description}
+                    {activeBattle.marketPulseA.modifier.description}
                   </div>
                 </div>
               )}
@@ -291,7 +346,7 @@ export default function BattleViewPage() {
                   <span>LLM COMBAT REASONER</span>
                 </div>
                 <span className="text-warning font-bold">
-                  {isLive ? `ROUND ${battle.combatLog.length}` : isPending ? 'WINDOW OPEN' : 'CONCLUDED'}
+                  {isLive ? `ROUND ${activeBattle.combatLog.length}` : isPending ? 'WINDOW OPEN' : 'CONCLUDED'}
                 </span>
               </div>
 
@@ -324,12 +379,12 @@ export default function BattleViewPage() {
             {/* Battle Log History list */}
             <div className="border-t border-background/20 pt-3 space-y-2">
               <div className="font-mono text-[11px] text-background/40 uppercase">
-                COMBAT EVENT LOG ({battle.combatLog.length} TURNS)
+                COMBAT EVENT LOG ({activeBattle.combatLog.length} TURNS)
               </div>
               <div ref={logRef} className="max-h-36 overflow-y-auto space-y-1.5 font-mono text-[11px] pr-2">
-                {battle.combatLog.map((turn) => (
+                {activeBattle.combatLog.map((turn) => (
                   <div key={turn.turnNumber} className="log-entry flex justify-between text-background/70 border-b border-background/5 pb-1">
-                    <span>T{turn.turnNumber} [{turn.actor === 'beastA' ? battle.beastA.name.split(' ')[0] : battle.beastB.name.split(' ')[0]}]: {turn.actionName}</span>
+                    <span>T{turn.turnNumber} [{turn.actor === 'beastA' ? activeBattle.beastA.name.split(' ')[0] : activeBattle.beastB.name.split(' ')[0]}]: {turn.actionName}</span>
                     <span className="text-danger font-bold">-{turn.damageDealt} HP</span>
                   </div>
                 ))}
@@ -342,30 +397,30 @@ export default function BattleViewPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-primary pb-2">
                 <span className="font-mono text-xs text-secondary font-bold">COMBATANT 02 // BRAVO</span>
-                <span className="font-mono text-xs text-secondary">{battle.beastB.ownerAddress}</span>
+                <span className="font-mono text-xs text-secondary">{activeBattle.beastB.ownerAddress}</span>
               </div>
 
               <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
                 <Image
-                  src={battle.beastB.avatarUrl}
-                  alt={battle.beastB.name}
+                  src={activeBattle.beastB.avatarUrl}
+                  alt={activeBattle.beastB.name}
                   fill
                   className="object-cover"
                   priority
                 />
-                {battle.beastB.boundAsset && (
+                {activeBattle.beastB.boundAsset && (
                   <div className="absolute top-2 right-2 bg-primary text-background font-mono text-[11px] font-bold px-2.5 py-1">
-                    {battle.beastB.boundAsset} BOUND
+                    {activeBattle.beastB.boundAsset} BOUND
                   </div>
                 )}
               </div>
 
               <div>
                 <h2 className="font-headline font-extrabold text-3xl uppercase tracking-tight text-primary">
-                  {battle.beastB.name}
+                  {activeBattle.beastB.name}
                 </h2>
                 <div className="font-mono text-xs text-secondary">
-                  RECORD: {battle.beastB.record.wins}W - {battle.beastB.record.losses}L
+                  RECORD: {activeBattle.beastB.record.wins}W - {activeBattle.beastB.record.losses}L
                 </div>
               </div>
 
@@ -388,30 +443,30 @@ export default function BattleViewPage() {
               <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs border-t border-neutral pt-3">
                 <div className="bg-surface-container-low p-1.5">
                   <div className="text-[10px] text-secondary">PWR</div>
-                  <div className="font-bold">{battle.beastB.stats.power}</div>
+                  <div className="font-bold">{activeBattle.beastB.stats.power}</div>
                 </div>
                 <div className="bg-surface-container-low p-1.5">
                   <div className="text-[10px] text-secondary">DEF</div>
-                  <div className="font-bold">{battle.beastB.stats.defense}</div>
+                  <div className="font-bold">{activeBattle.beastB.stats.defense}</div>
                 </div>
                 <div className="bg-surface-container-low p-1.5">
                   <div className="text-[10px] text-secondary">SPD</div>
-                  <div className="font-bold">{battle.beastB.stats.speed}</div>
+                  <div className="font-bold">{activeBattle.beastB.stats.speed}</div>
                 </div>
                 <div className="bg-surface-container-low p-1.5">
                   <div className="text-[10px] text-secondary">SPC</div>
-                  <div className="font-bold">{battle.beastB.stats.special}</div>
+                  <div className="font-bold">{activeBattle.beastB.stats.special}</div>
                 </div>
               </div>
 
-              {battle.marketPulseB && (
+              {activeBattle.marketPulseB && (
                 <div className="border border-primary bg-surface-container-low p-3 font-mono text-xs space-y-1">
                   <div className="flex items-center gap-1.5 text-primary font-bold uppercase">
                     <FiTrendingUp className="w-3.5 h-3.5" />
                     <span>LOCKED MARKET PULSE:</span>
                   </div>
                   <div className="text-primary font-bold">
-                    {battle.marketPulseB.modifier.description}
+                    {activeBattle.marketPulseB.modifier.description}
                   </div>
                 </div>
               )}
@@ -441,33 +496,33 @@ export default function BattleViewPage() {
 
             <div className="space-y-4">
               {/* Asset A Pulse */}
-              {battle.marketPulseA && (
+              {activeBattle.marketPulseA && (
                 <div className="border border-neutral p-4 bg-surface-container-low space-y-3 font-mono text-xs">
                   <div className="flex items-center justify-between">
                     <div className="font-bold uppercase text-primary">
-                      {battle.beastA.name} // {battle.marketPulseA.symbol}
+                      {activeBattle.beastA.name} // {activeBattle.marketPulseA.symbol}
                     </div>
                     <span className="text-primary font-bold">
-                      UP PROBABILITY: {Math.round(battle.marketPulseA.upProbability * 100)}%
+                      UP PROBABILITY: {Math.round(activeBattle.marketPulseA.upProbability * 100)}%
                     </span>
                   </div>
 
                   <div className="w-full h-3 bg-neutral flex overflow-hidden border border-primary">
                     <div 
                       className="h-full bg-primary" 
-                      style={{ width: `${battle.marketPulseA.upProbability * 100}%` }} 
+                      style={{ width: `${activeBattle.marketPulseA.upProbability * 100}%` }} 
                     />
                     <div 
                       className="h-full bg-secondary" 
-                      style={{ width: `${(1 - battle.marketPulseA.upProbability) * 100}%` }} 
+                      style={{ width: `${(1 - activeBattle.marketPulseA.upProbability) * 100}%` }} 
                     />
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] text-secondary">
-                    <span>BEST BID: {battle.marketPulseA.bestBid} // BEST ASK: {battle.marketPulseA.bestAsk}</span>
-                    {battle.marketPulseA.oracleQuestionId && (
+                    <span>BEST BID: {activeBattle.marketPulseA.bestBid} // BEST ASK: {activeBattle.marketPulseA.bestAsk}</span>
+                    {activeBattle.marketPulseA.oracleQuestionId && (
                       <a
-                        href={`https://prd.oracle.somnia.host/questions/${battle.marketPulseA.oracleQuestionId}?view=graph`}
+                        href={`https://prd.oracle.somnia.host/questions/${activeBattle.marketPulseA.oracleQuestionId}?view=graph`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-primary underline inline-flex items-center gap-1 hover:text-secondary"
@@ -481,31 +536,31 @@ export default function BattleViewPage() {
               )}
 
               {/* Asset B Pulse */}
-              {battle.marketPulseB ? (
+              {activeBattle.marketPulseB ? (
                 <div className="border border-neutral p-4 bg-surface-container-low space-y-3 font-mono text-xs">
                   <div className="flex items-center justify-between">
                     <div className="font-bold uppercase text-primary">
-                      {battle.beastB.name} // {battle.marketPulseB.symbol}
+                      {activeBattle.beastB.name} // {activeBattle.marketPulseB.symbol}
                     </div>
                     <span className="text-primary font-bold">
-                      UP PROBABILITY: {Math.round(battle.marketPulseB.upProbability * 100)}%
+                      UP PROBABILITY: {Math.round(activeBattle.marketPulseB.upProbability * 100)}%
                     </span>
                   </div>
 
                   <div className="w-full h-3 bg-neutral flex overflow-hidden border border-primary">
                     <div 
                       className="h-full bg-primary" 
-                      style={{ width: `${battle.marketPulseB.upProbability * 100}%` }} 
+                      style={{ width: `${activeBattle.marketPulseB.upProbability * 100}%` }} 
                     />
                     <div 
                       className="h-full bg-secondary" 
-                      style={{ width: `${(1 - battle.marketPulseB.upProbability) * 100}%` }} 
+                      style={{ width: `${(1 - activeBattle.marketPulseB.upProbability) * 100}%` }} 
                     />
                   </div>
                 </div>
               ) : (
                 <div className="border border-dashed border-outline-variant p-4 text-center font-mono text-xs text-secondary">
-                  {battle.beastB.name} is UNBOUND — No DreamDEX Market Pulse applied.
+                  {activeBattle.beastB.name} is UNBOUND — No DreamDEX Market Pulse applied.
                 </div>
               )}
             </div>
@@ -528,12 +583,12 @@ export default function BattleViewPage() {
             {/* Total Pools */}
             <div className="grid grid-cols-2 gap-4 font-mono text-xs">
               <div className="border border-primary p-3 bg-surface-container-low">
-                <span className="text-secondary block text-[10px] uppercase">{battle.beastA.name} POOL</span>
-                <span className="font-bold text-base">{battle.totalPoolA} STT</span>
+                <span className="text-secondary block text-[10px] uppercase">{activeBattle.beastA.name} POOL</span>
+                <span className="font-bold text-base">{activeBattle.totalPoolA || 0} STT</span>
               </div>
               <div className="border border-primary p-3 bg-surface-container-low">
-                <span className="text-secondary block text-[10px] uppercase">{battle.beastB.name} POOL</span>
-                <span className="font-bold text-base">{battle.totalPoolB} STT</span>
+                <span className="text-secondary block text-[10px] uppercase">{activeBattle.beastB.name} POOL</span>
+                <span className="font-bold text-base">{activeBattle.totalPoolB || 0} STT</span>
               </div>
             </div>
 
@@ -553,7 +608,7 @@ export default function BattleViewPage() {
                         : 'bg-surface-container-low text-primary border-neutral'
                     }`}
                   >
-                    {battle.beastA.name}
+                    {activeBattle.beastA.name}
                   </button>
 
                   <button
@@ -565,7 +620,7 @@ export default function BattleViewPage() {
                         : 'bg-surface-container-low text-primary border-neutral'
                     }`}
                   >
-                    {battle.beastB.name}
+                    {activeBattle.beastB.name}
                   </button>
                 </div>
               </div>
