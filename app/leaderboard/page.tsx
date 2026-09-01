@@ -10,27 +10,65 @@ import {
   FiSearch,
 } from 'react-icons/fi';
 import { getAllBeasts } from '@/lib/services/beastService';
-import { Beast, BoundAsset } from '@/lib/types';
-import { MOCK_LEADERBOARD_BETTORS } from '@/lib/mockData';
+import { getAllBets } from '@/lib/services/battleService';
+import { Beast, Bet, BoundAsset } from '@/lib/types';
+
+interface DynamicBettorStats {
+  address: string;
+  totalWagered: number;
+  totalBets: number;
+  profit: number;
+  winRate: number;
+}
 
 export default function LeaderboardPage() {
   const [tab, setTab] = useState<'beasts' | 'bettors'>('beasts');
   const [beasts, setBeasts] = useState<Beast[]>([]);
+  const [bettors, setBettors] = useState<DynamicBettorStats[]>([]);
   const [search, setSearch] = useState('');
   const [assetFilter, setAssetFilter] = useState<'ALL' | BoundAsset>('ALL');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    async function loadBeasts() {
+    async function loadData() {
       setLoading(true);
-      const data = await getAllBeasts();
+      const [allBeasts, allBets] = await Promise.all([
+        getAllBeasts(),
+        getAllBets(),
+      ]);
+
       if (mounted) {
-        setBeasts(data);
+        setBeasts(allBeasts);
+
+        // Aggregate Bettors from real Firestore bets
+        const bettorMap = new Map<string, { totalWagered: number; totalBets: number; wins: number; profit: number }>();
+        for (const bet of allBets) {
+          const prev = bettorMap.get(bet.bettorAddress) || { totalWagered: 0, totalBets: 0, wins: 0, profit: 0 };
+          prev.totalWagered += bet.amount;
+          prev.totalBets += 1;
+          if (bet.status === 'won') {
+            prev.wins += 1;
+            prev.profit += Math.round(bet.amount * 0.95);
+          } else if (bet.status === 'lost') {
+            prev.profit -= bet.amount;
+          }
+          bettorMap.set(bet.bettorAddress, prev);
+        }
+
+        const aggregated: DynamicBettorStats[] = Array.from(bettorMap.entries()).map(([address, stats]) => ({
+          address,
+          totalWagered: stats.totalWagered,
+          totalBets: stats.totalBets,
+          profit: stats.profit,
+          winRate: stats.totalBets > 0 ? Math.round((stats.wins / stats.totalBets) * 100) : 0,
+        })).sort((a, b) => b.totalWagered - a.totalWagered);
+
+        setBettors(aggregated);
         setLoading(false);
       }
     }
-    loadBeasts();
+    loadData();
     return () => {
       mounted = false;
     };
@@ -96,7 +134,7 @@ export default function LeaderboardPage() {
               }`}
             >
               <FiTrendingUp className="w-4 h-4" />
-              <span>TOP SPECTATOR BETTORS</span>
+              <span>TOP SPECTATOR BETTORS ({bettors.length})</span>
             </button>
           </div>
 
@@ -132,126 +170,154 @@ export default function LeaderboardPage() {
       <section className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10">
         {tab === 'beasts' ? (
           <div className="border border-primary bg-background overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-primary bg-surface-container-low font-mono text-xs text-secondary uppercase">
-                  <th className="p-4 w-16 text-center">RANK</th>
-                  <th className="p-4">COMBATANT</th>
-                  <th className="p-4">OWNER</th>
-                  <th className="p-4">MARKET BINDING</th>
-                  <th className="p-4">RECORD (W/L)</th>
-                  <th className="p-4">WIN RATE</th>
-                  <th className="p-4 text-right">PROFILE</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral font-mono text-xs">
-                {sortedBeasts.map((beast, idx) => {
-                  const rank = idx + 1;
-                  const totalDuels = beast.record.wins + beast.record.losses;
-                  const winRate = totalDuels > 0 ? Math.round((beast.record.wins / totalDuels) * 100) : 0;
+            {sortedBeasts.length > 0 ? (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-primary bg-surface-container-low font-mono text-xs text-secondary uppercase">
+                    <th className="p-4 w-16 text-center">RANK</th>
+                    <th className="p-4">COMBATANT</th>
+                    <th className="p-4">OWNER</th>
+                    <th className="p-4">MARKET BINDING</th>
+                    <th className="p-4">RECORD (W/L)</th>
+                    <th className="p-4">WIN RATE</th>
+                    <th className="p-4 text-right">PROFILE</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral font-mono text-xs">
+                  {sortedBeasts.map((beast, idx) => {
+                    const rank = idx + 1;
+                    const totalDuels = beast.record.wins + beast.record.losses;
+                    const winRate = totalDuels > 0 ? Math.round((beast.record.wins / totalDuels) * 100) : 0;
 
-                  return (
-                    <tr key={beast.id} className="hover:bg-surface-container-low transition-colors">
-                      <td className="p-4 text-center font-bold">
-                        <span className={`inline-flex items-center justify-center w-7 h-7 ${
-                          rank === 1 ? 'bg-primary text-background font-bold' :
-                          rank === 2 ? 'bg-neutral text-primary font-bold' :
-                          rank === 3 ? 'bg-surface-container-low text-primary' : 'text-secondary'
-                        }`}>
-                          {rank}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="relative w-10 h-10 border border-primary overflow-hidden bg-zinc-900 flex-shrink-0">
-                            <Image
-                              src={beast.avatarUrl}
-                              alt={beast.name}
-                              fill
-                              className="object-cover"
-                            />
+                    return (
+                      <tr key={beast.id} className="hover:bg-surface-container-low transition-colors">
+                        <td className="p-4 text-center font-bold">
+                          <span className={`inline-flex items-center justify-center w-7 h-7 ${
+                            rank === 1 ? 'bg-primary text-background font-bold' :
+                            rank === 2 ? 'bg-neutral text-primary font-bold' :
+                            rank === 3 ? 'bg-surface-container-low text-primary' : 'text-secondary'
+                          }`}>
+                            {rank}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-10 h-10 border border-primary overflow-hidden bg-zinc-900 flex-shrink-0">
+                              <Image
+                                src={beast.avatarUrl}
+                                alt={beast.name}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <span className="font-headline font-bold text-base uppercase text-primary">
+                              {beast.name}
+                            </span>
                           </div>
-                          <span className="font-headline font-bold text-base uppercase text-primary">
-                            {beast.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-secondary">
-                        {beast.ownerAddress}
-                      </td>
-                      <td className="p-4">
-                        {beast.boundAsset && beast.boundAsset !== 'UNBOUND' ? (
-                          <span className="px-2 py-0.5 bg-primary text-background font-bold text-[10px] uppercase">
-                            {beast.boundAsset} BOUND
-                          </span>
-                        ) : (
-                          <span className="text-secondary">UNBOUND</span>
-                        )}
-                      </td>
-                      <td className="p-4 font-bold text-primary">
-                        {beast.record.wins}W - {beast.record.losses}L
-                      </td>
-                      <td className="p-4">
-                        <span className="font-bold text-primary">{winRate}%</span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <Link
-                          href={`/beast/${beast.id}`}
-                          className="px-3 py-1.5 bg-primary text-background font-headline font-bold uppercase hover:bg-secondary transition-colors inline-block"
-                        >
-                          Inspect
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td className="p-4 text-secondary">
+                          {beast.ownerAddress}
+                        </td>
+                        <td className="p-4">
+                          {beast.boundAsset && beast.boundAsset !== 'UNBOUND' ? (
+                            <span className="px-2 py-0.5 bg-primary text-background font-bold text-[10px] uppercase">
+                              {beast.boundAsset} BOUND
+                            </span>
+                          ) : (
+                            <span className="text-secondary">UNBOUND</span>
+                          )}
+                        </td>
+                        <td className="p-4 font-bold text-primary">
+                          {beast.record.wins}W - {beast.record.losses}L
+                        </td>
+                        <td className="p-4">
+                          <span className="font-bold text-primary">{winRate}%</span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <Link
+                            href={`/beast/${beast.id}`}
+                            className="px-3 py-1.5 bg-primary text-background font-headline font-bold uppercase hover:bg-secondary transition-colors inline-block"
+                          >
+                            Inspect
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-12 text-center font-mono text-xs text-secondary space-y-3">
+                <FiShield className="w-8 h-8 mx-auto text-primary" />
+                <p className="font-bold uppercase text-primary">No combat beasts registered yet</p>
+                <p>Forge your custom cybernetic beast to enter the arena leaderboards.</p>
+                <Link
+                  href="/create"
+                  className="inline-block px-4 py-2 bg-primary text-background font-headline font-bold uppercase text-xs hover:bg-neutral hover:text-primary transition-colors border border-primary mt-2"
+                >
+                  Forge New Beast
+                </Link>
+              </div>
+            )}
           </div>
         ) : (
           <div className="border border-primary bg-background overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-primary bg-surface-container-low font-mono text-xs text-secondary uppercase">
-                  <th className="p-4 w-16 text-center">RANK</th>
-                  <th className="p-4">SPECTATOR ADDRESS</th>
-                  <th className="p-4">TOTAL WAGERED</th>
-                  <th className="p-4">NET PROFIT</th>
-                  <th className="p-4">ACCURACY RATE</th>
-                  <th className="p-4 text-right">TOTAL BETS</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral font-mono text-xs">
-                {MOCK_LEADERBOARD_BETTORS.map((entry) => (
-                  <tr key={entry.address} className="hover:bg-surface-container-low transition-colors">
-                    <td className="p-4 text-center font-bold">
-                      <span className={`inline-flex items-center justify-center w-7 h-7 ${
-                        entry.rank === 1 ? 'bg-primary text-background font-bold' :
-                        entry.rank === 2 ? 'bg-neutral text-primary' :
-                        entry.rank === 3 ? 'bg-surface-container-low text-primary' : 'text-secondary'
-                      }`}>
-                        {entry.rank}
-                      </span>
-                    </td>
-                    <td className="p-4 font-bold text-primary">
-                      {entry.address}
-                    </td>
-                    <td className="p-4 text-secondary">
-                      {entry.totalWagered} STT
-                    </td>
-                    <td className="p-4 font-bold text-primary">
-                      +{entry.profit} STT
-                    </td>
-                    <td className="p-4">
-                      <span className="font-bold text-primary">{entry.winRate}%</span>
-                    </td>
-                    <td className="p-4 text-right font-bold text-secondary">
-                      {entry.totalBets}
-                    </td>
+            {bettors.length > 0 ? (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-primary bg-surface-container-low font-mono text-xs text-secondary uppercase">
+                    <th className="p-4 w-16 text-center">RANK</th>
+                    <th className="p-4">SPECTATOR ADDRESS</th>
+                    <th className="p-4">TOTAL WAGERED</th>
+                    <th className="p-4">NET PROFIT</th>
+                    <th className="p-4">ACCURACY RATE</th>
+                    <th className="p-4 text-right">TOTAL BETS</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-neutral font-mono text-xs">
+                  {bettors.map((entry, idx) => (
+                    <tr key={entry.address} className="hover:bg-surface-container-low transition-colors">
+                      <td className="p-4 text-center font-bold">
+                        <span className={`inline-flex items-center justify-center w-7 h-7 ${
+                          idx === 0 ? 'bg-primary text-background font-bold' :
+                          idx === 1 ? 'bg-neutral text-primary' :
+                          idx === 2 ? 'bg-surface-container-low text-primary' : 'text-secondary'
+                        }`}>
+                          {idx + 1}
+                        </span>
+                      </td>
+                      <td className="p-4 font-bold text-primary">
+                        {entry.address}
+                      </td>
+                      <td className="p-4 text-secondary">
+                        {entry.totalWagered} STT
+                      </td>
+                      <td className="p-4 font-bold text-primary">
+                        {entry.profit >= 0 ? `+${entry.profit}` : entry.profit} STT
+                      </td>
+                      <td className="p-4">
+                        <span className="font-bold text-primary">{entry.winRate}%</span>
+                      </td>
+                      <td className="p-4 text-right font-bold text-secondary">
+                        {entry.totalBets}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-12 text-center font-mono text-xs text-secondary space-y-3">
+                <FiTrendingUp className="w-8 h-8 mx-auto text-primary" />
+                <p className="font-bold uppercase text-primary">No spectator wagers recorded yet</p>
+                <p>Spectator bets placed during pending battle windows will be indexed here automatically.</p>
+                <Link
+                  href="/arena"
+                  className="inline-block px-4 py-2 bg-primary text-background font-headline font-bold uppercase text-xs hover:bg-neutral hover:text-primary transition-colors border border-primary mt-2"
+                >
+                  Browse Arena Battles
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </section>

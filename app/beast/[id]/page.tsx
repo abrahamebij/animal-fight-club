@@ -7,11 +7,13 @@ import { useParams, useRouter } from 'next/navigation';
 import { 
   FiCrosshair, 
   FiArrowLeft,
+  FiShield,
+  FiZap,
 } from 'react-icons/fi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { getBeastById } from '@/lib/services/beastService';
-import { Beast } from '@/lib/types';
-import { MOCK_BEASTS, MOCK_BATTLES } from '@/lib/mockData';
+import { getAllBattles } from '@/lib/services/battleService';
+import { Beast, Battle } from '@/lib/types';
 import { AVAILABLE_PERKS } from '@/lib/constants/game';
 import { formatDate } from '@/lib/utils/timer';
 
@@ -19,18 +21,28 @@ export default function BeastProfilePage() {
   const params = useParams();
   const router = useRouter();
   const { requireAuth } = useWalletGate();
-  const beastId = (params?.id as string) || 'beast_kong_01';
+  const beastId = (params?.id as string) || '';
 
   const [beast, setBeast] = useState<Beast | null>(null);
+  const [beastBattles, setBeastBattles] = useState<Battle[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     async function loadBeast() {
+      if (!beastId) return;
       setLoading(true);
-      const data = await getBeastById(beastId);
+      const [data, allBattles] = await Promise.all([
+        getBeastById(beastId),
+        getAllBattles(),
+      ]);
       if (mounted) {
-        setBeast(data || MOCK_BEASTS[0]);
+        setBeast(data);
+        if (data) {
+          setBeastBattles(
+            allBattles.filter((b) => b.beastA.id === data.id || b.beastB.id === data.id)
+          );
+        }
         setLoading(false);
       }
     }
@@ -40,14 +52,39 @@ export default function BeastProfilePage() {
     };
   }, [beastId]);
 
-  const activeBeast = beast || MOCK_BEASTS[0];
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-background text-foreground font-mono text-sm space-y-4">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent animate-spin" />
+        <p className="uppercase tracking-widest text-secondary">LOADING COMBATANT TELEMETRY...</p>
+      </div>
+    );
+  }
 
-  const beastBattles = MOCK_BATTLES.filter(
-    (b) => b.beastA.id === activeBeast.id || b.beastB.id === activeBeast.id
-  );
+  if (!beast) {
+    return (
+      <div className="max-w-[1440px] mx-auto px-4 lg:px-10 py-20 text-center space-y-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-danger text-background font-mono text-xs uppercase tracking-wider">
+          <span>COMBATANT NOT FOUND</span>
+        </div>
+        <h1 className="font-headline font-extrabold text-4xl uppercase tracking-tight text-primary">
+          SPECIFIED BEAST ID DOES NOT EXIST
+        </h1>
+        <p className="font-mono text-xs text-secondary max-w-md mx-auto">
+          No genetic record exists for identifier <span className="text-primary font-bold">[{beastId}]</span>.
+        </p>
+        <Link
+          href="/leaderboard"
+          className="inline-block px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border border-primary"
+        >
+          Return to Leaderboard
+        </Link>
+      </div>
+    );
+  }
 
-  const winRate = activeBeast.record.wins + activeBeast.record.losses > 0
-    ? Math.round((activeBeast.record.wins / (activeBeast.record.wins + activeBeast.record.losses)) * 100)
+  const winRate = beast.record.wins + beast.record.losses > 0
+    ? Math.round((beast.record.wins / (beast.record.wins + beast.record.losses)) * 100)
     : 0;
 
   return (
@@ -60,143 +97,174 @@ export default function BeastProfilePage() {
             className="flex items-center gap-1.5 text-secondary hover:text-primary transition-colors"
           >
             <FiArrowLeft className="w-4 h-4" />
-            <span>BACK TO LEADERBOARD</span>
+            <span>BACK TO ARENA LEADERBOARD</span>
           </Link>
-          <span className="text-secondary">GENETIC IDENTITY // {activeBeast.id}</span>
+          <span className="text-secondary">BEAST_ID: {beast.id}</span>
         </div>
       </div>
 
       <div className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Portrait & Identity (5 cols) */}
+          {/* Left Column: Beast Avatar & Summary (5 cols) */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="border-2 border-primary p-6 bg-background space-y-6">
+            <div className="border-2 border-primary bg-background p-6 space-y-6">
               <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
                 <Image
-                  src={activeBeast.avatarUrl}
-                  alt={activeBeast.name}
+                  src={beast.avatarUrl}
+                  alt={beast.name}
                   fill
                   className="object-cover"
                   priority
                 />
-                {activeBeast.boundAsset && (
-                  <div className="absolute top-3 right-3 bg-primary text-background font-mono text-xs font-bold px-3 py-1 border border-background/30">
-                    {activeBeast.boundAsset} BOUND
+                {beast.boundAsset && beast.boundAsset !== 'UNBOUND' && (
+                  <div className="absolute top-3 right-3 bg-primary text-background font-mono text-xs font-bold px-3 py-1 border border-background/40">
+                    {beast.boundAsset} BOUND
                   </div>
                 )}
               </div>
 
               <div>
-                <h1 className="font-headline font-extrabold text-4xl uppercase tracking-tight text-primary">
-                  {activeBeast.name}
+                <div className="font-mono text-xs text-secondary uppercase tracking-widest">
+                  FORGED {formatDate(beast.createdAt)}
+                </div>
+                <h1 className="font-headline font-extrabold text-4xl uppercase tracking-tight text-primary mt-1">
+                  {beast.name}
                 </h1>
-                <p className="font-sans text-sm text-secondary mt-2 leading-relaxed">
-                  {activeBeast.description}
+                <p className="font-mono text-xs text-secondary mt-1">
+                  OWNER: {beast.ownerAddress}
                 </p>
               </div>
 
-              <div className="border-t border-primary pt-4 font-mono text-xs space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-secondary">OWNER:</span>
-                  <span className="font-bold">{activeBeast.ownerAddress}</span>
+              {/* Combat Record Card */}
+              <div className="border-t border-primary pt-4 grid grid-cols-3 gap-2 text-center font-mono">
+                <div className="bg-surface-container-low p-3 border border-neutral">
+                  <span className="text-secondary block text-[10px]">WINS</span>
+                  <span className="font-headline font-bold text-2xl text-primary">{beast.record.wins}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-secondary">CREATED:</span>
-                  <span>{formatDate(activeBeast.createdAt, 'YYYY-MM-DD')}</span>
+                <div className="bg-surface-container-low p-3 border border-neutral">
+                  <span className="text-secondary block text-[10px]">LOSSES</span>
+                  <span className="font-headline font-bold text-2xl text-primary">{beast.record.losses}</span>
+                </div>
+                <div className="bg-surface-container-low p-3 border border-neutral">
+                  <span className="text-secondary block text-[10px]">WIN RATE</span>
+                  <span className="font-headline font-bold text-2xl text-primary">{winRate}%</span>
                 </div>
               </div>
 
+              {/* Challenge Beast CTA */}
               <button
                 onClick={() => {
                   requireAuth({
-                    actionTitle: `challenge ${activeBeast.name} to an arena duel`,
+                    actionTitle: `issue duel challenge to ${beast.name}`,
                     onSuccess: () => {
-                      router.push(`/arena?challenge=${activeBeast.id}`);
+                      router.push(`/arena?challenge=${beast.id}`);
                     },
                   });
                 }}
-                className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg text-center uppercase tracking-wider hover:bg-secondary transition-colors border border-primary flex items-center justify-center gap-2 block"
+                className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border-2 border-primary flex items-center justify-center gap-2"
               >
                 <FiCrosshair className="w-5 h-5" />
-                <span>CHALLENGE TO DUEL</span>
+                <span>CHALLENGE IN ARENA</span>
               </button>
             </div>
           </div>
 
-          {/* Right Column: Stats, Perks, Record (7 cols) */}
+          {/* Right Column: Attribute Matrix, Passives, Combat Record (7 cols) */}
           <div className="lg:col-span-7 space-y-8">
-            {/* Record & Stats */}
+            {/* Attribute Matrix */}
             <div className="border border-primary p-6 bg-background space-y-6">
               <div className="flex items-center justify-between border-b border-primary pb-3">
                 <h2 className="font-headline font-bold text-2xl uppercase tracking-tight">
-                  COMBAT ATTRIBUTES & RECORD
+                  GENETIC ATTRIBUTES
                 </h2>
-                <div className="font-mono text-xs font-bold text-primary">
-                  {winRate}% WIN RATE
-                </div>
+                <span className="font-mono text-xs text-secondary">BASE STATS</span>
               </div>
 
-              {/* Record Cards */}
-              <div className="grid grid-cols-3 gap-4 font-mono text-xs text-center">
-                <div className="border border-primary p-3 bg-surface-container-low">
-                  <span className="text-secondary block text-[10px]">VICTORIES</span>
-                  <span className="font-headline font-extrabold text-2xl text-primary">{activeBeast.record.wins}</span>
+              <div className="space-y-4 font-mono text-xs">
+                {/* Power */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between font-bold">
+                    <span>POWER // KINETIC OUTPUT</span>
+                    <span className="text-primary">{beast.stats.power} / 20</span>
+                  </div>
+                  <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
+                    <div 
+                      className="h-full bg-primary" 
+                      style={{ width: `${(beast.stats.power / 20) * 100}%` }} 
+                    />
+                  </div>
                 </div>
-                <div className="border border-primary p-3 bg-surface-container-low">
-                  <span className="text-secondary block text-[10px]">DEFEATS</span>
-                  <span className="font-headline font-extrabold text-2xl text-secondary">{activeBeast.record.losses}</span>
-                </div>
-                <div className="border border-primary p-3 bg-surface-container-low">
-                  <span className="text-secondary block text-[10px]">TOTAL DUELS</span>
-                  <span className="font-headline font-extrabold text-2xl text-primary">
-                    {activeBeast.record.wins + activeBeast.record.losses}
-                  </span>
-                </div>
-              </div>
 
-              {/* Stat Progress Bars */}
-              <div className="space-y-4 font-mono text-xs border-t border-neutral pt-4">
-                {(['power', 'defense', 'speed', 'special'] as const).map((statKey) => {
-                  const val = activeBeast.stats[statKey];
-                  return (
-                    <div key={statKey} className="space-y-1">
-                      <div className="flex justify-between font-bold uppercase">
-                        <span className="text-secondary">{statKey}</span>
-                        <span>{val} / 10</span>
-                      </div>
-                      <div className="w-full h-3 bg-neutral border border-primary p-0.5">
-                        <div 
-                          className="h-full bg-primary" 
-                          style={{ width: `${(val / 10) * 100}%` }} 
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                {/* Defense */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between font-bold">
+                    <span>DEFENSE // REINFORCED PLATING</span>
+                    <span className="text-primary">{beast.stats.defense} / 20</span>
+                  </div>
+                  <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
+                    <div 
+                      className="h-full bg-primary" 
+                      style={{ width: `${(beast.stats.defense / 20) * 100}%` }} 
+                    />
+                  </div>
+                </div>
+
+                {/* Speed */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between font-bold">
+                    <span>SPEED // ACTUATOR VELOCITY</span>
+                    <span className="text-primary">{beast.stats.speed} / 20</span>
+                  </div>
+                  <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
+                    <div 
+                      className="h-full bg-primary" 
+                      style={{ width: `${(beast.stats.speed / 20) * 100}%` }} 
+                    />
+                  </div>
+                </div>
+
+                {/* Special */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between font-bold">
+                    <span>SPECIAL // NEURAL OVERCLOCK</span>
+                    <span className="text-primary">{beast.stats.special} / 20</span>
+                  </div>
+                  <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
+                    <div 
+                      className="h-full bg-primary" 
+                      style={{ width: `${(beast.stats.special / 20) * 100}%` }} 
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Equipped Perks */}
+            {/* Tactical Perks */}
             <div className="border border-primary p-6 bg-background space-y-6">
               <div className="flex items-center justify-between border-b border-primary pb-3">
                 <h2 className="font-headline font-bold text-2xl uppercase tracking-tight">
-                  EQUIPPED TACTICAL PERKS
+                  TACTICAL PERKS
                 </h2>
                 <span className="font-mono text-xs text-secondary">ACTIVE PASSIVES</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {activeBeast.perks.map((perkId) => {
-                  const perk = AVAILABLE_PERKS.find((p) => p.id === perkId);
-                  if (!perk) return null;
+                {beast.perks.map((perkId) => {
+                  const perk = AVAILABLE_PERKS.find((p) => p.id === perkId) || {
+                    id: perkId,
+                    name: perkId.replace('_', ' ').toUpperCase(),
+                    description: 'Special tactical passive perk loaded into combat matrix.',
+                    effectSummary: '+TACTICAL BUFF',
+                  };
+
                   return (
-                    <div key={perkId} className="border border-primary p-4 bg-surface-container-low space-y-2">
+                    <div 
+                      key={perk.id}
+                      className="border border-primary p-4 bg-surface-container-low space-y-2"
+                    >
                       <div className="flex items-center justify-between">
-                        <span className="font-headline font-bold text-base uppercase text-primary">
+                        <span className="font-headline font-bold text-sm uppercase text-primary">
                           {perk.name}
-                        </span>
-                        <span className="font-mono text-[10px] bg-primary text-background px-2 py-0.5 font-bold">
-                          {perk.category}
                         </span>
                       </div>
                       <p className="font-sans text-xs text-secondary">
@@ -226,7 +294,7 @@ export default function BeastProfilePage() {
                     <div key={b.id} className="border border-neutral p-3 flex items-center justify-between bg-surface-container-low">
                       <div className="space-y-0.5">
                         <div className="font-bold text-primary">
-                          VS {b.beastA.id === activeBeast.id ? b.beastB.name : b.beastA.name}
+                          VS {b.beastA.id === beast.id ? b.beastB.name : b.beastA.name}
                         </div>
                         <div className="text-[11px] text-secondary">
                           STATUS: {b.status.toUpperCase()}

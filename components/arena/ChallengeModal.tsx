@@ -16,7 +16,6 @@ import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { getBeastsByOwner, getAllBeasts } from '@/lib/services/beastService';
 import { createBattle } from '@/lib/services/battleService';
 import { Beast } from '@/lib/types';
-import { MOCK_BEASTS } from '@/lib/mockData';
 
 interface ChallengeModalProps {
   isOpen: boolean;
@@ -46,18 +45,18 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
 
     let mounted = true;
     async function loadData() {
-      const owner = address || '0x38F2...91C4';
-      const userBeasts = await getBeastsByOwner(owner);
+      const owner = address || '';
+      const userBeasts = owner ? await getBeastsByOwner(owner) : [];
       const all = await getAllBeasts();
 
       if (mounted) {
-        setMyBeasts(userBeasts.length > 0 ? userBeasts : MOCK_BEASTS.slice(0, 2));
-        setSelectedMyBeast(userBeasts[0] || MOCK_BEASTS[0]);
+        setMyBeasts(userBeasts);
+        setSelectedMyBeast(userBeasts[0] || null);
 
-        const opps = all.filter((b) => b.id !== (userBeasts[0]?.id || MOCK_BEASTS[0].id));
-        setAvailableOpponents(opps);
-        if (!targetOpponent && opps.length > 0) {
-          setSelectedOpponent(opps[0]);
+        const opps = all.filter((b) => !userBeasts.some((ub) => ub.id === b.id));
+        setAvailableOpponents(opps.length > 0 ? opps : all);
+        if (!targetOpponent && (opps[0] || all[0])) {
+          setSelectedOpponent(opps[0] || all[0]);
         }
       }
     }

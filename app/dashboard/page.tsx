@@ -14,7 +14,6 @@ import { formatBalance } from '@/lib/utils/format';
 import { getBeastsByOwner } from '@/lib/services/beastService';
 import { getBetsByBettor } from '@/lib/services/battleService';
 import { Beast, Bet } from '@/lib/types';
-import { MOCK_BEASTS } from '@/lib/mockData';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
@@ -30,14 +29,20 @@ export default function DashboardPage() {
   useEffect(() => {
     let mounted = true;
     async function loadUserData() {
+      if (!address) {
+        setMyBeasts([]);
+        setMyActiveBets([]);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
-      const targetOwner = address || '0x38F2...91C4';
       const [beasts, bets] = await Promise.all([
-        getBeastsByOwner(targetOwner),
-        getBetsByBettor(targetOwner),
+        getBeastsByOwner(address),
+        getBetsByBettor(address),
       ]);
       if (mounted) {
-        setMyBeasts(beasts.length > 0 ? beasts : MOCK_BEASTS.slice(0, 2));
+        setMyBeasts(beasts);
         setMyActiveBets(bets);
         setLoading(false);
       }

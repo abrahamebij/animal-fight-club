@@ -12,7 +12,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Battle, Beast, Bet, BattleStatus } from '@/lib/types';
-import { MOCK_BATTLES } from '@/lib/mockData';
 import { lockMarketPulseForBattle } from '@/lib/services/marketPulseService';
 
 const LOCAL_STORAGE_BATTLES = 'afc_custom_battles';
@@ -96,15 +95,12 @@ export async function createBattle(beastA: Beast, beastB: Beast): Promise<Battle
 }
 
 /**
- * Fetches a single battle by ID
+ * Fetches a single battle by ID from Firestore
  */
 export async function getBattleById(id: string): Promise<Battle | null> {
   const localList = getLocalBattles();
   const localMatch = localList.find((b) => b.id === id);
   if (localMatch) return localMatch;
-
-  const mockMatch = MOCK_BATTLES.find((b) => b.id === id);
-  if (mockMatch) return mockMatch;
 
   try {
     const docRef = doc(db, 'battles', id);
@@ -120,17 +116,10 @@ export async function getBattleById(id: string): Promise<Battle | null> {
 }
 
 /**
- * Fetches all battles across all statuses (pending, live, completed)
+ * Fetches all battles across all statuses from Firestore
  */
 export async function getAllBattles(): Promise<Battle[]> {
   const results: Battle[] = [...getLocalBattles()];
-
-  // Add default mock battles
-  for (const m of MOCK_BATTLES) {
-    if (!results.some((r) => r.id === m.id)) {
-      results.push(m);
-    }
-  }
 
   try {
     const q = query(collection(db, 'battles'), orderBy('challengeAcceptedAt', 'desc'));
@@ -183,26 +172,25 @@ export async function placeBet(
   }
 
   try {
-    // 1. Write bet doc
     const betDocRef = doc(db, 'bets', betId);
     await setDoc(betDocRef, newBet);
 
-    // 2. Increment battle pool in Firestore
     const battleDocRef = doc(db, 'battles', battleId);
     await updateDoc(battleDocRef, {
       [beastPicked === 'beastA' ? 'totalPoolA' : 'totalPoolB']: increment(amount),
     });
   } catch (error) {
-    console.warn('Firestore bet placement fallback:', error);
+    console.warn('Firestore bet placement error:', error);
   }
 
   return newBet;
 }
 
 /**
- * Fetches all bets placed by a specific wallet address
+ * Fetches all bets placed by a specific wallet address from Firestore
  */
 export async function getBetsByBettor(bettorAddress: string): Promise<Bet[]> {
+  if (!bettorAddress) return [];
   const normalized = bettorAddress.toLowerCase();
   const results: Bet[] = getLocalBets().filter(
     (b) => b.bettorAddress.toLowerCase() === normalized
@@ -223,6 +211,28 @@ export async function getBetsByBettor(bettorAddress: string): Promise<Bet[]> {
     });
   } catch (error) {
     console.warn('Error fetching bets from Firestore:', error);
+  }
+
+  return results;
+}
+
+/**
+ * Fetches all bets across all users (for global bettor leaderboards)
+ */
+export async function getAllBets(): Promise<Bet[]> {
+  const results: Bet[] = [...getLocalBets()];
+
+  try {
+    const q = query(collection(db, 'bets'), orderBy('placedAt', 'desc'));
+    const snap = await getDocs(q);
+    snap.forEach((d) => {
+      const b = d.data() as Bet;
+      if (!results.some((r) => r.id === b.id)) {
+        results.push(b);
+      }
+    });
+  } catch (error) {
+    console.warn('Error fetching all bets from Firestore:', error);
   }
 
   return results;

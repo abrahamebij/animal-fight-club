@@ -10,11 +10,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Beast } from '@/lib/types';
-import { MOCK_BEASTS } from '@/lib/mockData';
 
 const LOCAL_STORAGE_KEY = 'afc_custom_beasts';
 
-// Helper to get locally stored beasts
 function getLocalCustomBeasts(): Beast[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -25,7 +23,6 @@ function getLocalCustomBeasts(): Beast[] {
   }
 }
 
-// Helper to save locally
 function saveLocalCustomBeast(beast: Beast): void {
   if (typeof window === 'undefined') return;
   try {
@@ -38,7 +35,7 @@ function saveLocalCustomBeast(beast: Beast): void {
 }
 
 /**
- * Creates and persists a new Beast into Firestore (with local fallback cache)
+ * Creates and persists a new Beast into Firestore
  */
 export async function createBeast(
   beastData: Omit<Beast, 'id' | 'createdAt' | 'record'>
@@ -54,33 +51,28 @@ export async function createBeast(
     },
   };
 
-  // Always save to local cache for instant zero-latency UI feedback
   saveLocalCustomBeast(newBeast);
 
   try {
     const beastDocRef = doc(db, 'beasts', id);
     await setDoc(beastDocRef, newBeast);
   } catch (error) {
-    console.warn('Firestore write fallback to local storage:', error);
+    console.warn('Firestore write error:', error);
   }
 
   return newBeast;
 }
 
 /**
- * Fetches a single beast by ID from Firestore, local cache, or seed mocks
+ * Fetches a single beast by ID from Firestore (with local cache fallback)
  */
 export async function getBeastById(id: string): Promise<Beast | null> {
-  // 1. Check local cache first
+  // Check local cache
   const localList = getLocalCustomBeasts();
   const localMatch = localList.find((b) => b.id === id);
   if (localMatch) return localMatch;
 
-  // 2. Check seed mock beasts
-  const mockMatch = MOCK_BEASTS.find((b) => b.id === id);
-  if (mockMatch) return mockMatch;
-
-  // 3. Check Firestore
+  // Check Firestore
   try {
     const docRef = doc(db, 'beasts', id);
     const snap = await getDoc(docRef);
@@ -95,29 +87,20 @@ export async function getBeastById(id: string): Promise<Beast | null> {
 }
 
 /**
- * Fetches all beasts belonging to a specific wallet address
+ * Fetches all beasts belonging to a specific wallet address from Firestore
  */
 export async function getBeastsByOwner(ownerAddress: string): Promise<Beast[]> {
+  if (!ownerAddress) return [];
   const normalizedOwner = ownerAddress.toLowerCase();
   const results: Beast[] = [];
 
-  // 1. Local custom beasts
+  // Local beasts
   const localList = getLocalCustomBeasts().filter(
-    (b) => b.ownerAddress.toLowerCase() === normalizedOwner
+    (b) => b.ownerAddress?.toLowerCase() === normalizedOwner
   );
   results.push(...localList);
 
-  // 2. Mock beasts if matching
-  const mockMatches = MOCK_BEASTS.filter(
-    (b) => b.ownerAddress.toLowerCase() === normalizedOwner || (normalizedOwner.startsWith('0x38f2') && b.ownerAddress.startsWith('0x38F2'))
-  );
-  for (const m of mockMatches) {
-    if (!results.some((r) => r.id === m.id)) {
-      results.push(m);
-    }
-  }
-
-  // 3. Firestore query
+  // Firestore query
   try {
     const q = query(
       collection(db, 'beasts'),
@@ -138,17 +121,10 @@ export async function getBeastsByOwner(ownerAddress: string): Promise<Beast[]> {
 }
 
 /**
- * Fetches all beasts for the Arena and Leaderboards
+ * Fetches all live beasts for the Arena and Leaderboards from Firestore
  */
 export async function getAllBeasts(): Promise<Beast[]> {
   const results: Beast[] = [...getLocalCustomBeasts()];
-
-  // Add default mock beasts
-  for (const m of MOCK_BEASTS) {
-    if (!results.some((r) => r.id === m.id)) {
-      results.push(m);
-    }
-  }
 
   try {
     const q = query(collection(db, 'beasts'), orderBy('createdAt', 'desc'));

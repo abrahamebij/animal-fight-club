@@ -17,14 +17,13 @@ import {
 import { useAccount } from 'wagmi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { getBattleById, placeBet } from '@/lib/services/battleService';
-import { MOCK_BATTLES } from '@/lib/mockData';
 import { Battle, CombatTurn } from '@/lib/types';
 import { formatTimeRemaining } from '@/lib/utils/timer';
 import gsap from 'gsap';
 
 export default function BattleViewPage() {
   const params = useParams();
-  const battleId = (params?.id as string) || 'battle_live_01';
+  const battleId = (params?.id as string) || '';
   const { address } = useAccount();
 
   const [battle, setBattle] = useState<Battle | null>(null);
@@ -41,10 +40,11 @@ export default function BattleViewPage() {
   useEffect(() => {
     let mounted = true;
     async function loadBattle() {
+      if (!battleId) return;
       setLoading(true);
       const data = await getBattleById(battleId);
       if (mounted) {
-        setBattle(data || MOCK_BATTLES[0]);
+        setBattle(data);
         setLoading(false);
       }
     }
@@ -54,22 +54,16 @@ export default function BattleViewPage() {
     };
   }, [battleId]);
 
-  const activeBattle: Battle = battle || MOCK_BATTLES[0];
-
   // Betting state for spectators
   const [selectedSide, setSelectedSide] = useState<'beastA' | 'beastB'>('beastA');
   const [betAmount, setBetAmount] = useState<string>('50');
   const [betPlaced, setBetPlaced] = useState<boolean>(false);
 
-  const isLive = activeBattle.status === 'live';
-  const isPending = activeBattle.status === 'pending';
-  const isCompleted = activeBattle.status === 'completed';
-
-  const countdown = isPending && activeBattle.bettingWindowClosesAt
-    ? formatTimeRemaining(activeBattle.bettingWindowClosesAt)
+  const countdown = battle?.status === 'pending' && battle.bettingWindowClosesAt
+    ? formatTimeRemaining(battle.bettingWindowClosesAt)
     : null;
 
-  const lastTurn: CombatTurn | undefined = activeBattle.combatLog[activeBattle.combatLog.length - 1];
+  const lastTurn: CombatTurn | undefined = battle?.combatLog[battle.combatLog.length - 1];
   const hpA = lastTurn?.beastAHp ?? 100;
   const hpB = lastTurn?.beastBHp ?? 100;
 
@@ -78,7 +72,7 @@ export default function BattleViewPage() {
   const hpBarBRef = useRef<HTMLDivElement>(null);
   const betBtnRef = useRef<HTMLButtonElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
-  const prevLogLength = useRef(battle.combatLog.length);
+  const prevLogLength = useRef(battle?.combatLog.length || 0);
 
   // Mount entrance: stagger the 3 fighter columns in
   useLayoutEffect(() => {
@@ -223,8 +217,8 @@ export default function BattleViewPage() {
       actionTitle: `place a ${betAmount} STT wager on ${selectedSide === 'beastA' ? activeBattle.beastA.name : activeBattle.beastB.name}`,
       onSuccess: async () => {
         try {
-          const bettor = address || '0x38F2...91C4';
-          await placeBet(activeBattle.id, bettor, selectedSide, amountNum);
+          if (!address) return;
+          await placeBet(activeBattle.id, address, selectedSide, amountNum);
 
           // Update local battle pool state
           setBattle((prev) => {
@@ -253,6 +247,42 @@ export default function BattleViewPage() {
       },
     });
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-background text-foreground font-mono text-sm space-y-4">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent animate-spin" />
+        <p className="uppercase tracking-widest text-secondary">LOADING COMBAT TELEMETRY...</p>
+      </div>
+    );
+  }
+
+  if (!battle) {
+    return (
+      <div className="max-w-[1440px] mx-auto px-4 lg:px-10 py-20 text-center space-y-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-danger text-background font-mono text-xs uppercase tracking-wider">
+          <span>ENCOUNTER NOT FOUND</span>
+        </div>
+        <h1 className="font-headline font-extrabold text-4xl uppercase tracking-tight text-primary">
+          BATTLE IDENTIFIER DOES NOT EXIST
+        </h1>
+        <p className="font-mono text-xs text-secondary max-w-md mx-auto">
+          No combat logs or wagering pools registered for battle <span className="text-primary font-bold">[{battleId}]</span>.
+        </p>
+        <Link
+          href="/arena"
+          className="inline-block px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border border-primary"
+        >
+          Return to Arena
+        </Link>
+      </div>
+    );
+  }
+
+  const isLive = battle.status === 'live';
+  const isPending = battle.status === 'pending';
+  const isCompleted = battle.status === 'completed';
+  const activeBattle = battle;
 
   return (
     <div ref={containerRef} className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">

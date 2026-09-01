@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -9,15 +9,40 @@ import {
   FiClock, 
   FiArrowRight, 
 } from 'react-icons/fi';
-import { MOCK_BATTLES, MOCK_BEASTS } from '@/lib/mockData';
+import { getAllBattles } from '@/lib/services/battleService';
+import { getAllBeasts } from '@/lib/services/beastService';
+import { Battle, Beast } from '@/lib/types';
+import { formatTimeRemaining } from '@/lib/utils/timer';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function HomePage() {
-  const liveBattle = MOCK_BATTLES.find((b) => b.status === 'live');
-  const pendingBattle = MOCK_BATTLES.find((b) => b.status === 'pending');
+  const [battles, setBattles] = useState<Battle[]>([]);
+  const [beasts, setBeasts] = useState<Beast[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadData() {
+      const [allBattles, allBeasts] = await Promise.all([
+        getAllBattles(),
+        getAllBeasts(),
+      ]);
+      if (mounted) {
+        setBattles(allBattles);
+        setBeasts(allBeasts);
+      }
+    }
+    loadData();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const liveBattle = battles.find((b) => b.status === 'live');
+  const pendingBattle = battles.find((b) => b.status === 'pending');
+  const featuredBeasts = beasts.slice(0, 4);
 
   const heroRef = useRef<HTMLDivElement>(null);
   const protocolRef = useRef<HTMLDivElement>(null);
@@ -432,7 +457,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {MOCK_BEASTS.slice(0, 4).map((beast) => (
+            {featuredBeasts.map((beast) => (
               <div 
                 key={beast.id} 
                 className="beast-card border border-primary bg-background p-4 flex flex-col justify-between gap-4 group hover:border-primary transition-colors"

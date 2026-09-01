@@ -147,9 +147,12 @@ export default function CreateBeastPage() {
         }
 
         try {
-          const owner = address || '0x38F2...91C4';
+          if (!address) {
+            setIsSubmitting(false);
+            return;
+          }
           const createdBeast = await createBeast({
-            ownerAddress: owner,
+            ownerAddress: address,
             name: name.trim() || 'UNTITLED BEAST',
             description: description.trim() || 'No tactical lore entered.',
             avatarUrl: selectedAvatar,
