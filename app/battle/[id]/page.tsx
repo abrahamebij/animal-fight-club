@@ -122,6 +122,8 @@ export default function BattleViewPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [isSimulating, setIsSimulating] = useState(false);
+
   // HP bars: animate on value change (after mount)
   useEffect(() => {
     if (hpBarARef.current) {
@@ -131,17 +133,11 @@ export default function BattleViewPage() {
         ease: 'power2.out',
       });
       if (hpA < 100) {
-        // Flash red on damage
         gsap.to(hpBarARef.current, {
-          backgroundColor: '#DC2626',
+          opacity: 0.5,
           duration: 0.08,
           yoyo: true,
           repeat: 3,
-          onComplete: () => {
-            if (hpBarARef.current) {
-              gsap.set(hpBarARef.current, { backgroundColor: hpA <= 25 ? '#DC2626' : 'var(--primary)' });
-            }
-          },
         });
       }
     }
@@ -153,15 +149,10 @@ export default function BattleViewPage() {
       });
       if (hpB < 100) {
         gsap.to(hpBarBRef.current, {
-          backgroundColor: '#DC2626',
+          opacity: 0.5,
           duration: 0.08,
           yoyo: true,
           repeat: 3,
-          onComplete: () => {
-            if (hpBarBRef.current) {
-              gsap.set(hpBarBRef.current, { backgroundColor: hpB <= 25 ? '#DC2626' : 'var(--primary)' });
-            }
-          },
         });
       }
     }
@@ -169,7 +160,7 @@ export default function BattleViewPage() {
 
   // Animate new combat log entries as they appear
   useEffect(() => {
-    const currentLength = battle.combatLog.length;
+    const currentLength = activeBattle.combatLog.length;
     if (currentLength > prevLogLength.current && logRef.current) {
       const entries = logRef.current.querySelectorAll('.log-entry');
       const newEntries = Array.from(entries).slice(prevLogLength.current);
@@ -182,7 +173,44 @@ export default function BattleViewPage() {
       });
     }
     prevLogLength.current = currentLength;
-  }, [battle.combatLog.length]);
+  }, [activeBattle.combatLog.length]);
+
+  const handleExecuteCombat = async () => {
+    if (isSimulating || isCompleted) return;
+    setIsSimulating(true);
+
+    try {
+      const res = await fetch('/api/battle/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ battleId: activeBattle.id, battle: activeBattle }),
+      });
+
+      if (!res.ok) throw new Error('Failed to resolve combat');
+
+      const data = await res.json();
+      const allTurns: CombatTurn[] = data.turns || [];
+
+      // Step-by-step turn playback for live feedback
+      for (let i = 0; i < allTurns.length; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 1100));
+        const partialTurns = allTurns.slice(0, i + 1);
+        setBattle((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            status: i === allTurns.length - 1 ? 'completed' : 'live',
+            winner: i === allTurns.length - 1 ? data.winner : undefined,
+            combatLog: partialTurns,
+          };
+        });
+      }
+    } catch (err) {
+      console.error('Error during combat execution:', err);
+    } finally {
+      setIsSimulating(false);
+    }
+  };
 
   const { requireAuth } = useWalletGate();
 
@@ -351,7 +379,7 @@ export default function BattleViewPage() {
               </div>
 
               {/* Combat narrative output */}
-              <div className="space-y-4 min-h-[220px]">
+              <div className="space-y-4 min-h-[220px] flex flex-col justify-between">
                 {lastTurn ? (
                   <div className="space-y-3 bg-background/5 p-4 border border-background/10 font-mono text-xs">
                     <div className="flex items-center justify-between font-bold">
@@ -372,6 +400,22 @@ export default function BattleViewPage() {
                     <p className="text-sm font-bold text-background">Awaiting Window Expiry</p>
                     <p>Combat will execute turn-by-turn with LLM reasoning when betting window closes.</p>
                   </div>
+                )}
+
+                {/* Combat Trigger / Resolution Status */}
+                {activeBattle.status === 'completed' ? (
+                  <div className="bg-background text-primary p-3 text-center font-headline font-extrabold text-sm uppercase tracking-wider border border-background">
+                    DUEL CONCLUDED // VICTOR: {activeBattle.winner === 'beastA' ? activeBattle.beastA.name : activeBattle.beastB.name}
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleExecuteCombat}
+                    disabled={isSimulating}
+                    className="w-full py-3 bg-background text-primary font-headline font-bold text-xs uppercase tracking-wider hover:bg-neutral transition-colors border border-background disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <FiZap className="w-4 h-4 text-warning" />
+                    <span>{isSimulating ? 'SIMULATING COMBAT ROUNDS...' : 'TRIGGER AGENTIC COMBAT ENGINE'}</span>
+                  </button>
                 )}
               </div>
             </div>

@@ -1,17 +1,57 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
   FiAward, 
   FiTrendingUp, 
   FiShield, 
+  FiSearch,
 } from 'react-icons/fi';
-import { MOCK_LEADERBOARD_BEASTS, MOCK_LEADERBOARD_BETTORS } from '@/lib/mockData';
+import { getAllBeasts } from '@/lib/services/beastService';
+import { Beast, BoundAsset } from '@/lib/types';
+import { MOCK_LEADERBOARD_BETTORS } from '@/lib/mockData';
 
 export default function LeaderboardPage() {
   const [tab, setTab] = useState<'beasts' | 'bettors'>('beasts');
+  const [beasts, setBeasts] = useState<Beast[]>([]);
+  const [search, setSearch] = useState('');
+  const [assetFilter, setAssetFilter] = useState<'ALL' | BoundAsset>('ALL');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadBeasts() {
+      setLoading(true);
+      const data = await getAllBeasts();
+      if (mounted) {
+        setBeasts(data);
+        setLoading(false);
+      }
+    }
+    loadBeasts();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Sort beasts by wins then winRate
+  const sortedBeasts = [...beasts]
+    .filter((b) => {
+      const matchesSearch = b.name.toLowerCase().includes(search.toLowerCase());
+      const matchesAsset = 
+        assetFilter === 'ALL' || 
+        (assetFilter === 'UNBOUND' && !b.boundAsset) || 
+        b.boundAsset === assetFilter;
+      return matchesSearch && matchesAsset;
+    })
+    .sort((a, b) => {
+      const rateA = a.record.wins + a.record.losses > 0 ? a.record.wins / (a.record.wins + a.record.losses) : 0;
+      const rateB = b.record.wins + b.record.losses > 0 ? b.record.wins / (b.record.wins + b.record.losses) : 0;
+      if (b.record.wins !== a.record.wins) return b.record.wins - a.record.wins;
+      return rateB - rateA;
+    });
 
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
@@ -33,30 +73,58 @@ export default function LeaderboardPage() {
 
       {/* Tabs */}
       <section className="border-b border-primary bg-background sticky top-16 z-30">
-        <div className="max-w-[1440px] mx-auto px-4 lg:px-10 flex items-center gap-4 py-3">
-          <button
-            onClick={() => setTab('beasts')}
-            className={`px-5 py-2.5 font-headline font-bold text-base uppercase tracking-wider border transition-colors flex items-center gap-2 ${
-              tab === 'beasts'
-                ? 'bg-primary text-background border-primary'
-                : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
-            }`}
-          >
-            <FiShield className="w-4 h-4" />
-            <span>TOP COMBAT BEASTS</span>
-          </button>
+        <div className="max-w-[1440px] mx-auto px-4 lg:px-10 flex items-center justify-between overflow-x-auto py-3 gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setTab('beasts')}
+              className={`px-5 py-2.5 font-headline font-bold text-base uppercase tracking-wider border transition-colors flex items-center gap-2 ${
+                tab === 'beasts'
+                  ? 'bg-primary text-background border-primary'
+                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
+              }`}
+            >
+              <FiShield className="w-4 h-4" />
+              <span>TOP COMBAT BEASTS ({beasts.length})</span>
+            </button>
 
-          <button
-            onClick={() => setTab('bettors')}
-            className={`px-5 py-2.5 font-headline font-bold text-base uppercase tracking-wider border transition-colors flex items-center gap-2 ${
-              tab === 'bettors'
-                ? 'bg-primary text-background border-primary'
-                : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
-            }`}
-          >
-            <FiTrendingUp className="w-4 h-4" />
-            <span>TOP SPECTATOR BETTORS</span>
-          </button>
+            <button
+              onClick={() => setTab('bettors')}
+              className={`px-5 py-2.5 font-headline font-bold text-base uppercase tracking-wider border transition-colors flex items-center gap-2 ${
+                tab === 'bettors'
+                  ? 'bg-primary text-background border-primary'
+                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
+              }`}
+            >
+              <FiTrendingUp className="w-4 h-4" />
+              <span>TOP SPECTATOR BETTORS</span>
+            </button>
+          </div>
+
+          {tab === 'beasts' && (
+            <div className="flex items-center gap-3 font-mono text-xs">
+              <div className="flex items-center border border-primary bg-surface-container-low px-2 py-1">
+                <FiSearch className="w-3.5 h-3.5 text-secondary mr-2" />
+                <input
+                  type="text"
+                  placeholder="FILTER BY NAME..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="bg-transparent text-primary placeholder:text-secondary focus:outline-none uppercase font-bold text-xs"
+                />
+              </div>
+
+              <select
+                value={assetFilter}
+                onChange={(e) => setAssetFilter(e.target.value as 'ALL' | BoundAsset)}
+                className="bg-surface-container-low border border-primary p-1.5 font-headline font-bold text-xs uppercase"
+              >
+                <option value="ALL">ALL ASSETS</option>
+                <option value="BTC">BTC BOUND</option>
+                <option value="ETH">ETH BOUND</option>
+                <option value="UNBOUND">UNBOUND</option>
+              </select>
+            </div>
+          )}
         </div>
       </section>
 
@@ -77,60 +145,66 @@ export default function LeaderboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral font-mono text-xs">
-                {MOCK_LEADERBOARD_BEASTS.map((entry) => (
-                  <tr key={entry.beastId} className="hover:bg-surface-container-low transition-colors">
-                    <td className="p-4 text-center font-bold">
-                      <span className={`inline-flex items-center justify-center w-7 h-7 ${
-                        entry.rank === 1 ? 'bg-primary text-background font-bold' :
-                        entry.rank === 2 ? 'bg-neutral text-primary' :
-                        entry.rank === 3 ? 'bg-surface-container-low text-primary' : 'text-secondary'
-                      }`}>
-                        {entry.rank}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative w-10 h-10 border border-primary overflow-hidden bg-zinc-900 flex-shrink-0">
-                          <Image
-                            src={entry.avatarUrl}
-                            alt={entry.beastName}
-                            fill
-                            className="object-cover"
-                          />
+                {sortedBeasts.map((beast, idx) => {
+                  const rank = idx + 1;
+                  const totalDuels = beast.record.wins + beast.record.losses;
+                  const winRate = totalDuels > 0 ? Math.round((beast.record.wins / totalDuels) * 100) : 0;
+
+                  return (
+                    <tr key={beast.id} className="hover:bg-surface-container-low transition-colors">
+                      <td className="p-4 text-center font-bold">
+                        <span className={`inline-flex items-center justify-center w-7 h-7 ${
+                          rank === 1 ? 'bg-primary text-background font-bold' :
+                          rank === 2 ? 'bg-neutral text-primary font-bold' :
+                          rank === 3 ? 'bg-surface-container-low text-primary' : 'text-secondary'
+                        }`}>
+                          {rank}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-10 h-10 border border-primary overflow-hidden bg-zinc-900 flex-shrink-0">
+                            <Image
+                              src={beast.avatarUrl}
+                              alt={beast.name}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <span className="font-headline font-bold text-base uppercase text-primary">
+                            {beast.name}
+                          </span>
                         </div>
-                        <span className="font-headline font-bold text-base uppercase text-primary">
-                          {entry.beastName}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-secondary">
-                      {entry.ownerAddress}
-                    </td>
-                    <td className="p-4">
-                      {entry.boundAsset ? (
-                        <span className="px-2 py-0.5 bg-primary text-background font-bold text-[10px] uppercase">
-                          {entry.boundAsset} BOUND
-                        </span>
-                      ) : (
-                        <span className="text-secondary">UNBOUND</span>
-                      )}
-                    </td>
-                    <td className="p-4 font-bold text-primary">
-                      {entry.wins}W - {entry.losses}L
-                    </td>
-                    <td className="p-4">
-                      <span className="font-bold text-primary">{entry.winRate}%</span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <Link
-                        href={`/beast/${entry.beastId}`}
-                        className="px-3 py-1.5 bg-primary text-background font-headline font-bold uppercase hover:bg-secondary transition-colors inline-block"
-                      >
-                        Inspect
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="p-4 text-secondary">
+                        {beast.ownerAddress}
+                      </td>
+                      <td className="p-4">
+                        {beast.boundAsset && beast.boundAsset !== 'UNBOUND' ? (
+                          <span className="px-2 py-0.5 bg-primary text-background font-bold text-[10px] uppercase">
+                            {beast.boundAsset} BOUND
+                          </span>
+                        ) : (
+                          <span className="text-secondary">UNBOUND</span>
+                        )}
+                      </td>
+                      <td className="p-4 font-bold text-primary">
+                        {beast.record.wins}W - {beast.record.losses}L
+                      </td>
+                      <td className="p-4">
+                        <span className="font-bold text-primary">{winRate}%</span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <Link
+                          href={`/beast/${beast.id}`}
+                          className="px-3 py-1.5 bg-primary text-background font-headline font-bold uppercase hover:bg-secondary transition-colors inline-block"
+                        >
+                          Inspect
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
