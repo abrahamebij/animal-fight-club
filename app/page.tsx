@@ -164,45 +164,16 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="hero-panel lg:col-span-5 flex flex-col justify-center">
-            <div className="border border-primary p-4 bg-primary text-background flex flex-col gap-4">
-              <div className="flex items-center justify-between font-mono text-[11px] text-background/60 border-b border-background/20 pb-2">
-                <span>COMBAT_SIMULATION // APEX FEED</span>
-                <span className="text-secondary font-bold">STATUS: LIVE</span>
-              </div>
-
-              <div className="relative aspect-video w-full overflow-hidden border border-background/20 bg-zinc-900">
-                <video
-                  src="/hero-animation.mp4"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  className="absolute inset-0 w-full h-full object-cover opacity-80"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
-                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between font-mono text-xs">
-                  <span className="bg-primary px-2 py-1 border border-background/30 font-bold uppercase">
-                    {featuredBeasts[0]?.name || 'APEX COMBATANT'}
-                  </span>
-                  <span className="bg-primary text-background px-2 py-1 border border-background/30 font-bold">
-                    {btcPulse?.modifier ? btcPulse.modifier.description : 'BTC PULSE: +15% PWR'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2 font-mono text-xs">
-                <div className="flex justify-between text-background/70">
-                  <span>ORACLE INPUT</span>
-                  <span className="text-background">DREAMDEX BTC/USDso 15M</span>
-                </div>
-                <div className="flex justify-between text-background/70">
-                  <span>LIVE ODDS SPREAD</span>
-                  <span className="text-background">
-                    UP: {btcPulse ? `${Math.round(btcPulse.upProbability * 100)}%` : '62%'} // DOWN: {btcPulse ? `${Math.round((1 - btcPulse.upProbability) * 100)}%` : '38%'}
-                  </span>
-                </div>
-              </div>
+          <div className="hero-panel lg:col-span-5 flex items-center justify-center">
+            <div className="relative w-full aspect-video overflow-hidden bg-zinc-900">
+              <video
+                src="/hero-animation.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
         </div>
