@@ -8,10 +8,13 @@ import {
   FiPlusSquare, 
   FiClock, 
   FiArrowRight, 
+  FiShield,
+  FiActivity
 } from 'react-icons/fi';
 import { getAllBattles } from '@/lib/services/battleService';
 import { getAllBeasts } from '@/lib/services/beastService';
-import { Battle, Beast } from '@/lib/types';
+import { fetchMarketPulseForAsset } from '@/lib/services/marketPulseService';
+import { Battle, Beast, MarketPulse } from '@/lib/types';
 import { formatTimeRemaining } from '@/lib/utils/timer';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -21,17 +24,20 @@ gsap.registerPlugin(ScrollTrigger);
 export default function HomePage() {
   const [battles, setBattles] = useState<Battle[]>([]);
   const [beasts, setBeasts] = useState<Beast[]>([]);
+  const [btcPulse, setBtcPulse] = useState<MarketPulse | null>(null);
 
   useEffect(() => {
     let mounted = true;
     async function loadData() {
-      const [allBattles, allBeasts] = await Promise.all([
+      const [allBattles, allBeasts, pulse] = await Promise.all([
         getAllBattles(),
         getAllBeasts(),
+        fetchMarketPulseForAsset('BTC'),
       ]);
       if (mounted) {
         setBattles(allBattles);
         setBeasts(allBeasts);
+        setBtcPulse(pulse);
       }
     }
     loadData();
@@ -40,8 +46,8 @@ export default function HomePage() {
     };
   }, []);
 
-  const liveBattle = battles.find((b) => b.status === 'live');
-  const pendingBattle = battles.find((b) => b.status === 'pending');
+  const liveBattle = battles.find((b) => b.status === 'live') || battles[0];
+  const pendingBattle = battles.find((b) => b.status === 'pending') || (battles[1]?.status === 'pending' ? battles[1] : undefined);
   const featuredBeasts = beasts.slice(0, 4);
 
   const heroRef = useRef<HTMLDivElement>(null);
@@ -96,7 +102,7 @@ export default function HomePage() {
       });
     }, battlesRef);
     return () => ctx.revert();
-  }, []);
+  }, [battles]);
 
   // Beast roster cards ScrollTrigger
   useLayoutEffect(() => {
@@ -115,7 +121,7 @@ export default function HomePage() {
       });
     }, rosterRef);
     return () => ctx.revert();
-  }, []);
+  }, [featuredBeasts]);
 
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground">
@@ -161,8 +167,8 @@ export default function HomePage() {
           <div className="hero-panel lg:col-span-5 flex flex-col justify-center">
             <div className="border border-primary p-4 bg-primary text-background flex flex-col gap-4">
               <div className="flex items-center justify-between font-mono text-[11px] text-background/60 border-b border-background/20 pb-2">
-                <span>COMBAT_SIMULATION // SEQ_01</span>
-                <span className="text-secondary font-bold">STATUS: ACTIVE</span>
+                <span>COMBAT_SIMULATION // APEX FEED</span>
+                <span className="text-secondary font-bold">STATUS: LIVE</span>
               </div>
 
               <div className="relative aspect-video w-full overflow-hidden border border-background/20 bg-zinc-900">
@@ -177,10 +183,10 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
                 <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between font-mono text-xs">
                   <span className="bg-primary px-2 py-1 border border-background/30 font-bold uppercase">
-                    APEX MECHA-KONG
+                    {featuredBeasts[0]?.name || 'APEX COMBATANT'}
                   </span>
-                  <span className="bg-primary-container text-background px-2 py-1 border border-background/30 font-bold">
-                    BTC PULSE: +2 PWR
+                  <span className="bg-primary text-background px-2 py-1 border border-background/30 font-bold">
+                    {btcPulse?.modifier ? btcPulse.modifier.description : 'BTC PULSE: +15% PWR'}
                   </span>
                 </div>
               </div>
@@ -191,8 +197,10 @@ export default function HomePage() {
                   <span className="text-background">DREAMDEX BTC/USDso 15M</span>
                 </div>
                 <div className="flex justify-between text-background/70">
-                  <span>ODDS SPREAD</span>
-                  <span className="text-background">UP: 68% // DOWN: 32%</span>
+                  <span>LIVE ODDS SPREAD</span>
+                  <span className="text-background">
+                    UP: {btcPulse ? `${Math.round(btcPulse.upProbability * 100)}%` : '62%'} // DOWN: {btcPulse ? `${Math.round((1 - btcPulse.upProbability) * 100)}%` : '38%'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -290,151 +298,174 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Live Battle Card */}
-          {liveBattle && (
-            <div className="battle-card border border-primary p-6 bg-background flex flex-col justify-between gap-6 relative">
-              <div className="flex items-center justify-between border-b border-primary pb-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 bg-secondary animate-pulse" />
-                  <span className="font-headline font-bold text-xl uppercase tracking-wider text-primary">
-                    LIVE COMBAT IN PROGRESS
+        {battles.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Live / Primary Battle Card */}
+            {liveBattle && (
+              <div className="battle-card border border-primary p-6 bg-background flex flex-col justify-between gap-6 relative">
+                <div className="flex items-center justify-between border-b border-primary pb-4">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 ${liveBattle.status === 'live' ? 'bg-secondary animate-pulse' : 'bg-primary'}`} />
+                    <span className="font-headline font-bold text-xl uppercase tracking-wider text-primary">
+                      {liveBattle.status === 'live' ? 'LIVE COMBAT IN PROGRESS' : 'FEATURED ARENA DUEL'}
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs text-secondary">
+                    {liveBattle.status === 'completed' ? 'CONCLUDED' : `ROUND ${liveBattle.combatLog.length}`}
                   </span>
                 </div>
-                <span className="font-mono text-xs text-secondary">ROUND {liveBattle.combatLog.length}</span>
-              </div>
 
-              <div className="grid grid-cols-5 items-center gap-4 py-2">
-                {/* Fighter A */}
-                <div className="col-span-2 text-center space-y-2">
-                  <div className="relative aspect-square w-24 mx-auto border border-primary">
-                    <Image
-                      src={liveBattle.beastA.avatarUrl}
-                      alt={liveBattle.beastA.name}
-                      fill
-                      className="object-cover"
-                    />
+                <div className="grid grid-cols-5 items-center gap-4 py-2">
+                  {/* Fighter A */}
+                  <div className="col-span-2 text-center space-y-2">
+                    <div className="relative aspect-square w-24 mx-auto border border-primary overflow-hidden bg-zinc-900">
+                      <Image
+                        src={liveBattle.beastA.avatarUrl}
+                        alt={liveBattle.beastA.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="font-headline font-bold text-lg leading-tight uppercase">
+                      {liveBattle.beastA.name}
+                    </div>
+                    <div className="font-mono text-xs text-primary font-bold">
+                      {liveBattle.combatLog[liveBattle.combatLog.length - 1]?.beastAHp ?? 100} / 100 HP
+                    </div>
                   </div>
-                  <div className="font-headline font-bold text-lg leading-tight uppercase">
-                    {liveBattle.beastA.name}
+
+                  {/* VS Center */}
+                  <div className="col-span-1 text-center font-headline font-extrabold text-3xl text-secondary">
+                    VS
                   </div>
-                  <div className="font-mono text-xs text-primary font-bold">
-                    {liveBattle.combatLog[liveBattle.combatLog.length - 1]?.beastAHp ?? 100} / 100 HP
+
+                  {/* Fighter B */}
+                  <div className="col-span-2 text-center space-y-2">
+                    <div className="relative aspect-square w-24 mx-auto border border-primary overflow-hidden bg-zinc-900">
+                      <Image
+                        src={liveBattle.beastB.avatarUrl}
+                        alt={liveBattle.beastB.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="font-headline font-bold text-lg leading-tight uppercase">
+                      {liveBattle.beastB.name}
+                    </div>
+                    <div className="font-mono text-xs text-primary font-bold">
+                      {liveBattle.combatLog[liveBattle.combatLog.length - 1]?.beastBHp ?? 100} / 100 HP
+                    </div>
                   </div>
                 </div>
 
-                {/* VS Center */}
-                <div className="col-span-1 text-center font-headline font-extrabold text-3xl text-secondary">
-                  VS
+                <div className="bg-surface-container-low p-3 border border-neutral font-mono text-xs text-secondary line-clamp-2">
+                  {liveBattle.combatLog[liveBattle.combatLog.length - 1]?.combatNarrative || 'Combat matrix primed. Waiting for turn resolution sequence.'}
                 </div>
 
-                {/* Fighter B */}
-                <div className="col-span-2 text-center space-y-2">
-                  <div className="relative aspect-square w-24 mx-auto border border-primary">
-                    <Image
-                      src={liveBattle.beastB.avatarUrl}
-                      alt={liveBattle.beastB.name}
-                      fill
-                      className="object-cover"
-                    />
+                <Link
+                  href={`/battle/${liveBattle.id}`}
+                  className="w-full py-3.5 bg-primary text-background font-headline font-bold text-center text-base uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors flex items-center justify-center gap-2"
+                >
+                  <FiCrosshair className="w-4 h-4" />
+                  <span>Enter Battle View</span>
+                </Link>
+              </div>
+            )}
+
+            {/* Pending Battle Card */}
+            {pendingBattle && (
+              <div className="battle-card border border-primary p-6 bg-background flex flex-col justify-between gap-6">
+                <div className="flex items-center justify-between border-b border-primary pb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 bg-warning" />
+                    <span className="font-headline font-bold text-xl uppercase tracking-wider text-primary">
+                      PENDING WAGERING WINDOW
+                    </span>
                   </div>
-                  <div className="font-headline font-bold text-lg leading-tight uppercase">
-                    {liveBattle.beastB.name}
-                  </div>
-                  <div className="font-mono text-xs text-primary font-bold">
-                    {liveBattle.combatLog[liveBattle.combatLog.length - 1]?.beastBHp ?? 100} / 100 HP
+                  <div className="flex items-center gap-1 font-mono text-xs text-warning font-bold">
+                    <FiClock className="w-3.5 h-3.5" />
+                    <span>{formatTimeRemaining(pendingBattle.bettingWindowClosesAt)?.formatted || '60:00'} REMAINING</span>
                   </div>
                 </div>
-              </div>
 
-              <div className="bg-surface-container-low p-3 border border-neutral font-mono text-xs text-secondary line-clamp-2">
-                {liveBattle.combatLog[liveBattle.combatLog.length - 1]?.combatNarrative}
-              </div>
+                <div className="grid grid-cols-5 items-center gap-4 py-2">
+                  {/* Fighter A */}
+                  <div className="col-span-2 text-center space-y-2">
+                    <div className="relative aspect-square w-24 mx-auto border border-primary overflow-hidden bg-zinc-900">
+                      <Image
+                        src={pendingBattle.beastA.avatarUrl}
+                        alt={pendingBattle.beastA.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="font-headline font-bold text-lg leading-tight uppercase">
+                      {pendingBattle.beastA.name}
+                    </div>
+                    <div className="font-mono text-xs text-secondary">
+                      {pendingBattle.beastA.boundAsset ? `Bound: ${pendingBattle.beastA.boundAsset}` : 'Unbound'}
+                    </div>
+                  </div>
 
+                  {/* VS Center */}
+                  <div className="col-span-1 text-center font-headline font-extrabold text-3xl text-secondary">
+                    VS
+                  </div>
+
+                  {/* Fighter B */}
+                  <div className="col-span-2 text-center space-y-2">
+                    <div className="relative aspect-square w-24 mx-auto border border-primary overflow-hidden bg-zinc-900">
+                      <Image
+                        src={pendingBattle.beastB.avatarUrl}
+                        alt={pendingBattle.beastB.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="font-headline font-bold text-lg leading-tight uppercase">
+                      {pendingBattle.beastB.name}
+                    </div>
+                    <div className="font-mono text-xs text-secondary">
+                      {pendingBattle.beastB.boundAsset ? `Bound: ${pendingBattle.beastB.boundAsset}` : 'Unbound'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-surface-container-low p-3 border border-neutral flex items-center justify-between font-mono text-xs">
+                  <span>TOTAL WAGER POOL</span>
+                  <span className="font-bold text-primary">{pendingBattle.totalPoolA + pendingBattle.totalPoolB} STT</span>
+                </div>
+
+                <Link
+                  href={`/battle/${pendingBattle.id}`}
+                  className="w-full py-3.5 bg-primary text-background font-headline font-bold text-center text-base uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors flex items-center justify-center gap-2"
+                >
+                  <FiCrosshair className="w-4 h-4" />
+                  <span>Place Wager & Inspect Odds</span>
+                </Link>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="border border-primary p-12 bg-background text-center space-y-4 font-mono">
+            <FiShield className="w-10 h-10 mx-auto text-primary" />
+            <h3 className="font-headline font-bold text-2xl uppercase tracking-tight text-primary">
+              NO ACTIVE ARENA DUELS DETECTED
+            </h3>
+            <p className="text-secondary text-xs max-w-md mx-auto">
+              The pit is awaiting initial conflict. Challenge an opponent or forge your cybernetic beast to commence real-time combat.
+            </p>
+            <div className="pt-2 flex justify-center gap-4">
               <Link
-                href={`/battle/${liveBattle.id}`}
-                className="w-full py-3.5 bg-primary text-background font-headline font-bold text-center text-base uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors flex items-center justify-center gap-2"
+                href="/arena"
+                className="px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border border-primary inline-flex items-center gap-2"
               >
                 <FiCrosshair className="w-4 h-4" />
-                <span>Enter Live Battle View</span>
+                <span>Enter Arena Pit</span>
               </Link>
             </div>
-          )}
-
-          {/* Pending Battle Card */}
-          {pendingBattle && (
-            <div className="battle-card border border-primary p-6 bg-background flex flex-col justify-between gap-6">
-              <div className="flex items-center justify-between border-b border-primary pb-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 bg-warning" />
-                  <span className="font-headline font-bold text-xl uppercase tracking-wider text-primary">
-                    PENDING WAGERING WINDOW
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 font-mono text-xs text-warning font-bold">
-                  <FiClock className="w-3.5 h-3.5" />
-                  <span>40:00 REMAINING</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-5 items-center gap-4 py-2">
-                {/* Fighter A */}
-                <div className="col-span-2 text-center space-y-2">
-                  <div className="relative aspect-square w-24 mx-auto border border-primary">
-                    <Image
-                      src={pendingBattle.beastA.avatarUrl}
-                      alt={pendingBattle.beastA.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="font-headline font-bold text-lg leading-tight uppercase">
-                    {pendingBattle.beastA.name}
-                  </div>
-                  <div className="font-mono text-xs text-secondary">
-                    {pendingBattle.beastA.boundAsset ? `Bound: ${pendingBattle.beastA.boundAsset}` : 'Unbound'}
-                  </div>
-                </div>
-
-                {/* VS Center */}
-                <div className="col-span-1 text-center font-headline font-extrabold text-3xl text-secondary">
-                  VS
-                </div>
-
-                {/* Fighter B */}
-                <div className="col-span-2 text-center space-y-2">
-                  <div className="relative aspect-square w-24 mx-auto border border-primary">
-                    <Image
-                      src={pendingBattle.beastB.avatarUrl}
-                      alt={pendingBattle.beastB.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="font-headline font-bold text-lg leading-tight uppercase">
-                    {pendingBattle.beastB.name}
-                  </div>
-                  <div className="font-mono text-xs text-secondary">
-                    {pendingBattle.beastB.boundAsset ? `Bound: ${pendingBattle.beastB.boundAsset}` : 'Unbound'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-surface-container-low p-3 border border-neutral flex items-center justify-between font-mono text-xs">
-                <span>TOTAL WAGER POOL</span>
-                <span className="font-bold text-primary">{pendingBattle.totalPoolA + pendingBattle.totalPoolB} STT</span>
-              </div>
-
-              <Link
-                href={`/battle/${pendingBattle.id}`}
-                className="w-full py-3.5 bg-primary text-background font-headline font-bold text-center text-base uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors flex items-center justify-center gap-2"
-              >
-                <FiCrosshair className="w-4 h-4" />
-                <span>Place Wager & Inspect Odds</span>
-              </Link>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* 4. ROSTER HIGHLIGHTS */}
@@ -456,64 +487,85 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredBeasts.map((beast) => (
-              <div 
-                key={beast.id} 
-                className="beast-card border border-primary bg-background p-4 flex flex-col justify-between gap-4 group hover:border-primary transition-colors"
-              >
-                <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
-                  <Image
-                    src={beast.avatarUrl}
-                    alt={beast.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {beast.boundAsset && (
-                    <div className="absolute top-2 right-2 bg-primary text-background font-mono text-[10px] font-bold px-2 py-0.5 border border-background/30 uppercase">
-                      {beast.boundAsset} BOUND
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <h3 className="font-headline font-bold text-xl uppercase tracking-tight truncate">
-                    {beast.name}
-                  </h3>
-                  <div className="font-mono text-xs text-secondary flex items-center justify-between">
-                    <span>RECORD</span>
-                    <span className="font-bold text-primary">{beast.record.wins}W - {beast.record.losses}L</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-4 gap-1 py-1 font-mono text-[11px] text-center border-t border-neutral pt-2">
-                  <div className="bg-surface-container-low p-1">
-                    <span className="text-secondary block text-[9px]">PWR</span>
-                    <span className="font-bold">{beast.stats.power}</span>
-                  </div>
-                  <div className="bg-surface-container-low p-1">
-                    <span className="text-secondary block text-[9px]">DEF</span>
-                    <span className="font-bold">{beast.stats.defense}</span>
-                  </div>
-                  <div className="bg-surface-container-low p-1">
-                    <span className="text-secondary block text-[9px]">SPD</span>
-                    <span className="font-bold">{beast.stats.speed}</span>
-                  </div>
-                  <div className="bg-surface-container-low p-1">
-                    <span className="text-secondary block text-[9px]">SPC</span>
-                    <span className="font-bold">{beast.stats.special}</span>
-                  </div>
-                </div>
-
-                <Link
-                  href={`/beast/${beast.id}`}
-                  className="w-full py-2.5 bg-primary text-background font-headline font-bold text-sm text-center uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors block"
+          {featuredBeasts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredBeasts.map((beast) => (
+                <div 
+                  key={beast.id} 
+                  className="beast-card border border-primary bg-background p-4 flex flex-col justify-between gap-4 group hover:border-primary transition-colors"
                 >
-                  Inspect Profile
+                  <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
+                    <Image
+                      src={beast.avatarUrl}
+                      alt={beast.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {beast.boundAsset && beast.boundAsset !== 'UNBOUND' && (
+                      <div className="absolute top-2 right-2 bg-primary text-background font-mono text-[10px] font-bold px-2 py-0.5 border border-background/30 uppercase">
+                        {beast.boundAsset} BOUND
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <h3 className="font-headline font-bold text-xl uppercase tracking-tight truncate">
+                      {beast.name}
+                    </h3>
+                    <div className="font-mono text-xs text-secondary flex items-center justify-between">
+                      <span>RECORD</span>
+                      <span className="font-bold text-primary">{beast.record.wins}W - {beast.record.losses}L</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1 py-1 font-mono text-[11px] text-center border-t border-neutral pt-2">
+                    <div className="bg-surface-container-low p-1">
+                      <span className="text-secondary block text-[9px]">PWR</span>
+                      <span className="font-bold">{beast.stats.power}</span>
+                    </div>
+                    <div className="bg-surface-container-low p-1">
+                      <span className="text-secondary block text-[9px]">DEF</span>
+                      <span className="font-bold">{beast.stats.defense}</span>
+                    </div>
+                    <div className="bg-surface-container-low p-1">
+                      <span className="text-secondary block text-[9px]">SPD</span>
+                      <span className="font-bold">{beast.stats.speed}</span>
+                    </div>
+                    <div className="bg-surface-container-low p-1">
+                      <span className="text-secondary block text-[9px]">SPC</span>
+                      <span className="font-bold">{beast.stats.special}</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/beast/${beast.id}`}
+                    className="w-full py-2.5 bg-primary text-background font-headline font-bold text-sm text-center uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors block"
+                  >
+                    Inspect Profile
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="border border-primary p-12 bg-background text-center space-y-4 font-mono">
+              <FiShield className="w-10 h-10 mx-auto text-primary" />
+              <h3 className="font-headline font-bold text-2xl uppercase tracking-tight text-primary">
+                NO REGISTERED COMBATANTS
+              </h3>
+              <p className="text-secondary text-xs max-w-md mx-auto">
+                No cybernetic beasts have been forged on the network yet. Enter the Genetic Forge to create the first champion.
+              </p>
+              <div className="pt-2">
+                <Link
+                  href="/create"
+                  className="px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border border-primary inline-flex items-center gap-2"
+                >
+                  <FiPlusSquare className="w-4 h-4" />
+                  <span>Forge First Beast</span>
                 </Link>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       </section>
     </div>
