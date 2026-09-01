@@ -57,7 +57,7 @@ export default function BattleViewPage() {
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 ${isLive ? 'bg-danger animate-pulse' : isPending ? 'bg-warning' : 'bg-primary'}`} />
+              <span className={`w-2.5 h-2.5 ${isLive ? 'bg-secondary animate-pulse' : isPending ? 'bg-warning' : 'bg-primary'}`} />
               <span className="font-bold uppercase">
                 {isLive ? 'LIVE COMBAT FEED' : isPending ? 'PENDING BETTING WINDOW' : 'COMBAT CONCLUDED'}
               </span>
@@ -104,15 +104,15 @@ export default function BattleViewPage() {
                 </div>
               </div>
 
-              {/* HP Bar (Danger context) */}
+              {/* HP Bar */}
               <div className="space-y-1.5 font-mono text-xs">
                 <div className="flex justify-between font-bold">
                   <span>HEALTH INTEGRITY</span>
-                  <span className="text-danger">{hpA} / 100 HP</span>
+                  <span className={hpA <= 25 ? 'text-danger font-bold' : 'text-primary'}>{hpA} / 100 HP</span>
                 </div>
                 <div className="w-full h-3.5 bg-neutral border border-primary p-0.5">
                   <div 
-                    className="h-full bg-danger transition-all duration-500" 
+                    className={`h-full transition-all duration-500 ${hpA <= 25 ? 'bg-danger' : 'bg-primary'}`} 
                     style={{ width: `${Math.max(0, hpA)}%` }} 
                   />
                 </div>
@@ -239,15 +239,15 @@ export default function BattleViewPage() {
                 </div>
               </div>
 
-              {/* HP Bar (Danger context) */}
+              {/* HP Bar */}
               <div className="space-y-1.5 font-mono text-xs">
                 <div className="flex justify-between font-bold">
                   <span>HEALTH INTEGRITY</span>
-                  <span className="text-danger">{hpB} / 100 HP</span>
+                  <span className={hpB <= 25 ? 'text-danger font-bold' : 'text-primary'}>{hpB} / 100 HP</span>
                 </div>
                 <div className="w-full h-3.5 bg-neutral border border-primary p-0.5">
                   <div 
-                    className="h-full bg-danger transition-all duration-500" 
+                    className={`h-full transition-all duration-500 ${hpB <= 25 ? 'bg-danger' : 'bg-primary'}`} 
                     style={{ width: `${Math.max(0, hpB)}%` }} 
                   />
                 </div>

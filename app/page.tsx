@@ -60,7 +60,7 @@ export default function HomePage() {
             <div className="border border-primary p-4 bg-primary text-background flex flex-col gap-4">
               <div className="flex items-center justify-between font-mono text-[11px] text-background/60 border-b border-background/20 pb-2">
                 <span>COMBAT_SIMULATION // SEQ_01</span>
-                <span className="text-danger font-bold">STATUS: ACTIVE</span>
+                <span className="text-secondary font-bold">STATUS: ACTIVE</span>
               </div>
 
               <div className="relative aspect-video w-full overflow-hidden border border-background/20 bg-zinc-900">
@@ -190,11 +190,11 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Live Battle Card */}
           {liveBattle && (
-            <div className="border-2 border-primary p-6 bg-background flex flex-col justify-between gap-6 relative">
+            <div className="border border-primary p-6 bg-background flex flex-col justify-between gap-6 relative">
               <div className="flex items-center justify-between border-b border-primary pb-4">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 bg-danger animate-pulse" />
-                  <span className="font-headline font-bold text-xl uppercase tracking-wider text-danger">
+                  <span className="w-2.5 h-2.5 bg-secondary animate-pulse" />
+                  <span className="font-headline font-bold text-xl uppercase tracking-wider text-primary">
                     LIVE COMBAT IN PROGRESS
                   </span>
                 </div>
@@ -215,7 +215,7 @@ export default function HomePage() {
                   <div className="font-headline font-bold text-lg leading-tight uppercase">
                     {liveBattle.beastA.name}
                   </div>
-                  <div className="font-mono text-xs text-danger font-bold">
+                  <div className="font-mono text-xs text-primary font-bold">
                     {liveBattle.combatLog[liveBattle.combatLog.length - 1]?.beastAHp ?? 100} / 100 HP
                   </div>
                 </div>
@@ -238,7 +238,7 @@ export default function HomePage() {
                   <div className="font-headline font-bold text-lg leading-tight uppercase">
                     {liveBattle.beastB.name}
                   </div>
-                  <div className="font-mono text-xs text-danger font-bold">
+                  <div className="font-mono text-xs text-primary font-bold">
                     {liveBattle.combatLog[liveBattle.combatLog.length - 1]?.beastBHp ?? 100} / 100 HP
                   </div>
                 </div>
@@ -250,7 +250,7 @@ export default function HomePage() {
 
               <Link
                 href={`/battle/${liveBattle.id}`}
-                className="w-full py-3.5 bg-danger text-white font-headline font-bold text-center text-base uppercase tracking-wider hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-primary text-background font-headline font-bold text-center text-base uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors flex items-center justify-center gap-2"
               >
                 <FiCrosshair className="w-4 h-4" />
                 <span>Enter Live Battle View</span>

@@ -84,11 +84,11 @@ export default function ArenaPage() {
               onClick={() => setFilter('live')}
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border flex items-center gap-2 transition-colors ${
                 filter === 'live'
-                  ? 'bg-danger text-white border-danger'
-                  : 'bg-transparent text-danger border-transparent hover:border-danger'
+                  ? 'bg-danger text-background border-danger'
+                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
               }`}
             >
-              <span className="w-2 h-2 bg-danger rounded-none animate-pulse" />
+              <span className="w-2 h-2 bg-secondary rounded-none animate-pulse" />
               <span>LIVE COMBAT ({liveCount})</span>
             </button>
 
@@ -130,11 +130,7 @@ export default function ArenaPage() {
             return (
               <div 
                 key={battle.id}
-                className={`border p-6 flex flex-col justify-between gap-6 bg-background ${
-                  isLive 
-                    ? 'border-2 border-danger' 
-                    : 'border-primary'
-                }`}
+                className="border border-primary p-6 flex flex-col justify-between gap-6 bg-background"
               >
                 {/* Header Status */}
                 <div className="flex items-center justify-between border-b border-primary pb-3">
@@ -142,7 +138,7 @@ export default function ArenaPage() {
                     {isLive && (
                       <>
                         <span className="w-2.5 h-2.5 bg-danger animate-pulse" />
-                        <span className="font-headline font-bold text-base uppercase text-danger">
+                        <span className="font-headline font-bold text-base uppercase text-primary">
                           LIVE COMBAT
                         </span>
                       </>
@@ -222,7 +218,13 @@ export default function ArenaPage() {
                   {battle.marketPulseA && (
                     <div className="flex justify-between text-[11px] text-secondary">
                       <span>{battle.beastA.name.split(' ')[0]}</span>
-                      <span className="font-bold">{battle.marketPulseA.modifier.description}</span>
+                      <span className="font-bold text-primary">{battle.marketPulseA.modifier.description}</span>
+                    </div>
+                  )}
+                  {battle.marketPulseB && (
+                    <div className="flex justify-between text-[11px] text-secondary">
+                      <span>{battle.beastB.name.split(' ')[0]}</span>
+                      <span className="font-bold text-primary">{battle.marketPulseB.modifier.description}</span>
                     </div>
                   )}
                   {battle.winner && (
@@ -236,11 +238,7 @@ export default function ArenaPage() {
                 {/* Action CTA */}
                 <Link
                   href={`/battle/${battle.id}`}
-                  className={`w-full py-3 font-headline font-bold text-sm text-center uppercase tracking-wider transition-colors flex items-center justify-center gap-2 ${
-                    isLive
-                      ? 'bg-danger text-white hover:bg-red-700'
-                      : 'bg-primary text-background hover:bg-background hover:text-primary border border-primary'
-                  }`}
+                  className={`w-full py-3 ${isLive ? "bg-danger border-danger hover:border-primary": "bg-primary border-primary"} text-background font-headline font-bold text-sm text-center uppercase tracking-wider hover:bg-background hover:text-primary border transition-colors flex items-center justify-center gap-2`}
                 >
                   {isLive && (
                     <>
