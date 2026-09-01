@@ -1,26 +1,123 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FAFAF8;
+  --foreground: #0A0A0B;
+  --primary: #0A0A0B;
+  --surface: #FAFAF8;
+  --surface-container: #EEEEEA;
+  --surface-container-low: #F4F4F0;
+  --surface-container-high: #E8E8E4;
+  --outline: #77777B;
+  --outline-variant: #C7C6CA;
+  --neutral: #E5E5E1;
+  --danger: #DC2626;
+  --warning: #F59E0B;
+  --secondary: #5D5F5D;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-surface: var(--surface);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-neutral: var(--neutral);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-secondary: var(--secondary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-headline: var(--font-barlow-condensed);
+  --font-display: var(--font-barlow-condensed);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--neutral);
+  }
+  
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+.font-data-mono {
+  font-family: var(--font-mono), monospace;
+  font-feature-settings: "tnum" 1;
+}
+
+.sharp-card {
+  border: 1px solid #0A0A0B;
+  background-color: #FAFAF8;
+  border-radius: 0px;
+}
+
+.sharp-card-dark {
+  border: 1px solid rgba(250, 250, 248, 0.2);
+  background-color: #0A0A0B;
+  color: #FAFAF8;
+  border-radius: 0px;
+}
+
+.sharp-btn-primary {
+  background-color: #0A0A0B;
+  color: #FAFAF8;
+  border: 1px solid #0A0A0B;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-radius: 0px;
+  transition: all 150ms ease-in-out;
+}
+
+.sharp-btn-primary:hover {
+  background-color: #FAFAF8;
+  color: #0A0A0B;
+}
+
+.sharp-btn-secondary {
+  background-color: transparent;
+  color: #0A0A0B;
+  border: 1px solid #0A0A0B;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-radius: 0px;
+  transition: all 150ms ease-in-out;
+}
+
+.sharp-btn-secondary:hover {
+  background-color: #0A0A0B;
+  color: #FAFAF8;
+}
+
+.sharp-btn-danger {
+  background-color: #DC2626;
+  color: #FFFFFF;
+  border: 1px solid #DC2626;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-radius: 0px;
+  transition: all 150ms ease-in-out;
+}
+
+.sharp-btn-danger:hover {
+  background-color: #B91C1C;
+}
+
+::-webkit-scrollbar {
+  display: none;
 }
