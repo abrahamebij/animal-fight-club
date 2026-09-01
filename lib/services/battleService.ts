@@ -13,6 +13,7 @@ import {
 import { db } from '@/lib/firebase';
 import { Battle, Beast, Bet, BattleStatus } from '@/lib/types';
 import { MOCK_BATTLES } from '@/lib/mockData';
+import { lockMarketPulseForBattle } from '@/lib/services/marketPulseService';
 
 const LOCAL_STORAGE_BATTLES = 'afc_custom_battles';
 const LOCAL_STORAGE_BETS = 'afc_custom_bets';
@@ -67,7 +68,7 @@ export async function createBattle(beastA: Beast, beastB: Beast): Promise<Battle
   const now = Date.now();
   const ONE_HOUR_MS = 60 * 60 * 1000;
 
-  const newBattle: Battle = {
+  const baseBattle: Battle = {
     id,
     beastA,
     beastB,
@@ -78,6 +79,9 @@ export async function createBattle(beastA: Beast, beastB: Beast): Promise<Battle
     totalPoolB: 0,
     combatLog: [],
   };
+
+  // Lock in live DreamDEX market pulse modifiers
+  const newBattle = await lockMarketPulseForBattle(baseBattle);
 
   saveLocalBattle(newBattle);
 
