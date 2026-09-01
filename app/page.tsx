@@ -141,12 +141,13 @@ export default function HomePage() {
               </div>
 
               <div className="relative aspect-video w-full overflow-hidden border border-background/20 bg-zinc-900">
-                <Image
-                  src="/assets/stitch/home/asset_1.jpg"
-                  alt="Apex Mecha-Kong Combatant"
-                  fill
-                  className="object-cover opacity-80"
-                  priority
+                <video
+                  src="/hero-animation.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover opacity-80"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
                 <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between font-mono text-xs">
