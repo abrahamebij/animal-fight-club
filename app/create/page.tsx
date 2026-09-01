@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useLayoutEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { 
@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fi';
 import { STAT_BUDGET, AVAILABLE_PERKS, AVATAR_PRESETS } from '@/lib/constants/game';
 import { BeastStats, BoundAsset } from '@/lib/types';
+import gsap from 'gsap';
 
 export default function CreateBeastPage() {
   const router = useRouter();
@@ -36,7 +37,40 @@ export default function CreateBeastPage() {
   const usedPoints = stats.power + stats.defense + stats.speed + stats.special;
   const remainingPoints = STAT_BUDGET.TOTAL_POINTS - usedPoints;
 
-  const handleStatChange = (statKey: keyof BeastStats, delta: number) => {
+  const headerRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+  const submitBtnRef = useRef<HTMLButtonElement>(null);
+  const pointsBadgeRef = useRef<HTMLSpanElement>(null);
+  // Track stat value element refs by key
+  const statRefs = useRef<Record<string, HTMLSpanElement | null>>({});
+
+  // Header entrance
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+      tl.from('.forge-badge', { opacity: 0, y: -12, duration: 0.4 })
+        .from('.forge-title', { opacity: 0, y: 28, duration: 0.55 }, '-=0.2')
+        .from('.forge-desc', { opacity: 0, y: 18, duration: 0.4 }, '-=0.2');
+    }, headerRef);
+    return () => ctx.revert();
+  }, []);
+
+  // Form panels stagger in
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.forge-panel', {
+        opacity: 0,
+        y: 32,
+        duration: 0.55,
+        stagger: 0.12,
+        ease: 'power2.out',
+        delay: 0.3,
+      });
+    }, formRef);
+    return () => ctx.revert();
+  }, []);
+
+  const handleStatChange = useCallback((statKey: keyof BeastStats, delta: number) => {
     const currentValue = stats[statKey];
     const newValue = currentValue + delta;
 
@@ -47,7 +81,26 @@ export default function CreateBeastPage() {
       ...prev,
       [statKey]: newValue,
     }));
-  };
+
+    // Bounce the stat number
+    const el = statRefs.current[statKey];
+    if (el) {
+      gsap.fromTo(
+        el,
+        { scale: delta > 0 ? 1.5 : 0.6 },
+        { scale: 1, duration: 0.35, ease: 'elastic.out(1.2, 0.5)' }
+      );
+    }
+
+    // Flash the points badge when budget changes
+    if (pointsBadgeRef.current) {
+      gsap.fromTo(
+        pointsBadgeRef.current,
+        { scale: 1.2 },
+        { scale: 1, duration: 0.3, ease: 'back.out(2)' }
+      );
+    }
+  }, [stats, remainingPoints]);
 
   const togglePerk = (perkId: string) => {
     if (selectedPerks.includes(perkId)) {
@@ -59,10 +112,29 @@ export default function CreateBeastPage() {
     }
   };
 
+  const handleAvatarSelect = (imageUrl: string) => {
+    setSelectedAvatar(imageUrl);
+    // Scale-flash the preview image
+    gsap.fromTo(
+      '.avatar-preview',
+      { scale: 0.95, opacity: 0.6 },
+      { scale: 1, opacity: 1, duration: 0.35, ease: 'power2.out' }
+    );
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (remainingPoints < 0) return;
     setIsSubmitting(true);
+
+    // Pulse the submit button
+    if (submitBtnRef.current) {
+      gsap.fromTo(
+        submitBtnRef.current,
+        { scale: 0.96 },
+        { scale: 1, duration: 0.5, ease: 'elastic.out(1.2, 0.5)' }
+      );
+    }
 
     setTimeout(() => {
       setIsSubmitting(false);
@@ -73,28 +145,28 @@ export default function CreateBeastPage() {
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header */}
-      <section className="border-b border-primary bg-background pt-12 pb-8">
+      <section ref={headerRef} className="border-b border-primary bg-background pt-12 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-3">
+          <div className="forge-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-3">
             <span className="w-2 h-2 bg-secondary" />
             <span>GENETIC FORGE // ATTRIBUTE MATRIX</span>
           </div>
-          <h1 className="font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
+          <h1 className="forge-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
             CREATE YOUR BEAST
           </h1>
-          <p className="font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
+          <p className="forge-desc font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
             Distribute your 20-point attribute budget, equip tactical perks, and optionally bind your combatant to live DreamDEX Event Contract market odds.
           </p>
         </div>
       </section>
 
       {/* Main Form Grid */}
-      <section className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10">
+      <section ref={formRef} className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left / Config Section (8 cols) */}
+          {/* Left / Config Section (7 cols) */}
           <div className="lg:col-span-7 space-y-8">
             {/* 1. Identity & Name */}
-            <div className="border border-primary p-6 bg-background space-y-6">
+            <div className="forge-panel border border-primary p-6 bg-background space-y-6">
               <div className="flex items-center justify-between border-b border-primary pb-3">
                 <h2 className="font-headline font-bold text-xl uppercase tracking-tight">
                   1. IDENTIFIER & PROFILE
@@ -141,7 +213,7 @@ export default function CreateBeastPage() {
                       <button
                         key={preset.id}
                         type="button"
-                        onClick={() => setSelectedAvatar(preset.imageUrl)}
+                        onClick={() => handleAvatarSelect(preset.imageUrl)}
                         className={`relative aspect-square border overflow-hidden transition-all ${
                           selectedAvatar === preset.imageUrl
                             ? 'border-2 border-primary ring-2 ring-primary'
@@ -162,14 +234,17 @@ export default function CreateBeastPage() {
             </div>
 
             {/* 2. Stat Points Budget */}
-            <div className="border border-primary p-6 bg-background space-y-6">
+            <div className="forge-panel border border-primary p-6 bg-background space-y-6">
               <div className="flex items-center justify-between border-b border-primary pb-3">
                 <h2 className="font-headline font-bold text-xl uppercase tracking-tight">
                   2. ATTRIBUTE MATRIX ALLOCATION
                 </h2>
                 <div className="font-mono text-xs">
                   <span>POINTS REMAINING: </span>
-                  <span className={`font-bold px-2 py-0.5 ${remainingPoints === 0 ? 'bg-primary text-background' : 'bg-warning text-primary'}`}>
+                  <span
+                    ref={pointsBadgeRef}
+                    className={`inline-block font-bold px-2 py-0.5 ${remainingPoints === 0 ? 'bg-primary text-background' : 'bg-warning text-primary'}`}
+                  >
                     {remainingPoints} / {STAT_BUDGET.TOTAL_POINTS}
                   </span>
                 </div>
@@ -205,7 +280,10 @@ export default function CreateBeastPage() {
                         >
                           -
                         </button>
-                        <span className="font-mono font-bold text-xl w-8 text-center text-primary">
+                        <span
+                          ref={(el) => { statRefs.current[statKey] = el; }}
+                          className="inline-block font-mono font-bold text-xl w-8 text-center text-primary"
+                        >
                           {val}
                         </span>
                         <button
@@ -224,7 +302,7 @@ export default function CreateBeastPage() {
             </div>
 
             {/* 3. Perk Selection */}
-            <div className="border border-primary p-6 bg-background space-y-6">
+            <div className="forge-panel border border-primary p-6 bg-background space-y-6">
               <div className="flex items-center justify-between border-b border-primary pb-3">
                 <h2 className="font-headline font-bold text-xl uppercase tracking-tight">
                   3. TACTICAL PERKS (SELECT UP TO 2)
@@ -268,7 +346,7 @@ export default function CreateBeastPage() {
             </div>
 
             {/* 4. Market Binding */}
-            <div className="border border-primary p-6 bg-background space-y-6">
+            <div className="forge-panel border border-primary p-6 bg-background space-y-6">
               <div className="flex items-center justify-between border-b border-primary pb-3">
                 <h2 className="font-headline font-bold text-xl uppercase tracking-tight">
                   4. DREAMDEX MARKET BINDING
@@ -312,7 +390,7 @@ export default function CreateBeastPage() {
           </div>
 
           {/* Right / Live Preview Card (5 cols) */}
-          <div className="lg:col-span-5">
+          <div className="forge-panel lg:col-span-5">
             <div className="border-2 border-primary p-6 bg-background sticky top-24 space-y-6">
               <div className="flex items-center justify-between border-b border-primary pb-3">
                 <span className="font-headline font-bold text-xl uppercase tracking-wider">
@@ -321,7 +399,7 @@ export default function CreateBeastPage() {
                 <span className="font-mono text-xs text-secondary font-bold">READY TO FORGE</span>
               </div>
 
-              <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
+              <div className="avatar-preview relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
                 <Image
                   src={selectedAvatar}
                   alt={name}
@@ -351,7 +429,7 @@ export default function CreateBeastPage() {
                   <span className="text-secondary">POWER:</span>
                   <div className="flex items-center gap-2">
                     <div className="w-32 h-2 bg-neutral overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${(stats.power / 10) * 100}%` }} />
+                      <div className="h-full bg-primary transition-all duration-300" style={{ width: `${(stats.power / 10) * 100}%` }} />
                     </div>
                     <span className="font-bold w-4 text-right">{stats.power}</span>
                   </div>
@@ -361,7 +439,7 @@ export default function CreateBeastPage() {
                   <span className="text-secondary">DEFENSE:</span>
                   <div className="flex items-center gap-2">
                     <div className="w-32 h-2 bg-neutral overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${(stats.defense / 10) * 100}%` }} />
+                      <div className="h-full bg-primary transition-all duration-300" style={{ width: `${(stats.defense / 10) * 100}%` }} />
                     </div>
                     <span className="font-bold w-4 text-right">{stats.defense}</span>
                   </div>
@@ -371,7 +449,7 @@ export default function CreateBeastPage() {
                   <span className="text-secondary">SPEED:</span>
                   <div className="flex items-center gap-2">
                     <div className="w-32 h-2 bg-neutral overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${(stats.speed / 10) * 100}%` }} />
+                      <div className="h-full bg-primary transition-all duration-300" style={{ width: `${(stats.speed / 10) * 100}%` }} />
                     </div>
                     <span className="font-bold w-4 text-right">{stats.speed}</span>
                   </div>
@@ -381,7 +459,7 @@ export default function CreateBeastPage() {
                   <span className="text-secondary">SPECIAL:</span>
                   <div className="flex items-center gap-2">
                     <div className="w-32 h-2 bg-neutral overflow-hidden">
-                      <div className="h-full bg-primary" style={{ width: `${(stats.special / 10) * 100}%` }} />
+                      <div className="h-full bg-primary transition-all duration-300" style={{ width: `${(stats.special / 10) * 100}%` }} />
                     </div>
                     <span className="font-bold w-4 text-right">{stats.special}</span>
                   </div>
@@ -408,6 +486,7 @@ export default function CreateBeastPage() {
               </div>
 
               <button
+                ref={submitBtnRef}
                 type="submit"
                 disabled={remainingPoints < 0 || isSubmitting}
                 className="w-full py-4 bg-primary text-background font-headline font-extrabold text-xl uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -10,30 +10,107 @@ import {
   FiArrowRight, 
 } from 'react-icons/fi';
 import { MOCK_BATTLES, MOCK_BEASTS } from '@/lib/mockData';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function HomePage() {
   const liveBattle = MOCK_BATTLES.find((b) => b.status === 'live');
   const pendingBattle = MOCK_BATTLES.find((b) => b.status === 'pending');
 
+  const heroRef = useRef<HTMLDivElement>(null);
+  const protocolRef = useRef<HTMLDivElement>(null);
+  const battlesRef = useRef<HTMLDivElement>(null);
+  const rosterRef = useRef<HTMLDivElement>(null);
+
+  // Hero entrance animation
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      tl.from('.hero-badge', { opacity: 0, y: -16, duration: 0.5 })
+        .from('.hero-line', { opacity: 0, y: 48, duration: 0.7, stagger: 0.12 }, '-=0.2')
+        .from('.hero-desc', { opacity: 0, y: 24, duration: 0.5 }, '-=0.3')
+        .from('.hero-cta', { opacity: 0, y: 20, duration: 0.4, stagger: 0.1 }, '-=0.2')
+        .from('.hero-panel', { opacity: 0, x: 60, duration: 0.7, ease: 'power2.out' }, '-=0.6');
+    }, heroRef);
+    return () => ctx.revert();
+  }, []);
+
+  // Protocol steps ScrollTrigger
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.protocol-step', {
+        scrollTrigger: {
+          trigger: protocolRef.current,
+          start: 'top 80%',
+        },
+        opacity: 0,
+        y: 40,
+        duration: 0.6,
+        stagger: 0.15,
+        ease: 'power2.out',
+      });
+    }, protocolRef);
+    return () => ctx.revert();
+  }, []);
+
+  // Featured battles ScrollTrigger
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.battle-card', {
+        scrollTrigger: {
+          trigger: battlesRef.current,
+          start: 'top 80%',
+        },
+        opacity: 0,
+        y: 32,
+        duration: 0.55,
+        stagger: 0.15,
+        ease: 'power2.out',
+      });
+    }, battlesRef);
+    return () => ctx.revert();
+  }, []);
+
+  // Beast roster cards ScrollTrigger
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.beast-card', {
+        scrollTrigger: {
+          trigger: rosterRef.current,
+          start: 'top 80%',
+        },
+        opacity: 0,
+        y: 30,
+        scale: 0.97,
+        duration: 0.5,
+        stagger: 0.1,
+        ease: 'back.out(1.4)',
+      });
+    }, rosterRef);
+    return () => ctx.revert();
+  }, []);
+
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground">
       {/* 1. HERO SECTION */}
-      <section className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-16 pb-20">
+      <section ref={heroRef} className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-16 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border border-primary p-6 lg:p-12 bg-background">
           <div className="lg:col-span-7 flex flex-col justify-between gap-8">
             <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary text-background font-mono text-xs uppercase tracking-wider">
+              <div className="hero-badge inline-flex items-center gap-2 px-3 py-1 bg-primary text-background font-mono text-xs uppercase tracking-wider">
                 <span className="w-2 h-2 bg-secondary" />
                 <span>SOMNIA SHANNON // EVENT CONTRACT ARENA</span>
               </div>
 
               <h1 className="font-headline font-extrabold text-5xl sm:text-7xl lg:text-8xl leading-[0.9] tracking-tighter uppercase text-primary">
-                CREATE YOUR BEAST.<br />
-                WATCH IT FIGHT.<br />
-                BET ON THE WINNER.
+                <span className="hero-line block">CREATE YOUR BEAST.</span>
+                <span className="hero-line block">WATCH IT FIGHT.</span>
+                <span className="hero-line block">BET ON THE WINNER.</span>
               </h1>
 
-              <p className="font-sans text-base lg:text-xl text-secondary max-w-xl leading-relaxed">
+              <p className="hero-desc font-sans text-base lg:text-xl text-secondary max-w-xl leading-relaxed">
                 Primal AI combat meets precision financial forecasting. Forge your agent from raw parameters, enter the pit, and let live DreamDEX Event Contract market odds power real-time combat modifiers.
               </p>
             </div>
@@ -41,14 +118,14 @@ export default function HomePage() {
             <div className="flex flex-wrap gap-4 pt-2">
               <Link 
                 href="/create"
-                className="px-8 py-4 bg-primary text-background font-headline font-bold text-lg uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors inline-flex items-center gap-2"
+                className="hero-cta px-8 py-4 bg-primary text-background font-headline font-bold text-lg uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors inline-flex items-center gap-2"
               >
                 <FiPlusSquare className="w-5 h-5" />
                 <span>Create Your Beast</span>
               </Link>
               <Link 
                 href="/arena"
-                className="px-8 py-4 bg-transparent text-primary font-headline font-bold text-lg uppercase tracking-wider hover:bg-primary hover:text-background border border-primary transition-colors inline-flex items-center gap-2"
+                className="hero-cta px-8 py-4 bg-transparent text-primary font-headline font-bold text-lg uppercase tracking-wider hover:bg-primary hover:text-background border border-primary transition-colors inline-flex items-center gap-2"
               >
                 <FiCrosshair className="w-5 h-5" />
                 <span>Enter The Arena</span>
@@ -56,7 +133,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="lg:col-span-5 flex flex-col justify-center">
+          <div className="hero-panel lg:col-span-5 flex flex-col justify-center">
             <div className="border border-primary p-4 bg-primary text-background flex flex-col gap-4">
               <div className="flex items-center justify-between font-mono text-[11px] text-background/60 border-b border-background/20 pb-2">
                 <span>COMBAT_SIMULATION // SEQ_01</span>
@@ -98,7 +175,7 @@ export default function HomePage() {
       </section>
 
       {/* 2. HOW IT WORKS / PROTOCOL */}
-      <section className="border-y border-primary bg-primary text-background py-20">
+      <section ref={protocolRef} className="border-y border-primary bg-primary text-background py-20">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
           <div className="flex items-center gap-4 mb-12">
             <span className="font-mono text-xs uppercase tracking-widest text-background/60">PROTOCOL EXECUTION FLOW</span>
@@ -107,7 +184,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 border border-background/20">
             {/* Step 1 */}
-            <div className="p-8 border-b md:border-b-0 md:border-r border-background/20 flex flex-col justify-between gap-6 relative overflow-hidden group">
+            <div className="protocol-step p-8 border-b md:border-b-0 md:border-r border-background/20 flex flex-col justify-between gap-6 relative overflow-hidden group">
               <div className="absolute top-2 right-4 text-7xl font-headline font-extrabold text-background/5 group-hover:text-background/15 transition-colors">
                 01
               </div>
@@ -127,7 +204,7 @@ export default function HomePage() {
             </div>
 
             {/* Step 2 */}
-            <div className="p-8 border-b md:border-b-0 md:border-r border-background/20 flex flex-col justify-between gap-6 relative overflow-hidden group bg-background/[0.02]">
+            <div className="protocol-step p-8 border-b md:border-b-0 md:border-r border-background/20 flex flex-col justify-between gap-6 relative overflow-hidden group bg-background/[0.02]">
               <div className="absolute top-2 right-4 text-7xl font-headline font-extrabold text-background/5 group-hover:text-background/15 transition-colors">
                 02
               </div>
@@ -147,7 +224,7 @@ export default function HomePage() {
             </div>
 
             {/* Step 3 */}
-            <div className="p-8 flex flex-col justify-between gap-6 relative overflow-hidden group">
+            <div className="protocol-step p-8 flex flex-col justify-between gap-6 relative overflow-hidden group">
               <div className="absolute top-2 right-4 text-7xl font-headline font-extrabold text-background/5 group-hover:text-background/15 transition-colors">
                 03
               </div>
@@ -170,7 +247,7 @@ export default function HomePage() {
       </section>
 
       {/* 3. FEATURED LIVE & PENDING BATTLES */}
-      <section className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 py-20">
+      <section ref={battlesRef} className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 py-20">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <div className="font-mono text-xs text-secondary uppercase tracking-widest">REAL-TIME DISPATCH</div>
@@ -190,7 +267,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Live Battle Card */}
           {liveBattle && (
-            <div className="border border-primary p-6 bg-background flex flex-col justify-between gap-6 relative">
+            <div className="battle-card border border-primary p-6 bg-background flex flex-col justify-between gap-6 relative">
               <div className="flex items-center justify-between border-b border-primary pb-4">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 bg-secondary animate-pulse" />
@@ -260,7 +337,7 @@ export default function HomePage() {
 
           {/* Pending Battle Card */}
           {pendingBattle && (
-            <div className="border border-primary p-6 bg-background flex flex-col justify-between gap-6">
+            <div className="battle-card border border-primary p-6 bg-background flex flex-col justify-between gap-6">
               <div className="flex items-center justify-between border-b border-primary pb-4">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 bg-warning" />
@@ -335,7 +412,7 @@ export default function HomePage() {
       </section>
 
       {/* 4. ROSTER HIGHLIGHTS */}
-      <section className="border-t border-primary bg-background py-20">
+      <section ref={rosterRef} className="border-t border-primary bg-background py-20">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -357,7 +434,7 @@ export default function HomePage() {
             {MOCK_BEASTS.slice(0, 4).map((beast) => (
               <div 
                 key={beast.id} 
-                className="border border-primary bg-background p-4 flex flex-col justify-between gap-4 group hover:border-primary transition-colors"
+                className="beast-card border border-primary bg-background p-4 flex flex-col justify-between gap-4 group hover:border-primary transition-colors"
               >
                 <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
                   <Image

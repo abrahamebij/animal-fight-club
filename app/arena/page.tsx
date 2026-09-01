@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fi';
 import { MOCK_BATTLES } from '@/lib/mockData';
 import { BattleStatus } from '@/lib/types';
+import gsap from 'gsap';
 
 export default function ArenaPage() {
   const [filter, setFilter] = useState<'all' | BattleStatus>('all');
@@ -25,26 +26,70 @@ export default function ArenaPage() {
   const pendingCount = MOCK_BATTLES.filter((b) => b.status === 'pending').length;
   const completedCount = MOCK_BATTLES.filter((b) => b.status === 'completed').length;
 
+  const headerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const prevFilter = useRef(filter);
+
+  // Header entrance animation
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.arena-badge', { opacity: 0, y: -12, duration: 0.45, ease: 'power2.out' });
+      gsap.from('.arena-title', { opacity: 0, y: 32, duration: 0.6, ease: 'power3.out', delay: 0.1 });
+      gsap.from('.arena-desc', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out', delay: 0.25 });
+      gsap.from('.arena-actions', { opacity: 0, y: 16, duration: 0.45, ease: 'power2.out', delay: 0.35 });
+    }, headerRef);
+    return () => ctx.revert();
+  }, []);
+
+  // Animate battle cards on mount (initial load)
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.battle-card', {
+        opacity: 0,
+        y: 28,
+        duration: 0.5,
+        stagger: 0.08,
+        ease: 'power2.out',
+        delay: 0.5,
+      });
+    }, gridRef);
+    return () => ctx.revert();
+  }, []);
+
+  // Re-animate cards when filter changes
+  useEffect(() => {
+    if (prevFilter.current === filter) return;
+    prevFilter.current = filter;
+
+    if (!gridRef.current) return;
+    const cards = gridRef.current.querySelectorAll('.battle-card');
+    gsap.fromTo(
+      cards,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.4, stagger: 0.07, ease: 'power2.out' }
+    );
+  }, [filter]);
+
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header Banner */}
-      <section className="border-b border-primary bg-background pt-12 pb-8">
+      <section ref={headerRef} className="border-b border-primary bg-background pt-12 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider">
+              <div className="arena-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider">
                 <span className="w-2 h-2 bg-secondary" />
                 <span>ARENA DISPATCH GRID</span>
               </div>
-              <h1 className="font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
+              <h1 className="arena-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
                 THE COMBAT ARENA
               </h1>
-              <p className="font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
+              <p className="arena-desc font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
                 Live agentic combat encounters and pending wagering windows on Somnia Shannon. Spectators can bet on beast outcomes during active 1-hour windows.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="arena-actions flex flex-wrap items-center gap-3">
               <Link
                 href="/create"
                 className="px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors inline-flex items-center gap-2"
@@ -121,7 +166,7 @@ export default function ArenaPage() {
 
       {/* Battles Grid */}
       <section className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredBattles.map((battle) => {
             const isLive = battle.status === 'live';
             const isPending = battle.status === 'pending';
@@ -130,7 +175,7 @@ export default function ArenaPage() {
             return (
               <div 
                 key={battle.id}
-                className="border border-primary p-6 flex flex-col justify-between gap-6 bg-background"
+                className="battle-card border border-primary p-6 flex flex-col justify-between gap-6 bg-background"
               >
                 {/* Header Status */}
                 <div className="flex items-center justify-between border-b border-primary pb-3">

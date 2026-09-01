@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -16,6 +16,7 @@ import {
 } from 'react-icons/fi';
 import { MOCK_BATTLES } from '@/lib/mockData';
 import { Battle, CombatTurn } from '@/lib/types';
+import gsap from 'gsap';
 
 export default function BattleViewPage() {
   const params = useParams();
@@ -36,14 +37,133 @@ export default function BattleViewPage() {
   const hpA = lastTurn?.beastAHp ?? 100;
   const hpB = lastTurn?.beastBHp ?? 100;
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hpBarARef = useRef<HTMLDivElement>(null);
+  const hpBarBRef = useRef<HTMLDivElement>(null);
+  const betBtnRef = useRef<HTMLButtonElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  const prevLogLength = useRef(battle.combatLog.length);
+
+  // Mount entrance: stagger the 3 fighter columns in
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.fighter-panel', {
+        opacity: 0,
+        x: (i) => (i === 0 ? -80 : i === 2 ? 80 : 0),
+        y: (i) => (i === 1 ? 30 : 0),
+        duration: 0.7,
+        stagger: 0.12,
+        ease: 'power3.out',
+      });
+      gsap.from('.bottom-panel', {
+        opacity: 0,
+        y: 40,
+        duration: 0.6,
+        stagger: 0.15,
+        ease: 'power2.out',
+        delay: 0.5,
+      });
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
+
+  // HP bars: animate width on mount
+  useEffect(() => {
+    if (hpBarARef.current) {
+      gsap.fromTo(
+        hpBarARef.current,
+        { width: '100%' },
+        { width: `${Math.max(0, hpA)}%`, duration: 1.2, ease: 'power2.inOut', delay: 0.9 }
+      );
+    }
+    if (hpBarBRef.current) {
+      gsap.fromTo(
+        hpBarBRef.current,
+        { width: '100%' },
+        { width: `${Math.max(0, hpB)}%`, duration: 1.2, ease: 'power2.inOut', delay: 1.0 }
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // HP bars: animate on value change (after mount)
+  useEffect(() => {
+    if (hpBarARef.current) {
+      gsap.to(hpBarARef.current, {
+        width: `${Math.max(0, hpA)}%`,
+        duration: 0.7,
+        ease: 'power2.out',
+      });
+      if (hpA < 100) {
+        // Flash red on damage
+        gsap.to(hpBarARef.current, {
+          backgroundColor: '#DC2626',
+          duration: 0.08,
+          yoyo: true,
+          repeat: 3,
+          onComplete: () => {
+            if (hpBarARef.current) {
+              gsap.set(hpBarARef.current, { backgroundColor: hpA <= 25 ? '#DC2626' : 'var(--primary)' });
+            }
+          },
+        });
+      }
+    }
+    if (hpBarBRef.current) {
+      gsap.to(hpBarBRef.current, {
+        width: `${Math.max(0, hpB)}%`,
+        duration: 0.7,
+        ease: 'power2.out',
+      });
+      if (hpB < 100) {
+        gsap.to(hpBarBRef.current, {
+          backgroundColor: '#DC2626',
+          duration: 0.08,
+          yoyo: true,
+          repeat: 3,
+          onComplete: () => {
+            if (hpBarBRef.current) {
+              gsap.set(hpBarBRef.current, { backgroundColor: hpB <= 25 ? '#DC2626' : 'var(--primary)' });
+            }
+          },
+        });
+      }
+    }
+  }, [hpA, hpB]);
+
+  // Animate new combat log entries as they appear
+  useEffect(() => {
+    const currentLength = battle.combatLog.length;
+    if (currentLength > prevLogLength.current && logRef.current) {
+      const entries = logRef.current.querySelectorAll('.log-entry');
+      const newEntries = Array.from(entries).slice(prevLogLength.current);
+      gsap.from(newEntries, {
+        opacity: 0,
+        y: -12,
+        duration: 0.35,
+        stagger: 0.06,
+        ease: 'power2.out',
+      });
+    }
+    prevLogLength.current = currentLength;
+  }, [battle.combatLog.length]);
+
   const handlePlaceBet = (e: React.FormEvent) => {
     e.preventDefault();
     setBetPlaced(true);
+    // Bounce animation on the button
+    if (betBtnRef.current) {
+      gsap.fromTo(
+        betBtnRef.current,
+        { scale: 0.94 },
+        { scale: 1, duration: 0.45, ease: 'elastic.out(1.3, 0.5)' }
+      );
+    }
     setTimeout(() => setBetPlaced(false), 3000);
   };
 
   return (
-    <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
+    <div ref={containerRef} className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Top Breadcrumb & Status Bar */}
       <div className="border-b border-primary bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
@@ -73,7 +193,7 @@ export default function BattleViewPage() {
         {/* 1. Combatants Visual Duel Stage */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           {/* Fighter A Panel (4 cols) */}
-          <div className="lg:col-span-4 border-2 border-primary p-6 bg-background flex flex-col justify-between gap-6">
+          <div className="fighter-panel lg:col-span-4 border-2 border-primary p-6 bg-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-primary pb-2">
                 <span className="font-mono text-xs text-secondary font-bold">COMBATANT 01 // ALPHA</span>
@@ -111,9 +231,10 @@ export default function BattleViewPage() {
                   <span className={hpA <= 25 ? 'text-danger font-bold' : 'text-primary'}>{hpA} / 100 HP</span>
                 </div>
                 <div className="w-full h-3.5 bg-neutral border border-primary p-0.5">
-                  <div 
-                    className={`h-full transition-all duration-500 ${hpA <= 25 ? 'bg-danger' : 'bg-primary'}`} 
-                    style={{ width: `${Math.max(0, hpA)}%` }} 
+                  <div
+                    ref={hpBarARef}
+                    className={`h-full ${hpA <= 25 ? 'bg-danger' : 'bg-primary'}`}
+                    style={{ width: `${Math.max(0, hpA)}%` }}
                   />
                 </div>
               </div>
@@ -153,7 +274,7 @@ export default function BattleViewPage() {
           </div>
 
           {/* Center Live Combat Log & Reasoner Feed (4 cols) */}
-          <div className="lg:col-span-4 border-2 border-primary p-6 bg-primary text-background flex flex-col justify-between gap-6">
+          <div className="fighter-panel lg:col-span-4 border-2 border-primary p-6 bg-primary text-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-background/20 pb-2 font-mono text-xs">
                 <div className="flex items-center gap-2 text-background/80">
@@ -196,9 +317,9 @@ export default function BattleViewPage() {
               <div className="font-mono text-[11px] text-background/40 uppercase">
                 COMBAT EVENT LOG ({battle.combatLog.length} TURNS)
               </div>
-              <div className="max-h-36 overflow-y-auto space-y-1.5 font-mono text-[11px] pr-2">
+              <div ref={logRef} className="max-h-36 overflow-y-auto space-y-1.5 font-mono text-[11px] pr-2">
                 {battle.combatLog.map((turn) => (
-                  <div key={turn.turnNumber} className="flex justify-between text-background/70 border-b border-background/5 pb-1">
+                  <div key={turn.turnNumber} className="log-entry flex justify-between text-background/70 border-b border-background/5 pb-1">
                     <span>T{turn.turnNumber} [{turn.actor === 'beastA' ? battle.beastA.name.split(' ')[0] : battle.beastB.name.split(' ')[0]}]: {turn.actionName}</span>
                     <span className="text-danger font-bold">-{turn.damageDealt} HP</span>
                   </div>
@@ -208,7 +329,7 @@ export default function BattleViewPage() {
           </div>
 
           {/* Fighter B Panel (4 cols) */}
-          <div className="lg:col-span-4 border-2 border-primary p-6 bg-background flex flex-col justify-between gap-6">
+          <div className="fighter-panel lg:col-span-4 border-2 border-primary p-6 bg-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-primary pb-2">
                 <span className="font-mono text-xs text-secondary font-bold">COMBATANT 02 // BRAVO</span>
@@ -246,9 +367,10 @@ export default function BattleViewPage() {
                   <span className={hpB <= 25 ? 'text-danger font-bold' : 'text-primary'}>{hpB} / 100 HP</span>
                 </div>
                 <div className="w-full h-3.5 bg-neutral border border-primary p-0.5">
-                  <div 
-                    className={`h-full transition-all duration-500 ${hpB <= 25 ? 'bg-danger' : 'bg-primary'}`} 
-                    style={{ width: `${Math.max(0, hpB)}%` }} 
+                  <div
+                    ref={hpBarBRef}
+                    className={`h-full ${hpB <= 25 ? 'bg-danger' : 'bg-primary'}`}
+                    style={{ width: `${Math.max(0, hpB)}%` }}
                   />
                 </div>
               </div>
@@ -291,7 +413,7 @@ export default function BattleViewPage() {
         {/* 2. Market Pulse Terminal & Spectator Wagering Split Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Market Pulse Panel (7 cols) */}
-          <div className="lg:col-span-7 border border-primary p-6 bg-background space-y-6">
+          <div className="bottom-panel lg:col-span-7 border border-primary p-6 bg-background space-y-6">
             <div className="flex items-center justify-between border-b border-primary pb-3">
               <div className="flex items-center gap-2">
                 <FiActivity className="w-5 h-5 text-primary" />
@@ -381,7 +503,7 @@ export default function BattleViewPage() {
           </div>
 
           {/* Spectator Wagering Panel (5 cols) */}
-          <div className="lg:col-span-5 border-2 border-primary p-6 bg-background space-y-6">
+          <div className="bottom-panel lg:col-span-5 border-2 border-primary p-6 bg-background space-y-6">
             <div className="flex items-center justify-between border-b border-primary pb-3">
               <div className="flex items-center gap-2">
                 <FiZap className="w-5 h-5 text-warning" />
@@ -454,6 +576,7 @@ export default function BattleViewPage() {
               </div>
 
               <button
+                ref={betBtnRef}
                 type="submit"
                 disabled={!isPending && !isLive}
                 className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
