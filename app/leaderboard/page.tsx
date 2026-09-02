@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
@@ -12,6 +12,7 @@ import {
 import { getAllBeasts } from '@/lib/services/beastService';
 import { getAllBets } from '@/lib/services/battleService';
 import { Beast, Bet, BoundAsset } from '@/lib/types';
+import gsap from 'gsap';
 
 interface DynamicBettorStats {
   address: string;
@@ -28,6 +29,10 @@ export default function LeaderboardPage() {
   const [search, setSearch] = useState('');
   const [assetFilter, setAssetFilter] = useState<'ALL' | BoundAsset>('ALL');
   const [loading, setLoading] = useState(true);
+
+  const headerRef = useRef<HTMLElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
+  const prevTab = useRef(tab);
 
   useEffect(() => {
     let mounted = true;
@@ -74,6 +79,38 @@ export default function LeaderboardPage() {
     };
   }, []);
 
+  // Header entrance
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from('.lb-badge', { opacity: 0, y: -12, duration: 0.4, ease: 'power2.out' });
+      gsap.from('.lb-title', { opacity: 0, y: 28, duration: 0.55, ease: 'power3.out', delay: 0.1 });
+      gsap.from('.lb-desc', { opacity: 0, y: 16, duration: 0.4, ease: 'power2.out', delay: 0.2 });
+    }, headerRef);
+    return () => ctx.revert();
+  }, []);
+
+  // Animate table rows in once data loads
+  useLayoutEffect(() => {
+    if (loading || !tableRef.current) return;
+    const rows = tableRef.current.querySelectorAll('.lb-row');
+    gsap.fromTo(rows,
+      { opacity: 0, x: -16 },
+      { opacity: 1, x: 0, duration: 0.4, stagger: 0.04, ease: 'power2.out' }
+    );
+  }, [loading, tab]);
+
+  // Re-animate rows on tab switch
+  useEffect(() => {
+    if (prevTab.current === tab) return;
+    prevTab.current = tab;
+    if (!tableRef.current) return;
+    const rows = tableRef.current.querySelectorAll('.lb-row');
+    gsap.fromTo(rows,
+      { opacity: 0, x: -16 },
+      { opacity: 1, x: 0, duration: 0.35, stagger: 0.04, ease: 'power2.out' }
+    );
+  }, [tab]);
+
   // Sort beasts by wins then winRate
   const sortedBeasts = [...beasts]
     .filter((b) => {
@@ -94,16 +131,16 @@ export default function LeaderboardPage() {
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header */}
-      <section className="border-b border-primary bg-background pt-12 pb-8">
+      <section ref={headerRef} className="border-b border-primary bg-background pt-12 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-3">
+          <div className="lb-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-3">
             <span className="w-2 h-2 bg-secondary" />
             <span>GLOBAL RANKINGS // PROVING GROUNDS</span>
           </div>
-          <h1 className="font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
+          <h1 className="lb-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
             ARENA LEADERBOARDS
           </h1>
-          <p className="font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
+          <p className="lb-desc font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
             Historical combat rankings and spectator wagering records on Somnia Shannon. Auditable victory counts and prediction accuracy.
           </p>
         </div>
@@ -168,6 +205,7 @@ export default function LeaderboardPage() {
 
       {/* Table Content */}
       <section className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10">
+        <div ref={tableRef}>
         {tab === 'beasts' ? (
           <div className="border border-primary bg-background overflow-x-auto">
             {sortedBeasts.length > 0 ? (
@@ -190,7 +228,7 @@ export default function LeaderboardPage() {
                     const winRate = totalDuels > 0 ? Math.round((beast.record.wins / totalDuels) * 100) : 0;
 
                     return (
-                      <tr key={beast.id} className="hover:bg-surface-container-low transition-colors">
+                      <tr key={beast.id} className="lb-row hover:bg-surface-container-low transition-colors">
                         <td className="p-4 text-center font-bold">
                           <span className={`inline-flex items-center justify-center w-7 h-7 ${
                             rank === 1 ? 'bg-primary text-background font-bold' :
@@ -276,7 +314,7 @@ export default function LeaderboardPage() {
                 </thead>
                 <tbody className="divide-y divide-neutral font-mono text-xs">
                   {bettors.map((entry, idx) => (
-                    <tr key={entry.address} className="hover:bg-surface-container-low transition-colors">
+                    <tr key={entry.address} className="lb-row hover:bg-surface-container-low transition-colors">
                       <td className="p-4 text-center font-bold">
                         <span className={`inline-flex items-center justify-center w-7 h-7 ${
                           idx === 0 ? 'bg-primary text-background font-bold' :
@@ -320,6 +358,7 @@ export default function LeaderboardPage() {
             )}
           </div>
         )}
+        </div>
       </section>
     </div>
   );

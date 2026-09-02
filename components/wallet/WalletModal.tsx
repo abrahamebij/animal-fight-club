@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useLayoutEffect, useRef } from 'react';
 import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain, useBalance } from 'wagmi';
 import { 
   FiX, 
@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fi';
 import { somniaShannon } from '@/lib/config/wagmi';
 import { formatBalance } from '@/lib/utils/format';
+import gsap from 'gsap';
 
 interface WalletModalProps {
   isOpen: boolean;
@@ -33,6 +34,17 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
   });
 
   const [copied, setCopied] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Animate in on open
+  useLayoutEffect(() => {
+    if (!isOpen || !panelRef.current) return;
+    gsap.fromTo(
+      panelRef.current,
+      { opacity: 0, scale: 0.94, y: 16 },
+      { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'power3.out' }
+    );
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -49,6 +61,7 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/80 backdrop-blur-xs p-4 animate-in fade-in duration-200">
       <div 
+        ref={panelRef}
         className="w-full max-w-md bg-background border-2 border-primary shadow-2xl p-6 relative flex flex-col gap-6"
         onClick={(e) => e.stopPropagation()}
       >

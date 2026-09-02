@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
@@ -16,6 +16,7 @@ import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { getBeastsByOwner, getAllBeasts } from '@/lib/services/beastService';
 import { createBattle } from '@/lib/services/battleService';
 import { Beast } from '@/lib/types';
+import gsap from 'gsap';
 
 interface ChallengeModalProps {
   isOpen: boolean;
@@ -33,6 +34,18 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
   const [selectedMyBeast, setSelectedMyBeast] = useState<Beast | null>(null);
   const [selectedOpponent, setSelectedOpponent] = useState<Beast | null>(targetOpponent || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Animate in when opened
+  useLayoutEffect(() => {
+    if (!isOpen || !panelRef.current) return;
+    gsap.fromTo(
+      panelRef.current,
+      { opacity: 0, scale: 0.94, y: 16 },
+      { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'power3.out' }
+    );
+  }, [isOpen]);
 
   useEffect(() => {
     if (targetOpponent) {
@@ -90,6 +103,7 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/80 backdrop-blur-xs p-4 animate-in fade-in duration-200">
       <div 
+        ref={panelRef}
         className="w-full max-w-3xl bg-background border-2 border-primary shadow-2xl p-6 relative flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >

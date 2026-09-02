@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -16,6 +16,7 @@ import { getAllBattles } from '@/lib/services/battleService';
 import { Beast, Battle } from '@/lib/types';
 import { AVAILABLE_PERKS } from '@/lib/constants/game';
 import { formatDate } from '@/lib/utils/timer';
+import gsap from 'gsap';
 
 export default function BeastProfilePage() {
   const params = useParams();
@@ -26,6 +27,8 @@ export default function BeastProfilePage() {
   const [beast, setBeast] = useState<Beast | null>(null);
   const [beastBattles, setBeastBattles] = useState<Battle[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -51,6 +54,38 @@ export default function BeastProfilePage() {
       mounted = false;
     };
   }, [beastId]);
+
+  // Animate in once beast data has loaded and rendered
+  useLayoutEffect(() => {
+    if (!beast) return;
+    const ctx = gsap.context(() => {
+      gsap.from('.beast-col-left', {
+        opacity: 0, x: -50, duration: 0.65, ease: 'power3.out',
+      });
+      gsap.from('.beast-col-right', {
+        opacity: 0, x: 50, duration: 0.65, ease: 'power3.out',
+      });
+      // Stat bars: animate from 0 width
+      gsap.from('.stat-bar-fill', {
+        scaleX: 0,
+        transformOrigin: 'left center',
+        duration: 0.8,
+        stagger: 0.1,
+        ease: 'power2.out',
+        delay: 0.4,
+      });
+      // Combat record numbers count up
+      gsap.from('.record-num', {
+        opacity: 0,
+        y: 12,
+        duration: 0.4,
+        stagger: 0.1,
+        delay: 0.5,
+        ease: 'power2.out',
+      });
+    }, pageRef);
+    return () => ctx.revert();
+  }, [beast]);
 
   if (loading) {
     return (
@@ -88,7 +123,7 @@ export default function BeastProfilePage() {
     : 0;
 
   return (
-    <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
+    <div ref={pageRef} className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Top Breadcrumb */}
       <div className="border-b border-primary bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
@@ -106,7 +141,7 @@ export default function BeastProfilePage() {
       <div className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Column: Beast Avatar & Summary (5 cols) */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="beast-col-left lg:col-span-5 space-y-6">
             <div className="border-2 border-primary bg-background p-6 space-y-6">
               <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
                 <Image
@@ -139,15 +174,15 @@ export default function BeastProfilePage() {
               <div className="border-t border-primary pt-4 grid grid-cols-3 gap-2 text-center font-mono">
                 <div className="bg-surface-container-low p-3 border border-neutral">
                   <span className="text-secondary block text-[10px]">WINS</span>
-                  <span className="font-headline font-bold text-2xl text-primary">{beast.record.wins}</span>
+                  <span className="record-num font-headline font-bold text-2xl text-primary">{beast.record.wins}</span>
                 </div>
                 <div className="bg-surface-container-low p-3 border border-neutral">
                   <span className="text-secondary block text-[10px]">LOSSES</span>
-                  <span className="font-headline font-bold text-2xl text-primary">{beast.record.losses}</span>
+                  <span className="record-num font-headline font-bold text-2xl text-primary">{beast.record.losses}</span>
                 </div>
                 <div className="bg-surface-container-low p-3 border border-neutral">
                   <span className="text-secondary block text-[10px]">WIN RATE</span>
-                  <span className="font-headline font-bold text-2xl text-primary">{winRate}%</span>
+                  <span className="record-num font-headline font-bold text-2xl text-primary">{winRate}%</span>
                 </div>
               </div>
 
@@ -170,7 +205,7 @@ export default function BeastProfilePage() {
           </div>
 
           {/* Right Column: Attribute Matrix, Passives, Combat Record (7 cols) */}
-          <div className="lg:col-span-7 space-y-8">
+          <div className="beast-col-right lg:col-span-7 space-y-8">
             {/* Attribute Matrix */}
             <div className="border border-primary p-6 bg-background space-y-6">
               <div className="flex items-center justify-between border-b border-primary pb-3">
@@ -188,10 +223,7 @@ export default function BeastProfilePage() {
                     <span className="text-primary">{beast.stats.power} / 20</span>
                   </div>
                   <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
-                    <div 
-                      className="h-full bg-primary" 
-                      style={{ width: `${(beast.stats.power / 20) * 100}%` }} 
-                    />
+                    <div className="stat-bar-fill h-full bg-primary" style={{ width: `${(beast.stats.power / 20) * 100}%` }} />
                   </div>
                 </div>
 
@@ -202,10 +234,7 @@ export default function BeastProfilePage() {
                     <span className="text-primary">{beast.stats.defense} / 20</span>
                   </div>
                   <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
-                    <div 
-                      className="h-full bg-primary" 
-                      style={{ width: `${(beast.stats.defense / 20) * 100}%` }} 
-                    />
+                    <div className="stat-bar-fill h-full bg-primary" style={{ width: `${(beast.stats.defense / 20) * 100}%` }} />
                   </div>
                 </div>
 
@@ -216,10 +245,7 @@ export default function BeastProfilePage() {
                     <span className="text-primary">{beast.stats.speed} / 20</span>
                   </div>
                   <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
-                    <div 
-                      className="h-full bg-primary" 
-                      style={{ width: `${(beast.stats.speed / 20) * 100}%` }} 
-                    />
+                    <div className="stat-bar-fill h-full bg-primary" style={{ width: `${(beast.stats.speed / 20) * 100}%` }} />
                   </div>
                 </div>
 
@@ -230,10 +256,7 @@ export default function BeastProfilePage() {
                     <span className="text-primary">{beast.stats.special} / 20</span>
                   </div>
                   <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
-                    <div 
-                      className="h-full bg-primary" 
-                      style={{ width: `${(beast.stats.special / 20) * 100}%` }} 
-                    />
+                    <div className="stat-bar-fill h-full bg-primary" style={{ width: `${(beast.stats.special / 20) * 100}%` }} />
                   </div>
                 </div>
               </div>
