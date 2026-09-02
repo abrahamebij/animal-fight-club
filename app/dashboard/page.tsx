@@ -14,6 +14,7 @@ import { formatBalance } from '@/lib/utils/format';
 import { getBeastsByOwner } from '@/lib/services/beastService';
 import { getBetsByBettor } from '@/lib/services/battleService';
 import { Beast, Bet } from '@/lib/types';
+import { RouteGuard } from '@/components/wallet/RouteGuard';
 import gsap from 'gsap';
 
 export default function DashboardPage() {
@@ -85,7 +86,8 @@ export default function DashboardPage() {
     : 'NOT CONNECTED';
 
   return (
-    <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
+    <RouteGuard routeName="COMMAND CENTER DASHBOARD">
+      <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header */}
       <section ref={headerRef} className="border-b border-primary bg-background pt-12 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
@@ -291,5 +293,6 @@ export default function DashboardPage() {
         </div>
       </section>
     </div>
+    </RouteGuard>
   );
 }

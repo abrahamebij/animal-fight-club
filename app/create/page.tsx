@@ -17,6 +17,7 @@ import { STAT_BUDGET, AVAILABLE_PERKS } from '@/lib/constants/game';
 import { BeastStats, BoundAsset } from '@/lib/types';
 import { createBeast } from '@/lib/services/beastService';
 import { uploadImageToImgBB } from '@/lib/services/imageUploadService';
+import { RouteGuard } from '@/components/wallet/RouteGuard';
 import gsap from 'gsap';
 
 export default function CreateBeastPage() {
@@ -60,7 +61,8 @@ export default function CreateBeastPage() {
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
       tl.from('.forge-badge', { opacity: 0, y: -12, duration: 0.4 })
         .from('.forge-title', { opacity: 0, y: 28, duration: 0.55 }, '-=0.2')
-        .from('.forge-desc', { opacity: 0, y: 18, duration: 0.4 }, '-=0.2');
+        .from('.forge-desc', { opacity: 0, y: 18, duration: 0.4 }, '-=0.2')
+        .from('.forge-hero-ill', { opacity: 0, scale: 0.85, duration: 0.6, ease: 'back.out(1.4)' }, '-=0.3');
     }, headerRef);
     return () => ctx.revert();
   }, []);
@@ -219,7 +221,8 @@ export default function CreateBeastPage() {
   };
 
   return (
-    <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
+    <RouteGuard routeName="GENETIC FORGE">
+      <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* 1. HEADER */}
       <section ref={headerRef} className="border-b border-primary bg-background pt-12 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
@@ -652,5 +655,6 @@ export default function CreateBeastPage() {
         </form>
       </section>
     </div>
+    </RouteGuard>
   );
 }

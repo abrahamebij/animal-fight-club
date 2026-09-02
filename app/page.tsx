@@ -130,10 +130,10 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border border-primary p-6 lg:p-12 bg-background">
           <div className="lg:col-span-7 flex flex-col justify-between gap-8">
             <div className="space-y-6">
-              <div className="hero-badge inline-flex items-center gap-2 px-3 py-1 bg-primary text-background font-mono text-xs uppercase tracking-wider">
+              {/* <div className="hero-badge inline-flex items-center gap-2 px-3 py-1 bg-primary text-background font-mono text-xs uppercase tracking-wider">
                 <span className="w-2 h-2 bg-secondary" />
                 <span>SOMNIA SHANNON // EVENT CONTRACT ARENA</span>
-              </div>
+              </div> */}
 
               <h1 className="font-headline font-extrabold text-5xl sm:text-7xl lg:text-8xl leading-[0.9] tracking-tighter uppercase text-primary">
                 <span className="hero-line block">CREATE YOUR BEAST.</span>

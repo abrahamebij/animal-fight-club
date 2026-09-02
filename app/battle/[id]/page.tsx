@@ -12,7 +12,8 @@ import {
   FiTrendingUp, 
   FiExternalLink, 
   FiArrowLeft,
-  FiTerminal
+  FiTerminal,
+  FiAlertCircle
 } from 'react-icons/fi';
 import { useAccount } from 'wagmi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
@@ -208,8 +209,17 @@ export default function BattleViewPage() {
 
   const { requireAuth } = useWalletGate();
 
+  const isOwnerOfFighter = Boolean(
+    address &&
+    activeBattle && (
+      activeBattle.beastA.ownerAddress?.toLowerCase() === address.toLowerCase() ||
+      activeBattle.beastB.ownerAddress?.toLowerCase() === address.toLowerCase()
+    )
+  );
+
   const handlePlaceBet = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isOwnerOfFighter) return;
     const amountNum = Number(betAmount);
     if (isNaN(amountNum) || amountNum <= 0) return;
 
@@ -218,6 +228,7 @@ export default function BattleViewPage() {
       onSuccess: async () => {
         try {
           if (!address) return;
+          if (isOwnerOfFighter) return;
           await placeBet(activeBattle.id, address, selectedSide, amountNum);
 
           // Update local battle pool state
@@ -666,63 +677,75 @@ export default function BattleViewPage() {
               </div>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handlePlaceBet} className="space-y-4">
-              <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-primary mb-2 font-bold">
-                  SELECT PREDICTED VICTOR
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSide('beastA')}
-                    className={`p-3 font-headline font-bold text-sm uppercase tracking-wider border text-left transition-colors ${
-                      selectedSide === 'beastA'
-                        ? 'bg-primary text-background border-primary'
-                        : 'bg-surface-container-low text-primary border-neutral'
-                    }`}
-                  >
-                    {activeBattle.beastA.name}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSide('beastB')}
-                    className={`p-3 font-headline font-bold text-sm uppercase tracking-wider border text-left transition-colors ${
-                      selectedSide === 'beastB'
-                        ? 'bg-primary text-background border-primary'
-                        : 'bg-surface-container-low text-primary border-neutral'
-                    }`}
-                  >
-                    {activeBattle.beastB.name}
-                  </button>
+            {/* Wagering Form or Owner Exclusion Notice */}
+            {isOwnerOfFighter ? (
+              <div className="p-4 bg-surface-container-low border-2 border-primary space-y-2">
+                <div className="flex items-center gap-2 text-primary font-headline font-bold text-sm uppercase">
+                  <FiAlertCircle className="w-4 h-4 text-warning flex-shrink-0" />
+                  <span>COMBATANT OWNER EXCLUSION</span>
                 </div>
+                <p className="font-mono text-xs text-secondary leading-relaxed">
+                  You own a combatant in this duel (<span className="text-primary font-bold">{activeBattle.beastA.ownerAddress?.toLowerCase() === address?.toLowerCase() ? activeBattle.beastA.name : activeBattle.beastB.name}</span>). Protocol rules prohibit beast owners from placing spectator wagers on their own matches.
+                </p>
               </div>
+            ) : (
+              <form onSubmit={handlePlaceBet} className="space-y-4">
+                <div>
+                  <label className="block font-mono text-xs uppercase tracking-wider text-primary mb-2 font-bold">
+                    SELECT PREDICTED VICTOR
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSide('beastA')}
+                      className={`p-3 font-headline font-bold text-sm uppercase tracking-wider border text-left transition-colors ${
+                        selectedSide === 'beastA'
+                          ? 'bg-primary text-background border-primary'
+                          : 'bg-surface-container-low text-primary border-neutral'
+                      }`}
+                    >
+                      {activeBattle.beastA.name}
+                    </button>
 
-              <div>
-                <label className="block font-mono text-xs uppercase tracking-wider text-primary mb-1.5 font-bold">
-                  WAGER AMOUNT (STT)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={betAmount}
-                  onChange={(e) => setBetAmount(e.target.value)}
-                  className="w-full bg-surface-container-low border border-primary p-3 font-mono font-bold text-base text-primary focus:outline-none"
-                  placeholder="50"
-                />
-              </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSide('beastB')}
+                      className={`p-3 font-headline font-bold text-sm uppercase tracking-wider border text-left transition-colors ${
+                        selectedSide === 'beastB'
+                          ? 'bg-primary text-background border-primary'
+                          : 'bg-surface-container-low text-primary border-neutral'
+                      }`}
+                    >
+                      {activeBattle.beastB.name}
+                    </button>
+                  </div>
+                </div>
 
-              <button
-                ref={betBtnRef}
-                type="submit"
-                disabled={!isPending && !isLive}
-                className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <FiZap className="w-4 h-4" />
-                <span>{betPlaced ? 'WAGER SUBMITTED TO ESCROW' : 'CONFIRM SPECTATOR WAGER'}</span>
-              </button>
-            </form>
+                <div>
+                  <label className="block font-mono text-xs uppercase tracking-wider text-primary mb-1.5 font-bold">
+                    WAGER AMOUNT (STT)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={betAmount}
+                    onChange={(e) => setBetAmount(e.target.value)}
+                    className="w-full bg-surface-container-low border border-primary p-3 font-mono font-bold text-base text-primary focus:outline-none"
+                    placeholder="50"
+                  />
+                </div>
+
+                <button
+                  ref={betBtnRef}
+                  type="submit"
+                  disabled={!isPending && !isLive}
+                  className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <FiZap className="w-4 h-4" />
+                  <span>{betPlaced ? 'WAGER SUBMITTED TO ESCROW' : 'CONFIRM SPECTATOR WAGER'}</span>
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>

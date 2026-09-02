@@ -131,8 +131,94 @@ packages installed and confirmed working (no lint/build run yet).
 
 ## Phase 2 — Wallet connection & auth
 
-**Goal:** Wallet connect gated correctly — required only for create,
-challenge, and bet actions, never for browsing.
+**Goal:** Wallet connect gated correctly at both the route and action level
+— required only for create, challenge, and bet activity, never for
+browsing. Right now nothing enforces this: an unauthenticated user can
+currently navigate to any route directly, including ones that should be
+wallet-gated. This phase fixes that.
+
+### Prompt for Gemini — route protection & permission rules
+
+```
+Animal Fight Club currently has no route protection — Create Beast and the
+Dashboard are reachable by direct URL even without a connected wallet.
+Implement proper gating across the whole app using the rules below. Do not
+rely on hiding nav links alone; hiding a link does not stop someone from
+typing the URL directly or refreshing on that route, so enforcement must
+happen at the route/page level itself.
+
+WALLET-GATED ROUTES (require a connected wallet to view at all):
+- /create-beast
+- /dashboard (My Beasts / Pending Challenges / My Bets)
+
+If a user without a connected wallet navigates to either of these routes
+directly (typed URL, refresh, back button, bookmark), do not render the
+page content. Redirect them to a connect-wallet prompt or the landing page
+with a connect-wallet call to action, and do not flash the protected
+content before redirecting.
+
+OPEN ROUTES (no wallet required to view):
+- / (Landing)
+- /arena
+- /battle/[id] (both Pending and Live states)
+- /beast/[id] (Beast Profile)
+- /leaderboard
+
+These remain fully viewable with no wallet connected. Do not add any wallet
+check to these routes at the page level.
+
+ACTION-LEVEL GATING (page is open, but a specific action within it requires
+a wallet):
+- "Challenge" action on a Beast Profile or Arena listing
+- "Place Your Bet" action within Battle View (Pending state)
+
+For these, the surrounding page renders normally for everyone. Only when
+the user actually triggers the gated action (clicks Challenge or Place
+Your Bet) should the app check wallet connection. If no wallet is
+connected at that moment, intercept the action and show the connect-wallet
+flow instead of proceeding — do not silently fail, and do not let the
+action reach any backend call without a connected address.
+
+LOGOUT WHILE ON A PROTECTED ROUTE
+If a user is currently on a wallet-gated route (/create-beast or
+/dashboard, or mid-way through a gated action) and their wallet
+disconnects — whether by clicking disconnect, switching accounts in their
+wallet extension, or the connection otherwise dropping — immediately
+redirect them out of the protected route the same way as an unauthenticated
+user hitting it directly. Do not leave stale protected content on screen
+after disconnect. Treat "wallet just disconnected while on a gated route"
+identically to "unauthenticated user tried to load a gated route."
+
+IMPLEMENTATION NOTES
+- Use wagmi's connection state (e.g. `useAccount`'s `isConnected`) as the
+  single source of truth for gating decisions — do not maintain a separate
+  parallel "logged in" flag that could drift out of sync with the actual
+  wallet connection.
+- This should work both for client-side navigation (clicking a nav link)
+  and hard navigation (typing the URL, refreshing) — verify both cases
+  explicitly, since a check that only runs on client-side route transitions
+  will miss a direct page load.
+- Confirm with Abraham which Next.js routing pattern to use for this
+  (middleware-based redirect vs. a client-side guard component wrapping
+  protected pages) before implementing, since this affects whether the
+  check happens before or after the page's JavaScript loads.
+```
+
+### Permission matrix (for reference, not to be shown in-app)
+
+| Action | Unauthenticated (no wallet) | Authenticated (wallet connected) |
+|---|---|---|
+| Browse Landing, Arena, Leaderboard | ✅ | ✅ |
+| View any Beast Profile | ✅ | ✅ |
+| View any Battle (Pending or Live) | ✅ | ✅ |
+| View live odds / Market Pulse on a battle | ✅ | ✅ |
+| Create a beast | ❌ (redirected to connect) | ✅ |
+| View /dashboard (My Beasts, Pending Challenges, My Bets) | ❌ (redirected to connect) | ✅ |
+| Challenge another beast | ❌ (action intercepted, prompted to connect) | ✅ — but only if they own the challenging beast |
+| Accept/decline a challenge | ❌ | ✅ — only the challenged beast's owner |
+| Place a bet on a pending battle | ❌ (action intercepted, prompted to connect) | ✅ — but NOT if they own either beast in that battle (owners cannot bet on their own matches, per the product rule already defined) |
+| Disconnect wallet while on an open route (Landing/Arena/Battle/Profile/Leaderboard) | n/a | Stays on the page, page simply reverts to unauthenticated view/behavior |
+| Disconnect wallet while on a protected route (/create-beast, /dashboard) or mid-action | n/a | Immediately redirected out, same as an unauthenticated user hitting that route directly |
 
 - Wagmi config targeting Somnia Shannon testnet (chain ID `50312`, RPC
   `https://dream-rpc.somnia.network`) — confirm this RPC is still current
@@ -142,11 +228,17 @@ challenge, and bet actions, never for browsing.
   overriding the connector library's default theme — flag to Abraham if
   the chosen library makes this difficult)
 - Connected-state handling: truncated address display, disconnect flow
-- Gate logic: Create Beast, Challenge, and Bet actions require a connected
-  wallet; every other page and action does not
+- Route protection and action-level gating implemented exactly per the
+  Gemini prompt above, including the logout-while-on-protected-route
+  redirect behavior
+- Owner-exclusion check for betting (beast owners cannot bet on their own
+  battle) enforced at the action level, not just hinted at in copy
 
 **Sign-off required before Phase 3:** wallet connect flow tested on
-testnet.
+testnet, including: direct URL access to /create-beast and /dashboard
+while disconnected (should redirect), disconnecting mid-session while on a
+protected route (should redirect), and confirming open routes remain fully
+browsable while disconnected.
 
 ---
 
