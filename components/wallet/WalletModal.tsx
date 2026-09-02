@@ -62,11 +62,11 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/80 backdrop-blur-xs p-4 animate-in fade-in duration-200">
       <div 
         ref={panelRef}
-        className="w-full max-w-md bg-background border-2 border-primary shadow-2xl p-6 relative flex flex-col gap-6"
+        className="w-full max-w-md bg-background border border-divider shadow-2xl p-6 relative flex flex-col gap-6"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-primary pb-3">
+        <div className="flex items-center justify-between border-b border-divider pb-3">
           <div className="flex items-center gap-2">
             <FiShield className="w-5 h-5 text-primary" />
             <span className="font-headline font-extrabold text-xl uppercase tracking-wider text-primary">
@@ -75,7 +75,7 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center border border-primary hover:bg-primary hover:text-background transition-colors text-primary"
+            className="w-7 h-7 flex items-center justify-center border border-divider hover:bg-primary hover:text-background transition-colors text-primary"
             aria-label="Close modal"
           >
             <FiX className="w-4 h-4" />
@@ -84,7 +84,7 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
 
         {/* Action Gate Prompt if triggered by gated action */}
         {actionIntentMessage && (
-          <div className="border border-primary bg-surface-container-low p-3 font-mono text-xs text-secondary space-y-1">
+          <div className="border border-divider bg-surface-container-low p-3 font-mono text-xs text-secondary space-y-1">
             <div className="flex items-center gap-1.5 font-bold uppercase text-primary">
               <FiActivity className="w-3.5 h-3.5" />
               <span>AUTHENTICATION REQUIRED</span>
@@ -118,7 +118,7 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
         {isConnected && address ? (
           <div className="space-y-4 font-mono text-xs">
             {/* Account Card */}
-            <div className="border border-neutral bg-surface-container-low p-4 space-y-3">
+            <div className="border border-divider bg-surface-container-low p-4 space-y-3">
               <div className="flex justify-between items-center text-secondary">
                 <span>AUTHENTICATED ADDRESS</span>
                 <button
@@ -143,7 +143,7 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
                 {address}
               </div>
 
-              <div className="flex justify-between items-center border-t border-neutral pt-2">
+              <div className="flex justify-between items-center border-t border-divider pt-2">
                 <span className="text-secondary">NATIVE BALANCE</span>
                 <span className="font-bold text-primary">
                   {formatBalance(balance, 4)}
@@ -152,7 +152,7 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
             </div>
 
             {/* Network Info */}
-            <div className="border border-neutral p-3 bg-surface-container-low flex items-center justify-between text-[11px] text-secondary">
+            <div className="border border-divider p-3 bg-surface-container-low flex items-center justify-between text-[11px] text-secondary">
               <div className="flex items-center gap-2">
                 <span className={`w-2 h-2 ${isWrongNetwork ? 'bg-warning' : 'bg-secondary'}`} />
                 <span className="font-bold uppercase text-primary">
@@ -197,7 +197,7 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
                     connect({ connector });
                   }}
                   disabled={isPending}
-                  className="w-full p-4 border border-primary bg-surface-container-low hover:bg-primary hover:text-background transition-colors flex items-center justify-between font-headline font-bold text-base uppercase tracking-wider disabled:opacity-50 text-left group"
+                  className="w-full p-4 border border-divider bg-surface-container-low hover:bg-primary hover:text-background transition-colors flex items-center justify-between font-headline font-bold text-base uppercase tracking-wider disabled:opacity-50 text-left group"
                 >
                   <div className="flex items-center gap-3">
                     <FiShield className="w-5 h-5 text-primary group-hover:text-background transition-colors" />
@@ -216,7 +216,7 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
               </div>
             )}
 
-            <div className="font-mono text-[11px] text-secondary border-t border-neutral pt-3 leading-relaxed">
+            <div className="font-mono text-[11px] text-secondary border-t border-divider pt-3 leading-relaxed">
               By connecting, you agree to access Somnia Shannon testnet contract environments. Open spectator features do not require connection.
             </div>
           </div>

@@ -107,7 +107,7 @@ function ArenaContent() {
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header Banner */}
-      <section ref={headerRef} className="border-b border-primary bg-background pt-8 pb-8">
+      <section ref={headerRef} className="border-b border-divider divider-ash bg-background pt-8 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-7 space-y-4">
             <div className="arena-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
@@ -155,7 +155,7 @@ function ArenaContent() {
       </section>
 
       {/* Filter Tabs */}
-      <section className="border-b border-primary bg-background sticky top-16 z-30">
+      <section className="border-b border-divider divider-ash bg-background sticky top-16 z-30">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 flex items-center justify-between overflow-x-auto">
           <div className="flex items-center gap-2 py-3">
             <button
@@ -163,7 +163,7 @@ function ArenaContent() {
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border transition-colors ${
                 filter === 'all'
                   ? 'bg-primary text-background border-primary'
-                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
+                  : 'bg-transparent text-secondary border-transparent hover:border-divider hover:text-primary'
               }`}
             >
               ALL BATTLES ({battles.length})
@@ -174,7 +174,7 @@ function ArenaContent() {
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border flex items-center gap-2 transition-colors ${
                 filter === 'live'
                   ? 'bg-primary text-background border-primary'
-                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
+                  : 'bg-transparent text-secondary border-transparent hover:border-divider hover:text-primary'
               }`}
             >
               <span className="w-2 h-2 bg-secondary rounded-none animate-pulse" />
@@ -186,7 +186,7 @@ function ArenaContent() {
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border flex items-center gap-2 transition-colors ${
                 filter === 'pending'
                   ? 'bg-warning text-primary font-bold border-warning'
-                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
+                  : 'bg-transparent text-secondary border-transparent hover:border-divider hover:text-primary'
               }`}
             >
               <FiClock className="w-3.5 h-3.5" />
@@ -198,7 +198,7 @@ function ArenaContent() {
               className={`px-4 py-2 font-mono text-xs uppercase tracking-wider border flex items-center gap-2 transition-colors ${
                 filter === 'completed'
                   ? 'bg-primary text-background border-primary'
-                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
+                  : 'bg-transparent text-secondary border-transparent hover:border-divider hover:text-primary'
               }`}
             >
               <FiCheckCircle className="w-3.5 h-3.5" />
@@ -223,10 +223,10 @@ function ArenaContent() {
             return (
               <div 
                 key={battle.id}
-                className="battle-card border border-primary p-6 flex flex-col justify-between gap-6 bg-background"
+                className="battle-card border border-divider p-6 flex flex-col justify-between gap-6 bg-background"
               >
                 {/* Header Status */}
-                <div className="flex items-center justify-between border-b border-primary pb-3">
+                <div className="flex items-center justify-between border-b border-divider pb-3">
                   <div className="flex items-center gap-2">
                     {isLive && (
                       <>
@@ -262,7 +262,7 @@ function ArenaContent() {
                 <div className="grid grid-cols-5 items-center gap-2 py-2">
                   {/* Beast A */}
                   <div className="col-span-2 text-center space-y-2">
-                    <div className="relative aspect-square w-20 mx-auto border border-primary overflow-hidden bg-zinc-900">
+                    <div className="relative aspect-square w-20 mx-auto border border-divider overflow-hidden bg-zinc-900">
                       <Image
                         src={battle.beastA.avatarUrl}
                         alt={battle.beastA.name}
@@ -285,7 +285,7 @@ function ArenaContent() {
 
                   {/* Beast B */}
                   <div className="col-span-2 text-center space-y-2">
-                    <div className="relative aspect-square w-20 mx-auto border border-primary overflow-hidden bg-zinc-900">
+                    <div className="relative aspect-square w-20 mx-auto border border-divider overflow-hidden bg-zinc-900">
                       <Image
                         src={battle.beastB.avatarUrl}
                         alt={battle.beastB.name}
@@ -303,7 +303,7 @@ function ArenaContent() {
                 </div>
 
                 {/* Market Pulse Info */}
-                <div className="bg-surface-container-low p-3 border border-neutral font-mono text-xs space-y-1">
+                <div className="bg-surface-container-low p-3 border border-divider font-mono text-xs space-y-1">
                   <div className="flex justify-between text-secondary">
                     <span>WAGER POOL</span>
                     <span className="font-bold text-primary">{(battle.totalPoolA || 0) + (battle.totalPoolB || 0)} STT</span>

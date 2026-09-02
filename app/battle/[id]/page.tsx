@@ -298,7 +298,7 @@ export default function BattleViewPage() {
   return (
     <div ref={containerRef} className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Top Breadcrumb & Status Bar */}
-      <div className="border-b border-primary bg-background">
+      <div className="border-b border-divider divider-ash bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
           <Link
             href="/arena"
@@ -315,7 +315,7 @@ export default function BattleViewPage() {
                 {isLive ? 'LIVE COMBAT FEED' : isPending ? `PENDING BETTING WINDOW (${countdown?.formatted || '60:00'})` : 'COMBAT CONCLUDED'}
               </span>
             </div>
-            <span className="text-neutral">|</span>
+            <span className="text-divider">|</span>
             <span className="text-secondary">BATTLE ID: {activeBattle.id}</span>
           </div>
         </div>
@@ -326,14 +326,14 @@ export default function BattleViewPage() {
         {/* 1. Combatants Visual Duel Stage */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           {/* Fighter A Panel (4 cols) */}
-          <div className="fighter-panel lg:col-span-4 border-2 border-primary p-6 bg-background flex flex-col justify-between gap-6">
+          <div className="fighter-panel lg:col-span-4 border border-divider p-6 bg-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-primary pb-2">
+              <div className="flex items-center justify-between border-b border-divider pb-2">
                 <span className="font-mono text-xs text-secondary font-bold">COMBATANT 01 // ALPHA</span>
                 <span className="font-mono text-xs text-secondary">{activeBattle.beastA.ownerAddress}</span>
               </div>
 
-              <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
+              <div className="relative aspect-square w-full border border-divider overflow-hidden bg-zinc-900">
                 <Image
                   src={activeBattle.beastA.avatarUrl}
                   alt={activeBattle.beastA.name}
@@ -363,7 +363,7 @@ export default function BattleViewPage() {
                   <span>HEALTH INTEGRITY</span>
                   <span className={hpA <= 25 ? 'text-danger font-bold' : 'text-primary'}>{hpA} / 100 HP</span>
                 </div>
-                <div className="w-full h-3.5 bg-neutral border border-primary p-0.5">
+                <div className="w-full h-3.5 bg-neutral border border-divider p-0.5">
                   <div
                     ref={hpBarARef}
                     className={`h-full ${hpA <= 25 ? 'bg-danger' : 'bg-primary'}`}
@@ -393,7 +393,7 @@ export default function BattleViewPage() {
               </div>
 
               {activeBattle.marketPulseA && (
-                <div className="border border-primary bg-surface-container-low p-3 font-mono text-xs space-y-1">
+                <div className="border border-divider bg-surface-container-low p-3 font-mono text-xs space-y-1">
                   <div className="flex items-center gap-1.5 text-primary font-bold uppercase">
                     <FiTrendingUp className="w-3.5 h-3.5" />
                     <span>LOCKED MARKET PULSE:</span>
@@ -407,7 +407,7 @@ export default function BattleViewPage() {
           </div>
 
           {/* Center Live Combat Log & Reasoner Feed (4 cols) */}
-          <div className="fighter-panel lg:col-span-4 border-2 border-primary p-6 bg-primary text-background flex flex-col justify-between gap-6">
+          <div className="fighter-panel lg:col-span-4 border border-divider p-6 bg-primary text-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-background/20 pb-2 font-mono text-xs">
                 <div className="flex items-center gap-2 text-background/80">
@@ -478,14 +478,14 @@ export default function BattleViewPage() {
           </div>
 
           {/* Fighter B Panel (4 cols) */}
-          <div className="fighter-panel lg:col-span-4 border-2 border-primary p-6 bg-background flex flex-col justify-between gap-6">
+          <div className="fighter-panel lg:col-span-4 border border-divider p-6 bg-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-primary pb-2">
+              <div className="flex items-center justify-between border-b border-divider pb-2">
                 <span className="font-mono text-xs text-secondary font-bold">COMBATANT 02 // BRAVO</span>
                 <span className="font-mono text-xs text-secondary">{activeBattle.beastB.ownerAddress}</span>
               </div>
 
-              <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
+              <div className="relative aspect-square w-full border border-divider overflow-hidden bg-zinc-900">
                 <Image
                   src={activeBattle.beastB.avatarUrl}
                   alt={activeBattle.beastB.name}
@@ -515,7 +515,7 @@ export default function BattleViewPage() {
                   <span>HEALTH INTEGRITY</span>
                   <span className={hpB <= 25 ? 'text-danger font-bold' : 'text-primary'}>{hpB} / 100 HP</span>
                 </div>
-                <div className="w-full h-3.5 bg-neutral border border-primary p-0.5">
+                <div className="w-full h-3.5 bg-neutral border border-divider p-0.5">
                   <div
                     ref={hpBarBRef}
                     className={`h-full ${hpB <= 25 ? 'bg-danger' : 'bg-primary'}`}
@@ -525,7 +525,7 @@ export default function BattleViewPage() {
               </div>
 
               {/* Stats & Market Modifier */}
-              <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs border-t border-neutral pt-3">
+              <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs border-t border-divider pt-3">
                 <div className="bg-surface-container-low p-1.5">
                   <div className="text-[10px] text-secondary">PWR</div>
                   <div className="font-bold">{activeBattle.beastB.stats.power}</div>
@@ -545,7 +545,7 @@ export default function BattleViewPage() {
               </div>
 
               {activeBattle.marketPulseB && (
-                <div className="border border-primary bg-surface-container-low p-3 font-mono text-xs space-y-1">
+                <div className="border border-divider bg-surface-container-low p-3 font-mono text-xs space-y-1">
                   <div className="flex items-center gap-1.5 text-primary font-bold uppercase">
                     <FiTrendingUp className="w-3.5 h-3.5" />
                     <span>LOCKED MARKET PULSE:</span>
@@ -562,8 +562,8 @@ export default function BattleViewPage() {
         {/* 2. Market Pulse Terminal & Spectator Wagering Split Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Market Pulse Panel (7 cols) */}
-          <div className="bottom-panel lg:col-span-7 border border-primary p-6 bg-background space-y-6">
-            <div className="flex items-center justify-between border-b border-primary pb-3">
+          <div className="bottom-panel lg:col-span-7 border border-divider p-6 bg-background space-y-6">
+            <div className="flex items-center justify-between border-b border-divider pb-3">
               <div className="flex items-center gap-2">
                 <FiActivity className="w-5 h-5 text-primary" />
                 <h3 className="font-headline font-bold text-2xl uppercase tracking-tight">
@@ -582,7 +582,7 @@ export default function BattleViewPage() {
             <div className="space-y-4">
               {/* Asset A Pulse */}
               {activeBattle.marketPulseA && (
-                <div className="border border-neutral p-4 bg-surface-container-low space-y-3 font-mono text-xs">
+                <div className="border border-divider p-4 bg-surface-container-low space-y-3 font-mono text-xs">
                   <div className="flex items-center justify-between">
                     <div className="font-bold uppercase text-primary">
                       {activeBattle.beastA.name} // {activeBattle.marketPulseA.symbol}
@@ -592,7 +592,7 @@ export default function BattleViewPage() {
                     </span>
                   </div>
 
-                  <div className="w-full h-3 bg-neutral flex overflow-hidden border border-primary">
+                  <div className="w-full h-3 bg-neutral flex overflow-hidden border border-divider">
                     <div 
                       className="h-full bg-primary" 
                       style={{ width: `${activeBattle.marketPulseA.upProbability * 100}%` }} 
@@ -622,7 +622,7 @@ export default function BattleViewPage() {
 
               {/* Asset B Pulse */}
               {activeBattle.marketPulseB ? (
-                <div className="border border-neutral p-4 bg-surface-container-low space-y-3 font-mono text-xs">
+                <div className="border border-divider p-4 bg-surface-container-low space-y-3 font-mono text-xs">
                   <div className="flex items-center justify-between">
                     <div className="font-bold uppercase text-primary">
                       {activeBattle.beastB.name} // {activeBattle.marketPulseB.symbol}
@@ -632,7 +632,7 @@ export default function BattleViewPage() {
                     </span>
                   </div>
 
-                  <div className="w-full h-3 bg-neutral flex overflow-hidden border border-primary">
+                  <div className="w-full h-3 bg-neutral flex overflow-hidden border border-divider">
                     <div 
                       className="h-full bg-primary" 
                       style={{ width: `${activeBattle.marketPulseB.upProbability * 100}%` }} 
@@ -644,7 +644,7 @@ export default function BattleViewPage() {
                   </div>
                 </div>
               ) : (
-                <div className="border border-dashed border-outline-variant p-4 text-center font-mono text-xs text-secondary">
+                <div className="border border-dashed border-divider p-4 text-center font-mono text-xs text-secondary">
                   {activeBattle.beastB.name} is UNBOUND — No DreamDEX Market Pulse applied.
                 </div>
               )}
@@ -652,8 +652,8 @@ export default function BattleViewPage() {
           </div>
 
           {/* Spectator Wagering Panel (5 cols) */}
-          <div className="bottom-panel lg:col-span-5 border-2 border-primary p-6 bg-background space-y-6">
-            <div className="flex items-center justify-between border-b border-primary pb-3">
+          <div className="bottom-panel lg:col-span-5 border border-divider p-6 bg-background space-y-6">
+            <div className="flex items-center justify-between border-b border-divider pb-3">
               <div className="flex items-center gap-2">
                 <FiZap className="w-5 h-5 text-warning" />
                 <h3 className="font-headline font-bold text-2xl uppercase tracking-tight">
@@ -667,11 +667,11 @@ export default function BattleViewPage() {
 
             {/* Total Pools */}
             <div className="grid grid-cols-2 gap-4 font-mono text-xs">
-              <div className="border border-primary p-3 bg-surface-container-low">
+              <div className="border border-divider p-3 bg-surface-container-low">
                 <span className="text-secondary block text-[10px] uppercase">{activeBattle.beastA.name} POOL</span>
                 <span className="font-bold text-base">{activeBattle.totalPoolA || 0} STT</span>
               </div>
-              <div className="border border-primary p-3 bg-surface-container-low">
+              <div className="border border-divider p-3 bg-surface-container-low">
                 <span className="text-secondary block text-[10px] uppercase">{activeBattle.beastB.name} POOL</span>
                 <span className="font-bold text-base">{activeBattle.totalPoolB || 0} STT</span>
               </div>
@@ -679,7 +679,7 @@ export default function BattleViewPage() {
 
             {/* Wagering Form or Owner Exclusion Notice */}
             {isOwnerOfFighter ? (
-              <div className="p-4 bg-surface-container-low border-2 border-primary space-y-2">
+              <div className="p-4 bg-surface-container-low border border-divider space-y-2">
                 <div className="flex items-center gap-2 text-primary font-headline font-bold text-sm uppercase">
                   <FiAlertCircle className="w-4 h-4 text-warning flex-shrink-0" />
                   <span>COMBATANT OWNER EXCLUSION</span>
@@ -701,7 +701,7 @@ export default function BattleViewPage() {
                       className={`p-3 font-headline font-bold text-sm uppercase tracking-wider border text-left transition-colors ${
                         selectedSide === 'beastA'
                           ? 'bg-primary text-background border-primary'
-                          : 'bg-surface-container-low text-primary border-neutral'
+                          : 'bg-surface-container-low text-primary border-divider'
                       }`}
                     >
                       {activeBattle.beastA.name}
@@ -713,7 +713,7 @@ export default function BattleViewPage() {
                       className={`p-3 font-headline font-bold text-sm uppercase tracking-wider border text-left transition-colors ${
                         selectedSide === 'beastB'
                           ? 'bg-primary text-background border-primary'
-                          : 'bg-surface-container-low text-primary border-neutral'
+                          : 'bg-surface-container-low text-primary border-divider'
                       }`}
                     >
                       {activeBattle.beastB.name}
@@ -730,7 +730,7 @@ export default function BattleViewPage() {
                     min="1"
                     value={betAmount}
                     onChange={(e) => setBetAmount(e.target.value)}
-                    className="w-full bg-surface-container-low border border-primary p-3 font-mono font-bold text-base text-primary focus:outline-none"
+                    className="w-full bg-surface-container-low border border-divider p-3 font-mono font-bold text-base text-primary focus:outline-none"
                     placeholder="50"
                   />
                 </div>

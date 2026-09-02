@@ -25,7 +25,7 @@ export function ConnectButton() {
         {isConnected && address ? (
           <button
             onClick={() => setModalOpen(true)}
-            className={`flex items-center gap-2 px-3 py-1.5 border transition-colors font-mono text-xs ${
+            className={`flex items-center gap-2 px-3 py-1.5 border border-divider transition-colors font-mono text-xs ${
               isWrongNetwork
                 ? 'bg-warning text-primary border-warning font-bold'
                 : 'bg-surface-container-low text-primary border-primary hover:bg-primary hover:text-background'

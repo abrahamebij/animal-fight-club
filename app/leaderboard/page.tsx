@@ -134,7 +134,7 @@ export default function LeaderboardPage() {
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header */}
-      <section ref={headerRef} className="border-b border-primary bg-background pt-8 pb-8">
+      <section ref={headerRef} className="border-b border-divider divider-ash bg-background pt-8 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-7 space-y-4">
             <div className="lb-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
@@ -161,7 +161,7 @@ export default function LeaderboardPage() {
       </section>
 
       {/* Tabs */}
-      <section className="border-b border-primary bg-background sticky top-16 z-30">
+      <section className="border-b border-divider divider-ash bg-background sticky top-16 z-30">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 flex items-center justify-between overflow-x-auto py-3 gap-4">
           <div className="flex items-center gap-4">
             <button
@@ -169,7 +169,7 @@ export default function LeaderboardPage() {
               className={`px-5 py-2.5 font-headline font-bold text-base uppercase tracking-wider border transition-colors flex items-center gap-2 ${
                 tab === 'beasts'
                   ? 'bg-primary text-background border-primary'
-                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
+                  : 'bg-transparent text-secondary border-transparent hover:border-divider hover:text-primary'
               }`}
             >
               <FiShield className="w-4 h-4" />
@@ -181,7 +181,7 @@ export default function LeaderboardPage() {
               className={`px-5 py-2.5 font-headline font-bold text-base uppercase tracking-wider border transition-colors flex items-center gap-2 ${
                 tab === 'bettors'
                   ? 'bg-primary text-background border-primary'
-                  : 'bg-transparent text-secondary border-transparent hover:border-primary hover:text-primary'
+                  : 'bg-transparent text-secondary border-transparent hover:border-divider hover:text-primary'
               }`}
             >
               <FiTrendingUp className="w-4 h-4" />
@@ -191,7 +191,7 @@ export default function LeaderboardPage() {
 
           {tab === 'beasts' && (
             <div className="flex items-center gap-3 font-mono text-xs">
-              <div className="flex items-center border border-primary bg-surface-container-low px-2 py-1">
+              <div className="flex items-center border border-divider bg-surface-container-low px-2 py-1">
                 <FiSearch className="w-3.5 h-3.5 text-secondary mr-2" />
                 <input
                   type="text"
@@ -205,7 +205,7 @@ export default function LeaderboardPage() {
               <select
                 value={assetFilter}
                 onChange={(e) => setAssetFilter(e.target.value as 'ALL' | BoundAsset)}
-                className="bg-surface-container-low border border-primary p-1.5 font-headline font-bold text-xs uppercase"
+                className="bg-surface-container-low border border-divider p-1.5 font-headline font-bold text-xs uppercase"
               >
                 <option value="ALL">ALL ASSETS</option>
                 <option value="BTC">BTC BOUND</option>
@@ -221,11 +221,11 @@ export default function LeaderboardPage() {
       <section className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10">
         <div ref={tableRef}>
         {tab === 'beasts' ? (
-          <div className="border border-primary bg-background overflow-x-auto">
+          <div className="border border-divider bg-background overflow-x-auto">
             {sortedBeasts.length > 0 ? (
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-primary bg-surface-container-low font-mono text-xs text-secondary uppercase">
+                  <tr className="border-b border-divider bg-surface-container-low font-mono text-xs text-secondary uppercase">
                     <th className="p-4 w-16 text-center">RANK</th>
                     <th className="p-4">COMBATANT</th>
                     <th className="p-4">OWNER</th>
@@ -235,7 +235,7 @@ export default function LeaderboardPage() {
                     <th className="p-4 text-right">PROFILE</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral font-mono text-xs">
+                <tbody className="divide-y divide-divider font-mono text-xs">
                   {sortedBeasts.map((beast, idx) => {
                     const rank = idx + 1;
                     const totalDuels = beast.record.wins + beast.record.losses;
@@ -254,7 +254,7 @@ export default function LeaderboardPage() {
                         </td>
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="relative w-10 h-10 border border-primary overflow-hidden bg-zinc-900 flex-shrink-0">
+                            <div className="relative w-10 h-10 border border-divider overflow-hidden bg-zinc-900 flex-shrink-0">
                               <Image
                                 src={beast.avatarUrl}
                                 alt={beast.name}
@@ -313,11 +313,11 @@ export default function LeaderboardPage() {
             )}
           </div>
         ) : (
-          <div className="border border-primary bg-background overflow-x-auto">
+          <div className="border border-divider bg-background overflow-x-auto">
             {bettors.length > 0 ? (
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-primary bg-surface-container-low font-mono text-xs text-secondary uppercase">
+                  <tr className="border-b border-divider bg-surface-container-low font-mono text-xs text-secondary uppercase">
                     <th className="p-4 w-16 text-center">RANK</th>
                     <th className="p-4">SPECTATOR ADDRESS</th>
                     <th className="p-4">TOTAL WAGERED</th>
@@ -326,7 +326,7 @@ export default function LeaderboardPage() {
                     <th className="p-4 text-right">TOTAL BETS</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral font-mono text-xs">
+                <tbody className="divide-y divide-divider font-mono text-xs">
                   {bettors.map((entry, idx) => (
                     <tr key={entry.address} className="lb-row hover:bg-surface-container-low transition-colors">
                       <td className="p-4 text-center font-bold">

@@ -252,7 +252,7 @@ export default function CreateBeastPage() {
         {/* 1. HEADER */}
         <section
           ref={headerRef}
-          className="border-b border-primary bg-background pt-8 pb-8"
+          className="border-b border-divider divider-ash bg-background pt-8 pb-8"
         >
           <div className="max-w-[1440px] mx-auto px-4 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 space-y-4">
@@ -293,8 +293,8 @@ export default function CreateBeastPage() {
             {/* Left Column: Avatar Upload & Basic Lore (5 cols) */}
             <div className="lg:col-span-5 space-y-6">
               {/* Custom Avatar Uploader */}
-              <div className="forge-panel border border-primary p-6 bg-background space-y-4">
-                <div className="flex items-center justify-between border-b border-primary pb-2">
+              <div className="forge-panel border border-divider p-6 bg-background space-y-4">
+                <div className="flex items-center justify-between border-b border-divider pb-2">
                   <span className="font-mono text-xs text-secondary uppercase font-bold">
                     01 // CUSTOM AVATAR SYNTHESIS
                   </span>
@@ -315,7 +315,7 @@ export default function CreateBeastPage() {
                 {/* Uploaded Avatar Preview or Drag-and-Drop Area */}
                 {selectedAvatar ? (
                   <div className="space-y-3">
-                    <div className="relative aspect-square w-full border-2 border-primary overflow-hidden bg-zinc-900 group">
+                    <div className="relative aspect-square w-full border-2 border-divider overflow-hidden bg-zinc-900 group">
                       <Image
                         src={selectedAvatar}
                         alt={name || "Uploaded Combatant Avatar"}
@@ -332,7 +332,7 @@ export default function CreateBeastPage() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="w-full py-2.5 bg-surface-container-low border border-primary text-primary font-headline font-bold text-xs uppercase tracking-wider hover:bg-primary hover:text-background transition-colors flex items-center justify-center gap-2"
+                      className="w-full py-2.5 bg-surface-container-low border border-divider text-primary font-headline font-bold text-xs uppercase tracking-wider hover:bg-primary hover:text-background transition-colors flex items-center justify-center gap-2"
                     >
                       <FiRefreshCw className="w-3.5 h-3.5" />
                       <span>Change / Replace Avatar Image</span>
@@ -348,7 +348,7 @@ export default function CreateBeastPage() {
                     className={`border-2 border-dashed p-8 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 min-h-[260px] ${
                       dragActive
                         ? "border-primary bg-primary/10"
-                        : "border-neutral hover:border-primary bg-surface-container-low"
+                        : "border-divider hover:border-primary bg-surface-container-low"
                     }`}
                   >
                     {isUploading ? (
@@ -360,7 +360,7 @@ export default function CreateBeastPage() {
                       </div>
                     ) : (
                       <>
-                        <div className="w-12 h-12 border border-primary bg-background flex items-center justify-center">
+                        <div className="w-12 h-12 border border-divider bg-background flex items-center justify-center">
                           <FiUploadCloud className="w-6 h-6 text-primary" />
                         </div>
                         <div className="space-y-1">
@@ -371,7 +371,7 @@ export default function CreateBeastPage() {
                             or click to browse from your device
                           </p>
                         </div>
-                        <span className="font-mono text-[10px] text-secondary uppercase border border-neutral px-2 py-0.5">
+                        <span className="font-mono text-[10px] text-secondary uppercase border border-divider px-2 py-0.5">
                           PNG, JPG, WEBP, GIF UP TO 32MB
                         </span>
                       </>
@@ -389,8 +389,8 @@ export default function CreateBeastPage() {
               </div>
 
               {/* Beast Lore & Identity */}
-              <div className="forge-panel border border-primary p-6 bg-background space-y-4">
-                <div className="flex items-center justify-between border-b border-primary pb-2">
+              <div className="forge-panel border border-divider p-6 bg-background space-y-4">
+                <div className="flex items-center justify-between border-b border-divider pb-2">
                   <span className="font-mono text-xs text-secondary uppercase font-bold">
                     02 // COMBAT IDENTIFIER
                   </span>
@@ -409,7 +409,7 @@ export default function CreateBeastPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. MECHA-KONG, CYBER-MANTIS..."
-                    className="w-full bg-surface-container-low border border-primary p-3 font-mono text-sm text-primary uppercase focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-secondary"
+                    className="w-full bg-surface-container-low border border-divider p-3 font-mono text-sm text-primary uppercase focus:outline-none focus:border-primary placeholder:text-secondary"
                     maxLength={24}
                   />
                 </div>
@@ -423,7 +423,7 @@ export default function CreateBeastPage() {
                     onChange={(e) => setDescription(e.target.value)}
                     rows={3}
                     placeholder="Describe your combatant's genetic modifications and combat directives..."
-                    className="w-full bg-surface-container-low border border-primary p-3 font-mono text-xs text-primary focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-secondary"
+                    className="w-full bg-surface-container-low border border-divider p-3 font-mono text-xs text-primary focus:outline-none focus:border-primary placeholder:text-secondary"
                     maxLength={180}
                   />
                 </div>
@@ -433,8 +433,8 @@ export default function CreateBeastPage() {
             {/* Right Column: Attribute Allocator, Perks, Market Binding, Submit (7 cols) */}
             <div className="lg:col-span-7 space-y-6">
               {/* Attribute Matrix Allocator (20 points) */}
-              <div className="forge-panel border border-primary p-6 bg-background space-y-6">
-                <div className="flex items-center justify-between border-b border-primary pb-3">
+              <div className="forge-panel border border-divider p-6 bg-background space-y-6">
+                <div className="flex items-center justify-between border-b border-divider pb-3">
                   <div>
                     <span className="font-mono text-xs text-secondary uppercase font-bold">
                       03 // ATTRIBUTE MATRIX
@@ -452,7 +452,7 @@ export default function CreateBeastPage() {
                       className={`inline-block font-headline font-bold text-lg px-2.5 py-0.5 border ${
                         remainingPoints === 0
                           ? "bg-primary text-background border-primary"
-                          : "bg-surface-container-low text-primary border-primary"
+                          : "bg-surface-container-low text-primary border-divider"
                       }`}
                     >
                       {remainingPoints} / {STAT_BUDGET.TOTAL_POINTS}
@@ -463,7 +463,7 @@ export default function CreateBeastPage() {
                 {/* Stat Allocation Rows */}
                 <div className="space-y-4">
                   {/* POWER */}
-                  <div className="border border-neutral p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="border border-divider p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="font-headline font-bold text-base uppercase text-primary">
                         POWER // KINETIC OUTPUT
@@ -477,7 +477,7 @@ export default function CreateBeastPage() {
                         type="button"
                         onClick={() => handleStatChange("power", -1)}
                         disabled={stats.power <= STAT_BUDGET.MIN_PER_STAT}
-                        className="w-9 h-9 bg-background border border-primary font-headline font-bold text-lg hover:bg-neutral disabled:opacity-30 disabled:hover:bg-background transition-colors flex items-center justify-center"
+                        className="w-9 h-9 bg-background border border-divider font-headline font-bold text-lg hover:bg-neutral disabled:opacity-30 disabled:hover:bg-background transition-colors flex items-center justify-center"
                       >
                         -
                       </button>
@@ -504,7 +504,7 @@ export default function CreateBeastPage() {
                   </div>
 
                   {/* DEFENSE */}
-                  <div className="border border-neutral p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="border border-divider p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="font-headline font-bold text-base uppercase text-primary">
                         DEFENSE // REINFORCED PLATING
@@ -519,7 +519,7 @@ export default function CreateBeastPage() {
                         type="button"
                         onClick={() => handleStatChange("defense", -1)}
                         disabled={stats.defense <= STAT_BUDGET.MIN_PER_STAT}
-                        className="w-9 h-9 bg-background border border-primary font-headline font-bold text-lg hover:bg-neutral disabled:opacity-30 disabled:hover:bg-background transition-colors flex items-center justify-center"
+                        className="w-9 h-9 bg-background border border-divider font-headline font-bold text-lg hover:bg-neutral disabled:opacity-30 disabled:hover:bg-background transition-colors flex items-center justify-center"
                       >
                         -
                       </button>
@@ -546,7 +546,7 @@ export default function CreateBeastPage() {
                   </div>
 
                   {/* SPEED */}
-                  <div className="border border-neutral p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="border border-divider p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="font-headline font-bold text-base uppercase text-primary">
                         SPEED // ACTUATOR VELOCITY
@@ -560,7 +560,7 @@ export default function CreateBeastPage() {
                         type="button"
                         onClick={() => handleStatChange("speed", -1)}
                         disabled={stats.speed <= STAT_BUDGET.MIN_PER_STAT}
-                        className="w-9 h-9 bg-background border border-primary font-headline font-bold text-lg hover:bg-neutral disabled:opacity-30 disabled:hover:bg-background transition-colors flex items-center justify-center"
+                        className="w-9 h-9 bg-background border border-divider font-headline font-bold text-lg hover:bg-neutral disabled:opacity-30 disabled:hover:bg-background transition-colors flex items-center justify-center"
                       >
                         -
                       </button>
@@ -587,7 +587,7 @@ export default function CreateBeastPage() {
                   </div>
 
                   {/* SPECIAL */}
-                  <div className="border border-neutral p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="border border-divider p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="font-headline font-bold text-base uppercase text-primary">
                         SPECIAL // NEURAL OVERCLOCK
@@ -601,7 +601,7 @@ export default function CreateBeastPage() {
                         type="button"
                         onClick={() => handleStatChange("special", -1)}
                         disabled={stats.special <= STAT_BUDGET.MIN_PER_STAT}
-                        className="w-9 h-9 bg-background border border-primary font-headline font-bold text-lg hover:bg-neutral disabled:opacity-30 disabled:hover:bg-background transition-colors flex items-center justify-center"
+                        className="w-9 h-9 bg-background border border-divider font-headline font-bold text-lg hover:bg-neutral disabled:opacity-30 disabled:hover:bg-background transition-colors flex items-center justify-center"
                       >
                         -
                       </button>
@@ -630,8 +630,8 @@ export default function CreateBeastPage() {
               </div>
 
               {/* Tactical Perks (Select Up to 2) */}
-              <div className="forge-panel border border-primary p-6 bg-background space-y-4">
-                <div className="flex items-center justify-between border-b border-primary pb-2">
+              <div className="forge-panel border border-divider p-6 bg-background space-y-4">
+                <div className="flex items-center justify-between border-b border-divider pb-2">
                   <div>
                     <span className="font-mono text-xs text-secondary uppercase font-bold">
                       04 // TACTICAL PASSIVES
@@ -653,7 +653,7 @@ export default function CreateBeastPage() {
                         className={`p-3 text-left border transition-colors flex flex-col justify-between gap-2 ${
                           isSelected
                             ? "border-primary bg-primary text-background"
-                            : "border-neutral bg-surface-container-low hover:border-primary text-primary"
+                            : "border-divider bg-surface-container-low hover:border-primary text-primary"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
@@ -681,8 +681,8 @@ export default function CreateBeastPage() {
               </div>
 
               {/* Market Binding (DreamDEX Event Contracts) */}
-              <div className="forge-panel border border-primary p-6 bg-background space-y-4">
-                <div className="flex items-center justify-between border-b border-primary pb-2">
+              <div className="forge-panel border border-divider p-6 bg-background space-y-4">
+                <div className="flex items-center justify-between border-b border-divider pb-2">
                   <div>
                     <span className="font-mono text-xs text-secondary uppercase font-bold">
                       05 // DREAMDEX MARKET BINDING
@@ -713,7 +713,7 @@ export default function CreateBeastPage() {
                         className={`p-3 text-center border font-headline font-bold text-sm uppercase tracking-wider transition-colors ${
                           isSelected
                             ? "border-primary bg-primary text-background"
-                            : "border-neutral bg-surface-container-low hover:border-primary text-primary"
+                            : "border-divider bg-surface-container-low hover:border-primary text-primary"
                         }`}
                       >
                         {asset === "UNBOUND"

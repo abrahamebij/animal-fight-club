@@ -125,7 +125,7 @@ export default function BeastProfilePage() {
   return (
     <div ref={pageRef} className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Top Breadcrumb */}
-      <div className="border-b border-primary bg-background">
+      <div className="border-b border-divider divider-ash bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
           <Link
             href="/leaderboard"
@@ -142,8 +142,8 @@ export default function BeastProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Column: Beast Avatar & Summary (5 cols) */}
           <div className="beast-col-left lg:col-span-5 space-y-6">
-            <div className="border-2 border-primary bg-background p-6 space-y-6">
-              <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
+            <div className="border border-divider bg-background p-6 space-y-6">
+              <div className="relative aspect-square w-full border border-divider overflow-hidden bg-zinc-900">
                 <Image
                   src={beast.avatarUrl}
                   alt={beast.name}
@@ -171,16 +171,16 @@ export default function BeastProfilePage() {
               </div>
 
               {/* Combat Record Card */}
-              <div className="border-t border-primary pt-4 grid grid-cols-3 gap-2 text-center font-mono">
-                <div className="bg-surface-container-low p-3 border border-neutral">
+              <div className="border-t border-divider pt-4 grid grid-cols-3 gap-2 text-center font-mono">
+                <div className="bg-surface-container-low p-3 border border-divider">
                   <span className="text-secondary block text-[10px]">WINS</span>
                   <span className="record-num font-headline font-bold text-2xl text-primary">{beast.record.wins}</span>
                 </div>
-                <div className="bg-surface-container-low p-3 border border-neutral">
+                <div className="bg-surface-container-low p-3 border border-divider">
                   <span className="text-secondary block text-[10px]">LOSSES</span>
                   <span className="record-num font-headline font-bold text-2xl text-primary">{beast.record.losses}</span>
                 </div>
-                <div className="bg-surface-container-low p-3 border border-neutral">
+                <div className="bg-surface-container-low p-3 border border-divider">
                   <span className="text-secondary block text-[10px]">WIN RATE</span>
                   <span className="record-num font-headline font-bold text-2xl text-primary">{winRate}%</span>
                 </div>
@@ -196,7 +196,7 @@ export default function BeastProfilePage() {
                     },
                   });
                 }}
-                className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border-2 border-primary flex items-center justify-center gap-2"
+                className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border border-primary flex items-center justify-center gap-2"
               >
                 <FiCrosshair className="w-5 h-5" />
                 <span>CHALLENGE IN ARENA</span>
@@ -207,8 +207,8 @@ export default function BeastProfilePage() {
           {/* Right Column: Attribute Matrix, Passives, Combat Record (7 cols) */}
           <div className="beast-col-right lg:col-span-7 space-y-8">
             {/* Attribute Matrix */}
-            <div className="border border-primary p-6 bg-background space-y-6">
-              <div className="flex items-center justify-between border-b border-primary pb-3">
+            <div className="border border-divider p-6 bg-background space-y-6">
+              <div className="flex items-center justify-between border-b border-divider pb-3">
                 <h2 className="font-headline font-bold text-2xl uppercase tracking-tight">
                   GENETIC ATTRIBUTES
                 </h2>
@@ -222,7 +222,7 @@ export default function BeastProfilePage() {
                     <span>POWER // KINETIC OUTPUT</span>
                     <span className="text-primary">{beast.stats.power} / 20</span>
                   </div>
-                  <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
+                  <div className="h-3 w-full bg-surface-container-low border border-divider overflow-hidden">
                     <div className="stat-bar-fill h-full bg-primary" style={{ width: `${(beast.stats.power / 20) * 100}%` }} />
                   </div>
                 </div>
@@ -233,7 +233,7 @@ export default function BeastProfilePage() {
                     <span>DEFENSE // REINFORCED PLATING</span>
                     <span className="text-primary">{beast.stats.defense} / 20</span>
                   </div>
-                  <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
+                  <div className="h-3 w-full bg-surface-container-low border border-divider overflow-hidden">
                     <div className="stat-bar-fill h-full bg-primary" style={{ width: `${(beast.stats.defense / 20) * 100}%` }} />
                   </div>
                 </div>
@@ -244,7 +244,7 @@ export default function BeastProfilePage() {
                     <span>SPEED // ACTUATOR VELOCITY</span>
                     <span className="text-primary">{beast.stats.speed} / 20</span>
                   </div>
-                  <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
+                  <div className="h-3 w-full bg-surface-container-low border border-divider overflow-hidden">
                     <div className="stat-bar-fill h-full bg-primary" style={{ width: `${(beast.stats.speed / 20) * 100}%` }} />
                   </div>
                 </div>
@@ -255,7 +255,7 @@ export default function BeastProfilePage() {
                     <span>SPECIAL // NEURAL OVERCLOCK</span>
                     <span className="text-primary">{beast.stats.special} / 20</span>
                   </div>
-                  <div className="h-3 w-full bg-surface-container-low border border-neutral overflow-hidden">
+                  <div className="h-3 w-full bg-surface-container-low border border-divider overflow-hidden">
                     <div className="stat-bar-fill h-full bg-primary" style={{ width: `${(beast.stats.special / 20) * 100}%` }} />
                   </div>
                 </div>
@@ -263,8 +263,8 @@ export default function BeastProfilePage() {
             </div>
 
             {/* Tactical Perks */}
-            <div className="border border-primary p-6 bg-background space-y-6">
-              <div className="flex items-center justify-between border-b border-primary pb-3">
+            <div className="border border-divider p-6 bg-background space-y-6">
+              <div className="flex items-center justify-between border-b border-divider pb-3">
                 <h2 className="font-headline font-bold text-2xl uppercase tracking-tight">
                   TACTICAL PERKS
                 </h2>
@@ -282,8 +282,8 @@ export default function BeastProfilePage() {
 
                   return (
                     <div 
-                      key={perk.id}
-                      className="border border-primary p-4 bg-surface-container-low space-y-2"
+                      key={perk.id} 
+                      className="border border-divider p-4 bg-surface-container-low space-y-2"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-headline font-bold text-sm uppercase text-primary">
@@ -303,8 +303,8 @@ export default function BeastProfilePage() {
             </div>
 
             {/* Recent Battles List */}
-            <div className="border border-primary p-6 bg-background space-y-6">
-              <div className="flex items-center justify-between border-b border-primary pb-3">
+            <div className="border border-divider p-6 bg-background space-y-6">
+              <div className="flex items-center justify-between border-b border-divider pb-3">
                 <h2 className="font-headline font-bold text-2xl uppercase tracking-tight">
                   RECENT COMBAT RECORD
                 </h2>
@@ -314,7 +314,7 @@ export default function BeastProfilePage() {
               {beastBattles.length > 0 ? (
                 <div className="space-y-3 font-mono text-xs">
                   {beastBattles.map((b) => (
-                    <div key={b.id} className="border border-neutral p-3 flex items-center justify-between bg-surface-container-low">
+                    <div key={b.id} className="border border-divider p-3 flex items-center justify-between bg-surface-container-low">
                       <div className="space-y-0.5">
                         <div className="font-bold text-primary">
                           VS {b.beastA.id === beast.id ? b.beastB.name : b.beastA.name}

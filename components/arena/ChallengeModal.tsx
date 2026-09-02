@@ -104,11 +104,11 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/80 backdrop-blur-xs p-4 animate-in fade-in duration-200">
       <div 
         ref={panelRef}
-        className="w-full max-w-3xl bg-background border-2 border-primary shadow-2xl p-6 relative flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-3xl bg-background border border-divider shadow-2xl p-6 relative flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-primary pb-3">
+        <div className="flex items-center justify-between border-b border-divider pb-3">
           <div className="flex items-center gap-2">
             <FiCrosshair className="w-5 h-5 text-primary" />
             <span className="font-headline font-extrabold text-2xl uppercase tracking-wider text-primary">
@@ -117,7 +117,7 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center border border-primary hover:bg-primary hover:text-background transition-colors text-primary"
+            className="w-7 h-7 flex items-center justify-center border border-divider hover:bg-primary hover:text-background transition-colors text-primary"
             aria-label="Close modal"
           >
             <FiX className="w-4 h-4" />
@@ -125,7 +125,7 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
         </div>
 
         {/* 1-Hour Window Info Banner */}
-        <div className="border border-neutral bg-surface-container-low p-3 font-mono text-xs text-secondary flex items-center justify-between">
+        <div className="border border-divider bg-surface-container-low p-3 font-mono text-xs text-secondary flex items-center justify-between">
           <span>WINDOW DURATION: 1 HOUR (3600S)</span>
           <span className="font-bold text-primary">PUBLIC SPECTATOR BETTING OPENS</span>
         </div>
@@ -133,14 +133,14 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
         {/* Matchup Duel Stage Selector */}
         <div className="grid grid-cols-1 md:grid-cols-11 items-center gap-4 py-2">
           {/* Challenger Selection (5 cols) */}
-          <div className="md:col-span-5 border border-primary p-4 bg-surface-container-low space-y-3">
+          <div className="md:col-span-5 border border-divider p-4 bg-surface-container-low space-y-3">
             <div className="font-mono text-xs text-secondary uppercase font-bold">
               YOUR COMBATANT (ALPHA)
             </div>
 
             {myBeasts.length > 0 ? (
               <div className="space-y-3">
-                <div className="relative aspect-video w-full border border-primary overflow-hidden bg-zinc-900">
+                <div className="relative aspect-video w-full border border-divider overflow-hidden bg-zinc-900">
                   {selectedMyBeast && (
                     <Image
                       src={selectedMyBeast.avatarUrl}
@@ -161,7 +161,7 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
                       const found = myBeasts.find((b) => b.id === e.target.value);
                       if (found) setSelectedMyBeast(found);
                     }}
-                    className="w-full bg-background border border-primary p-2 font-headline font-bold text-sm uppercase"
+                    className="w-full bg-background border border-divider p-2 font-headline font-bold text-sm uppercase"
                   >
                     {myBeasts.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -193,12 +193,12 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
           </div>
 
           {/* Opponent Selection (5 cols) */}
-          <div className="md:col-span-5 border border-primary p-4 bg-surface-container-low space-y-3">
+          <div className="md:col-span-5 border border-divider p-4 bg-surface-container-low space-y-3">
             <div className="font-mono text-xs text-secondary uppercase font-bold">
               OPPONENT COMBATANT (BRAVO)
             </div>
 
-            <div className="relative aspect-video w-full border border-primary overflow-hidden bg-zinc-900">
+            <div className="relative aspect-video w-full border border-divider overflow-hidden bg-zinc-900">
               {selectedOpponent && (
                 <Image
                   src={selectedOpponent.avatarUrl}
@@ -219,7 +219,7 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
                   const found = availableOpponents.find((b) => b.id === e.target.value);
                   if (found) setSelectedOpponent(found);
                 }}
-                className="w-full bg-background border border-primary p-2 font-headline font-bold text-sm uppercase"
+                className="w-full bg-background border border-divider p-2 font-headline font-bold text-sm uppercase"
               >
                 {availableOpponents.map((b) => (
                   <option key={b.id} value={b.id}>

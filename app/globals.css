@@ -12,6 +12,7 @@
   --outline: #77777B;
   --outline-variant: #C7C6CA;
   --neutral: #E5E5E1;
+  --divider: #C7C6CA;
   --danger: #DC2626;
   --warning: #F59E0B;
   --secondary: #5D5F5D;
@@ -29,6 +30,8 @@
   --color-outline: var(--outline);
   --color-outline-variant: var(--outline-variant);
   --color-neutral: var(--neutral);
+  --color-divider: var(--divider);
+  --color-ash: var(--divider);
   --color-danger: var(--danger);
   --color-warning: var(--warning);
   --color-secondary: var(--secondary);
@@ -40,7 +43,7 @@
 
 @layer base {
   * {
-    border-color: var(--neutral);
+    border-color: var(--divider);
   }
   
   body {
@@ -51,8 +54,49 @@
     -webkit-font-smoothing: antialiased;
   }
   button {
-    cursor:pointer
+    cursor: pointer;
   }
+}
+
+.border-divider,
+.border-ash,
+.divider-ash,
+.ash-divider {
+  border-color: var(--divider) !important;
+}
+
+.border-b-divider,
+.border-b.border-divider,
+.border-b.divider-ash,
+.border-b.border-ash,
+.border-b.ash-divider {
+  border-bottom-color: var(--divider) !important;
+}
+
+.border-t-divider,
+.border-t.border-divider,
+.border-t.divider-ash,
+.border-t.border-ash,
+.border-t.ash-divider {
+  border-top-color: var(--divider) !important;
+}
+
+.border-y-divider,
+.border-y.border-divider,
+.border-y.divider-ash,
+.border-y.border-ash,
+.border-y.ash-divider {
+  border-top-color: var(--divider) !important;
+  border-bottom-color: var(--divider) !important;
+}
+
+.border-x-divider,
+.border-x.border-divider,
+.border-x.divider-ash,
+.border-x.border-ash,
+.border-x.ash-divider {
+  border-left-color: var(--divider) !important;
+  border-right-color: var(--divider) !important;
 }
 
 .font-data-mono {
@@ -61,7 +105,7 @@
 }
 
 .sharp-card {
-  border: 1px solid var(--primary);
+  border: 1px solid var(--divider);
   background-color: var(--background);
   border-radius: 0px;
 }

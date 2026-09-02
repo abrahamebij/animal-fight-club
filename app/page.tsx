@@ -127,14 +127,9 @@ export default function HomePage() {
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground">
       {/* 1. HERO SECTION */}
       <section ref={heroRef} className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-16 pb-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border border-primary p-6 lg:p-12 bg-background">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border border-divider p-6 lg:p-12 bg-background">
           <div className="lg:col-span-7 flex flex-col justify-between gap-8">
             <div className="space-y-6">
-              {/* <div className="hero-badge inline-flex items-center gap-2 px-3 py-1 bg-primary text-background font-mono text-xs uppercase tracking-wider">
-                <span className="w-2 h-2 bg-secondary" />
-                <span>SOMNIA SHANNON // EVENT CONTRACT ARENA</span>
-              </div> */}
-
               <h1 className="font-headline font-extrabold text-5xl sm:text-7xl lg:text-8xl leading-[0.9] tracking-tighter uppercase text-primary">
                 <span className="hero-line block">CREATE YOUR BEAST.</span>
                 <span className="hero-line block">WATCH IT FIGHT.</span>
@@ -165,7 +160,7 @@ export default function HomePage() {
           </div>
 
           <div className="hero-panel lg:col-span-5 flex items-center justify-center">
-            <div className="relative w-full aspect-video overflow-hidden bg-zinc-900">
+            <div className="relative w-full aspect-video overflow-hidden bg-zinc-900 border border-divider">
               <video
                 src="/hero-animation.mp4"
                 autoPlay
@@ -180,7 +175,7 @@ export default function HomePage() {
       </section>
 
       {/* 2. HOW IT WORKS / PROTOCOL */}
-      <section ref={protocolRef} className="border-y border-primary bg-primary text-background py-20">
+      <section ref={protocolRef} className="border-y border-divider divider-ash bg-primary text-background py-20">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
           <div className="flex items-center gap-4 mb-12">
             <span className="font-mono text-xs uppercase tracking-widest text-background/60">PROTOCOL EXECUTION FLOW</span>
@@ -273,8 +268,8 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Live / Primary Battle Card */}
             {liveBattle && (
-              <div className="battle-card border border-primary p-6 bg-background flex flex-col justify-between gap-6 relative">
-                <div className="flex items-center justify-between border-b border-primary pb-4">
+              <div className="battle-card border border-divider p-6 bg-background flex flex-col justify-between gap-6 relative">
+                <div className="flex items-center justify-between border-b border-divider pb-4">
                   <div className="flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 ${liveBattle.status === 'live' ? 'bg-secondary animate-pulse' : 'bg-primary'}`} />
                     <span className="font-headline font-bold text-xl uppercase tracking-wider text-primary">
@@ -289,7 +284,7 @@ export default function HomePage() {
                 <div className="grid grid-cols-5 items-center gap-4 py-2">
                   {/* Fighter A */}
                   <div className="col-span-2 text-center space-y-2">
-                    <div className="relative aspect-square w-24 mx-auto border border-primary overflow-hidden bg-zinc-900">
+                    <div className="relative aspect-square w-24 mx-auto border border-divider overflow-hidden bg-zinc-900">
                       <Image
                         src={liveBattle.beastA.avatarUrl}
                         alt={liveBattle.beastA.name}
@@ -312,7 +307,7 @@ export default function HomePage() {
 
                   {/* Fighter B */}
                   <div className="col-span-2 text-center space-y-2">
-                    <div className="relative aspect-square w-24 mx-auto border border-primary overflow-hidden bg-zinc-900">
+                    <div className="relative aspect-square w-24 mx-auto border border-divider overflow-hidden bg-zinc-900">
                       <Image
                         src={liveBattle.beastB.avatarUrl}
                         alt={liveBattle.beastB.name}
@@ -329,7 +324,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="bg-surface-container-low p-3 border border-neutral font-mono text-xs text-secondary line-clamp-2">
+                <div className="bg-surface-container-low p-3 border border-divider font-mono text-xs text-secondary line-clamp-2">
                   {liveBattle.combatLog[liveBattle.combatLog.length - 1]?.combatNarrative || 'Combat matrix primed. Waiting for turn resolution sequence.'}
                 </div>
 
@@ -345,8 +340,8 @@ export default function HomePage() {
 
             {/* Pending Battle Card */}
             {pendingBattle && (
-              <div className="battle-card border border-primary p-6 bg-background flex flex-col justify-between gap-6">
-                <div className="flex items-center justify-between border-b border-primary pb-4">
+              <div className="battle-card border border-divider p-6 bg-background flex flex-col justify-between gap-6">
+                <div className="flex items-center justify-between border-b border-divider pb-4">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 bg-warning" />
                     <span className="font-headline font-bold text-xl uppercase tracking-wider text-primary">
@@ -362,7 +357,7 @@ export default function HomePage() {
                 <div className="grid grid-cols-5 items-center gap-4 py-2">
                   {/* Fighter A */}
                   <div className="col-span-2 text-center space-y-2">
-                    <div className="relative aspect-square w-24 mx-auto border border-primary overflow-hidden bg-zinc-900">
+                    <div className="relative aspect-square w-24 mx-auto border border-divider overflow-hidden bg-zinc-900">
                       <Image
                         src={pendingBattle.beastA.avatarUrl}
                         alt={pendingBattle.beastA.name}
@@ -385,7 +380,7 @@ export default function HomePage() {
 
                   {/* Fighter B */}
                   <div className="col-span-2 text-center space-y-2">
-                    <div className="relative aspect-square w-24 mx-auto border border-primary overflow-hidden bg-zinc-900">
+                    <div className="relative aspect-square w-24 mx-auto border border-divider overflow-hidden bg-zinc-900">
                       <Image
                         src={pendingBattle.beastB.avatarUrl}
                         alt={pendingBattle.beastB.name}
@@ -402,7 +397,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="bg-surface-container-low p-3 border border-neutral flex items-center justify-between font-mono text-xs">
+                <div className="bg-surface-container-low p-3 border border-divider flex items-center justify-between font-mono text-xs">
                   <span>TOTAL WAGER POOL</span>
                   <span className="font-bold text-primary">{pendingBattle.totalPoolA + pendingBattle.totalPoolB} STT</span>
                 </div>
@@ -418,7 +413,7 @@ export default function HomePage() {
             )}
           </div>
         ) : (
-          <div className="border border-primary p-12 bg-background text-center space-y-4 font-mono">
+          <div className="border border-divider p-12 bg-background text-center space-y-4 font-mono">
             <FiShield className="w-10 h-10 mx-auto text-primary" />
             <h3 className="font-headline font-bold text-2xl uppercase tracking-tight text-primary">
               NO ACTIVE ARENA DUELS DETECTED
@@ -440,7 +435,7 @@ export default function HomePage() {
       </section>
 
       {/* 4. ROSTER HIGHLIGHTS */}
-      <section ref={rosterRef} className="border-t border-primary bg-background py-20">
+      <section ref={rosterRef} className="border-t border-divider divider-ash bg-background py-20">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -463,9 +458,9 @@ export default function HomePage() {
               {featuredBeasts.map((beast) => (
                 <div 
                   key={beast.id} 
-                  className="beast-card border border-primary bg-background p-4 flex flex-col justify-between gap-4 group hover:border-primary transition-colors"
+                  className="beast-card border border-divider bg-background p-4 flex flex-col justify-between gap-4 group hover:border-primary transition-colors"
                 >
-                  <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
+                  <div className="relative aspect-square w-full border border-divider overflow-hidden bg-zinc-900">
                     <Image
                       src={beast.avatarUrl}
                       alt={beast.name}
@@ -489,7 +484,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-1 py-1 font-mono text-[11px] text-center border-t border-neutral pt-2">
+                  <div className="grid grid-cols-4 gap-1 py-1 font-mono text-[11px] text-center border-t border-divider pt-2">
                     <div className="bg-surface-container-low p-1">
                       <span className="text-secondary block text-[9px]">PWR</span>
                       <span className="font-bold">{beast.stats.power}</span>
@@ -518,7 +513,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="border border-primary p-12 bg-background text-center space-y-4 font-mono">
+            <div className="border border-divider p-12 bg-background text-center space-y-4 font-mono">
               <FiShield className="w-10 h-10 mx-auto text-primary" />
               <h3 className="font-headline font-bold text-2xl uppercase tracking-tight text-primary">
                 NO REGISTERED COMBATANTS

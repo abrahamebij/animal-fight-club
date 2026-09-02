@@ -24,7 +24,7 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-primary">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-divider divider-ash">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-16 flex items-center justify-between">
         {/* Brand & Wordmark */}
         <div className="flex items-center gap-10">
@@ -52,7 +52,7 @@ export function Navbar() {
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-colors border ${
                     isActive 
                       ? 'bg-primary text-background border-primary' 
-                      : 'text-secondary border-transparent hover:text-primary hover:border-primary'
+                      : 'text-secondary border-transparent hover:text-primary hover:border-divider'
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
