@@ -23,7 +23,7 @@ import Img from "@/components/ui/Img";
 
 export default function CreateBeastPage() {
   const router = useRouter();
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -61,9 +61,9 @@ export default function CreateBeastPage() {
     if (!headerRef.current) return;
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: "power2.out" } });
-      tl.from(".forge-badge", { opacity: 0, y: -12, duration: 0.4 })
-        .from(".forge-title", { opacity: 0, y: 28, duration: 0.55 }, "-=0.2")
-        .from(".forge-desc", { opacity: 0, y: 18, duration: 0.4 }, "-=0.2")
+      tl.from(".forge-badge", { opacity: 0, y: -12, duration: 0.45 })
+        .from(".forge-title", { opacity: 0, y: 32, duration: 0.6 }, "-=0.2")
+        .from(".forge-desc", { opacity: 0, y: 20, duration: 0.5 }, "-=0.25")
         .from(
           ".forge-hero-ill",
           { opacity: 0, scale: 0.85, duration: 0.6, ease: "back.out(1.4)" },
@@ -71,7 +71,7 @@ export default function CreateBeastPage() {
         );
     }, headerRef);
     return () => ctx.revert();
-  }, [address]);
+  }, []);
 
   // Form panels stagger in
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function CreateBeastPage() {
       });
     }, formRef);
     return () => ctx.revert();
-  }, [address]);
+  }, []);
 
   // Handle Image File Upload via ImgBB
   const handleFileUpload = async (file: File) => {

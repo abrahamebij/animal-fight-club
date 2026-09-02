@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import { FiLock, FiShield, FiArrowLeft } from 'react-icons/fi';
@@ -12,17 +12,21 @@ interface RouteGuardProps {
   routeName?: string;
 }
 
+const emptySubscribe = () => () => {};
+
 export function RouteGuard({ children, routeName = 'PROTECTED PROTOCOL ROUTE' }: RouteGuardProps) {
   const { isConnected, isConnecting, isReconnecting } = useAccount();
   const { requireAuth } = useWalletGate();
-  const [hasMounted, setHasMounted] = useState(false);
 
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
+  // useSyncExternalStore enables instant synchronous client-side rendering on navigation without unmounting/delaying children
+  const isHydrated = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
-  // Loading state while wagmi hydrates connection
-  if (!hasMounted || isConnecting || isReconnecting) {
+  // Loading state while wagmi hydrates connection on initial app load
+  if (!isHydrated || isConnecting || isReconnecting) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] bg-background text-foreground font-mono text-sm space-y-4">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent animate-spin" />

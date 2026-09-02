@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
@@ -37,14 +37,14 @@ export default function DashboardPage() {
     if (!headerRef.current) return;
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-      tl.from('.dash-badge', { opacity: 0, y: -12, duration: 0.4 })
-        .from('.dash-title', { opacity: 0, y: 24, duration: 0.5 }, '-=0.2')
-        .from('.dash-desc', { opacity: 0, y: 14, duration: 0.35 }, '-=0.2')
-        .from('.dash-cta', { opacity: 0, x: 20, duration: 0.35 }, '-=0.25')
+      tl.from('.dash-badge', { opacity: 0, y: -12, duration: 0.45 })
+        .from('.dash-title', { opacity: 0, y: 32, duration: 0.6 }, '-=0.2')
+        .from('.dash-desc', { opacity: 0, y: 20, duration: 0.5 }, '-=0.25')
+        .from('.dash-cta', { opacity: 0, x: 20, duration: 0.45 }, '-=0.25')
         .from('.dash-hero-ill', { opacity: 0, scale: 0.85, duration: 0.6, ease: 'back.out(1.4)' }, '-=0.3');
     }, headerRef);
     return () => ctx.revert();
-  }, [address]);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -74,15 +74,18 @@ export default function DashboardPage() {
   }, [address]);
 
   // Animate metric tiles + beast cards once data is ready
-  useLayoutEffect(() => {
-    if (loading) return;
-    gsap.from('.dash-metric', {
-      opacity: 0, y: 20, scale: 0.95, duration: 0.4, stagger: 0.08, ease: 'back.out(1.5)',
-    });
-    gsap.from('.dash-beast-card', {
-      opacity: 0, y: 28, duration: 0.5, stagger: 0.1, ease: 'power2.out', delay: 0.2,
-    });
-  }, [loading]);
+  useEffect(() => {
+    if (loading || !contentRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.from('.dash-metric', {
+        opacity: 0, y: 20, scale: 0.95, duration: 0.4, stagger: 0.08, ease: 'back.out(1.5)',
+      });
+      gsap.from('.dash-beast-card', {
+        opacity: 0, y: 28, duration: 0.5, stagger: 0.1, ease: 'power2.out', delay: 0.2,
+      });
+    }, contentRef);
+    return () => ctx.revert();
+  }, [loading, isConnected]);
 
   const displayAddress = isConnected && address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
