@@ -16,6 +16,7 @@ import { getBeastById } from '@/lib/services/beastService';
 import { Battle, BattleStatus, Beast } from '@/lib/types';
 import { ChallengeModal } from '@/components/arena/ChallengeModal';
 import { formatTimeRemaining } from '@/lib/utils/timer';
+import Img from '@/components/ui/Img';
 import gsap from 'gsap';
 
 function ArenaContent() {
@@ -79,10 +80,12 @@ function ArenaContent() {
   // Header entrance animation
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.from('.arena-badge', { opacity: 0, y: -12, duration: 0.45, ease: 'power2.out' });
-      gsap.from('.arena-title', { opacity: 0, y: 32, duration: 0.6, ease: 'power3.out', delay: 0.1 });
-      gsap.from('.arena-desc', { opacity: 0, y: 20, duration: 0.5, ease: 'power2.out', delay: 0.25 });
-      gsap.from('.arena-actions', { opacity: 0, y: 16, duration: 0.45, ease: 'power2.out', delay: 0.35 });
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+      tl.from('.arena-badge', { opacity: 0, y: -12, duration: 0.45 })
+        .from('.arena-title', { opacity: 0, y: 32, duration: 0.6 }, '-=0.2')
+        .from('.arena-desc', { opacity: 0, y: 20, duration: 0.5 }, '-=0.25')
+        .from('.arena-actions', { opacity: 0, y: 16, duration: 0.45 }, '-=0.25')
+        .from('.arena-hero-ill', { opacity: 0, scale: 0.85, duration: 0.6, ease: 'back.out(1.4)' }, '-=0.3');
     }, headerRef);
     return () => ctx.revert();
   }, []);
@@ -104,23 +107,21 @@ function ArenaContent() {
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header Banner */}
-      <section ref={headerRef} className="border-b border-primary bg-background pt-12 pb-8">
-        <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-            <div className="space-y-3">
-              <div className="arena-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider">
-                <span className="w-2 h-2 bg-secondary" />
-                <span>ARENA DISPATCH GRID</span>
-              </div>
-              <h1 className="arena-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
-                THE COMBAT ARENA
-              </h1>
-              <p className="arena-desc font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
-                Live agentic combat encounters and pending wagering windows on Somnia Shannon. Spectators can bet on beast outcomes during active 1-hour windows.
-              </p>
+      <section ref={headerRef} className="border-b border-primary bg-background pt-8 pb-8">
+        <div className="max-w-[1440px] mx-auto px-4 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-7 space-y-4">
+            <div className="arena-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
+              <span className="w-2 h-2 bg-secondary" />
+              <span>ARENA DISPATCH GRID</span>
             </div>
+            <h1 className="arena-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
+              THE COMBAT ARENA
+            </h1>
+            <p className="arena-desc font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
+              Live agentic combat encounters and pending wagering windows on Somnia Shannon. Spectators can bet on beast outcomes during active 1-hour windows.
+            </p>
 
-            <div className="arena-actions flex flex-wrap items-center gap-3">
+            <div className="arena-actions flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={() => {
                   setTargetOpponent(null);
@@ -139,6 +140,15 @@ function ArenaContent() {
                 <FiPlusSquare className="w-4 h-4" />
                 <span>Forge Beast</span>
               </Link>
+            </div>
+          </div>
+
+          <div className="arena-hero-ill lg:col-span-5 flex justify-center lg:justify-end">
+            <div className="w-full">
+              <Img
+                src="/arena-hero.png"
+                alt="Arena Combat Graffiti Illustration"
+              />
             </div>
           </div>
         </div>

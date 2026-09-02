@@ -16,6 +16,7 @@ import { getBetsByBettor } from '@/lib/services/battleService';
 import { Beast, Bet } from '@/lib/types';
 import { RouteGuard } from '@/components/wallet/RouteGuard';
 import gsap from 'gsap';
+import Img from '@/components/ui/Img';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
@@ -32,16 +33,18 @@ export default function DashboardPage() {
   const contentRef = useRef<HTMLElement>(null);
 
   // Header entrance
-  useLayoutEffect(() => {
+  useEffect(() => {
+    if (!headerRef.current) return;
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
       tl.from('.dash-badge', { opacity: 0, y: -12, duration: 0.4 })
         .from('.dash-title', { opacity: 0, y: 24, duration: 0.5 }, '-=0.2')
         .from('.dash-desc', { opacity: 0, y: 14, duration: 0.35 }, '-=0.2')
-        .from('.dash-cta', { opacity: 0, x: 20, duration: 0.35 }, '-=0.25');
+        .from('.dash-cta', { opacity: 0, x: 20, duration: 0.35 }, '-=0.25')
+        .from('.dash-hero-ill', { opacity: 0, scale: 0.85, duration: 0.6, ease: 'back.out(1.4)' }, '-=0.3');
     }, headerRef);
     return () => ctx.revert();
-  }, []);
+  }, [address]);
 
   useEffect(() => {
     let mounted = true;
@@ -89,29 +92,37 @@ export default function DashboardPage() {
     <RouteGuard routeName="COMMAND CENTER DASHBOARD">
       <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header */}
-      <section ref={headerRef} className="border-b border-primary bg-background pt-12 pb-8">
-        <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
-          <div className="dash-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-3">
-            <span className="w-2 h-2 bg-secondary" />
-            <span>COMMAND CENTER // USER TERMINAL</span>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-            <div>
-              <h1 className="dash-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
-                COMMAND CENTER
-              </h1>
-              <p className="dash-desc font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
-                Manage your minted combatants, track pending challenges, and review active spectator wagers.
-              </p>
+      <section ref={headerRef} className="border-b border-primary bg-background pt-8 pb-8">
+        <div className="max-w-[1440px] mx-auto px-4 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-7 space-y-4">
+            <div className="dash-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
+              <span className="w-2 h-2 bg-secondary" />
+              <span>COMMAND CENTER // USER TERMINAL</span>
             </div>
+            <h1 className="dash-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
+              COMMAND CENTER
+            </h1>
+            <p className="dash-desc font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
+              Manage your minted combatants, track pending challenges, and review active spectator wagers.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/create"
+                className="dash-cta px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors inline-flex items-center gap-2"
+              >
+                <FiPlusSquare className="w-4 h-4" />
+                <span>Forge New Beast</span>
+              </Link>
+            </div>
+          </div>
 
-            <Link
-              href="/create"
-              className="dash-cta px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors inline-flex items-center gap-2 self-start sm:self-auto"
-            >
-              <FiPlusSquare className="w-4 h-4" />
-              <span>Forge New Beast</span>
-            </Link>
+          <div className="dash-hero-ill lg:col-span-5 flex justify-center lg:justify-end">
+            <div className="w-full">
+              <Img
+                src="/dashboard-hero.png"
+                alt="Command Center Surreal Illustration"
+              />
+            </div>
           </div>
         </div>
       </section>
