@@ -8,10 +8,10 @@ import {
   FiPlusSquare, 
   FiAward, 
   FiGrid, 
-  FiUser, 
-  FiShield
+  FiUser
 } from 'react-icons/fi';
 import { ConnectButton } from '@/components/wallet/ConnectButton';
+import Img from '@/components/ui/Img';
 
 const NAV_ITEMS = [
   { label: 'ARENA', href: '/arena', icon: FiCrosshair },
@@ -30,10 +30,15 @@ export function Navbar() {
         <div className="flex items-center gap-10">
           <Link 
             href="/" 
-            className="flex items-center gap-2 group"
+            className="flex items-center gap-2.5 group"
           >
-            <div className="w-8 h-8 bg-primary flex items-center justify-center text-background font-headline font-bold text-lg group-hover:bg-secondary transition-colors">
-              <FiShield className="w-4 h-4" />
+            <div className="w-8 h-8 relative flex items-center justify-center overflow-hidden flex-shrink-0">
+              <Img 
+                src="/logo.png" 
+                alt="Animal Fight Club Logo" 
+                className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
+                priority
+              />
             </div>
             <span className="font-headline font-extrabold text-2xl tracking-tighter uppercase text-primary">
               ANIMAL FIGHT CLUB

@@ -26,6 +26,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Animal Fight Club | AI Combat & Market Pulse Arena",
   description: "Create AI-agent beasts, battle in LLM-reasoned combat, and wager with live DreamDEX Event Contract market odds on Somnia Shannon testnet.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 import { Web3Provider } from "@/components/providers/Web3Provider";

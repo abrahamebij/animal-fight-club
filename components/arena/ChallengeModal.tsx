@@ -16,6 +16,7 @@ import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { getBeastsByOwner, getAllBeasts } from '@/lib/services/beastService';
 import { createBattle } from '@/lib/services/battleService';
 import { Beast } from '@/lib/types';
+import Img from '@/components/ui/Img';
 import gsap from 'gsap';
 
 interface ChallengeModalProps {
@@ -109,8 +110,14 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-divider pb-3">
-          <div className="flex items-center gap-2">
-            <FiCrosshair className="w-5 h-5 text-primary" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 relative flex items-center justify-center overflow-hidden flex-shrink-0">
+              <Img 
+                src="/logo.png" 
+                alt="Animal Fight Club Logo" 
+                className="w-6 h-6 object-contain"
+              />
+            </div>
             <span className="font-headline font-extrabold text-2xl uppercase tracking-wider text-primary">
               INITIATE ARENA CHALLENGE
             </span>

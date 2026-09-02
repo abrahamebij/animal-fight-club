@@ -5,6 +5,7 @@ import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import { FiLock, FiShield, FiArrowLeft } from 'react-icons/fi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
+import Img from '@/components/ui/Img';
 
 interface RouteGuardProps {
   children: React.ReactNode;
@@ -36,6 +37,14 @@ export function RouteGuard({ children, routeName = 'PROTECTED PROTOCOL ROUTE' }:
   if (!isConnected) {
     return (
       <div className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 py-24 flex flex-col items-center justify-center text-center space-y-6">
+        <div className="w-16 h-16 relative flex items-center justify-center overflow-hidden flex-shrink-0 mb-2">
+          <Img 
+            src="/logo.png" 
+            alt="Animal Fight Club Logo" 
+            className="w-16 h-16 object-contain"
+          />
+        </div>
+
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary text-background font-mono text-xs uppercase tracking-wider">
           <FiLock className="w-3.5 h-3.5" />
           <span>AUTHENTICATION REQUIRED</span>

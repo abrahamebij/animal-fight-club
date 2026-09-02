@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fi';
 import { somniaShannon } from '@/lib/config/wagmi';
 import { formatBalance } from '@/lib/utils/format';
+import Img from '@/components/ui/Img';
 import gsap from 'gsap';
 
 interface WalletModalProps {
@@ -67,8 +68,14 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-divider pb-3">
-          <div className="flex items-center gap-2">
-            <FiShield className="w-5 h-5 text-primary" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-6 h-6 relative flex items-center justify-center overflow-hidden flex-shrink-0">
+              <Img 
+                src="/logo.png" 
+                alt="Animal Fight Club Logo" 
+                className="w-6 h-6 object-contain"
+              />
+            </div>
             <span className="font-headline font-extrabold text-xl uppercase tracking-wider text-primary">
               {isConnected ? 'TERMINAL WALLET // AUTH' : 'CONNECT WALLET // ACCESS'}
             </span>

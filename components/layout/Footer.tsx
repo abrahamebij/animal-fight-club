@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FiActivity, FiCpu, FiShield } from 'react-icons/fi';
+import { FiActivity, FiCpu } from 'react-icons/fi';
+import Img from '@/components/ui/Img';
 
 export function Footer() {
   return (
@@ -11,9 +12,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-12 border-b border-background/20">
           {/* Col 1 */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-primary-container border border-background/20 flex items-center justify-center text-background">
-                <FiShield className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 relative flex items-center justify-center overflow-hidden flex-shrink-0">
+                <Img 
+                  src="/logo.png" 
+                  alt="Animal Fight Club Logo" 
+                  className="w-7 h-7 object-contain"
+                />
               </div>
               <span className="font-headline font-bold text-xl uppercase tracking-tight">
                 ANIMAL FIGHT CLUB
