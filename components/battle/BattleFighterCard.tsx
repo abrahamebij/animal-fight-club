@@ -4,6 +4,7 @@ import React, { useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { FiTrendingUp } from 'react-icons/fi';
 import { Beast, MarketPulse } from '@/lib/types';
+import { truncateAddress } from '@/lib/utils/format';
 import gsap from 'gsap';
 
 interface BattleFighterCardProps {
@@ -12,6 +13,7 @@ interface BattleFighterCardProps {
   beast: Beast;
   hp: number;
   marketPulse?: MarketPulse | null;
+  className?: string;
 }
 
 export function BattleFighterCard({
@@ -20,6 +22,7 @@ export function BattleFighterCard({
   beast,
   hp,
   marketPulse,
+  className = '',
 }: BattleFighterCardProps) {
   const hpBarRef = useRef<HTMLDivElement>(null);
 
@@ -42,14 +45,14 @@ export function BattleFighterCard({
   }, [hp]);
 
   return (
-    <div className="fighter-panel lg:col-span-4 border border-divider p-6 bg-background flex flex-col justify-between gap-6">
-      <div className="space-y-4">
+    <div className={`fighter-panel border border-divider p-4 bg-background flex flex-col justify-between gap-4 ${className}`}>
+      <div className="space-y-3">
         <div className="flex items-center justify-between border-b border-divider pb-2">
-          <span className="font-mono text-xs text-secondary font-bold">
+          <span className="font-mono text-[11px] text-secondary font-bold">
             {label} ({role})
           </span>
-          <span className="font-mono text-xs text-secondary truncate max-w-[140px]">
-            {beast.ownerAddress}
+          <span className="font-mono text-[11px] text-secondary truncate">
+            {beast.ownerAddress ? truncateAddress(beast.ownerAddress) : 'ANONYMOUS'}
           </span>
         </div>
 

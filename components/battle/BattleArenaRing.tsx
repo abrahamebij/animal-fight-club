@@ -99,6 +99,7 @@ interface BattleArenaRingProps {
   overrideHpB?: number;
   replayReset?: number;      // increment to snap fighters back to standing
   suppressVictory?: boolean; // hide the winner banner mid-replay
+  backgroundImageUrl?: string; // custom ring background image
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -115,6 +116,7 @@ export function BattleArenaRing({
   overrideHpB,
   replayReset,
   suppressVictory,
+  backgroundImageUrl,
 }: BattleArenaRingProps) {
   const figARef      = useRef<HTMLDivElement>(null);
   const figBRef      = useRef<HTMLDivElement>(null);
@@ -337,6 +339,14 @@ export function BattleArenaRing({
       >
         {/* Arena stadium background with subtle atmospheric haze */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0d] via-[#101015] to-[#08080a]" />
+
+        {/* Custom background image if provided */}
+        {backgroundImageUrl && (
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-85 z-0"
+            style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+          />
+        )}
 
         {/* Overhead arena spotlights illuminating the fighting ring */}
         <div
@@ -584,63 +594,33 @@ export function BattleArenaRing({
         )}
       </div>
 
-      {/* ── FIGHTER INFO STRIP ──────────────────────────────────────────────── */}
-      <div className="border-x border-b border-divider bg-background">
-        <div className="grid grid-cols-3 divide-x divide-divider font-mono text-xs">
-          {/* Beast A */}
-          <div className="p-3 space-y-1">
-            <div className="font-bold text-primary uppercase truncate">{battle.beastA.name}</div>
-            <div className="text-secondary text-[10px]">
-              PWR {battle.beastA.stats.power} · DEF {battle.beastA.stats.defense} · SPD {battle.beastA.stats.speed} · SPC {battle.beastA.stats.special}
-            </div>
-            <div className="text-secondary text-[10px]">
-              {battle.beastA.record.wins}W – {battle.beastA.record.losses}L
-            </div>
-            {battle.marketPulseA?.modifier && (
-              <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 border border-divider bg-surface-container-low text-[10px] text-primary font-bold">
-                <FiZap className="w-2.5 h-2.5 flex-shrink-0" />
-                <span className="truncate">{battle.marketPulseA.modifier.description}</span>
-              </div>
-            )}
-          </div>
+      {/* ── COMBAT TRIGGER / STATUS STRIP ──────────────────────────────────────────────── */}
+      <div className="border-x border-b border-divider bg-background p-3 flex items-center justify-between font-mono text-xs">
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-danger animate-ping' : 'bg-primary'}`} />
+          <span className="font-bold uppercase text-[11px] text-primary tracking-wider">
+            {isLive ? 'LIVE COMBAT ENGINE RUNNING' : isCompleted ? 'DUEL COMPLETED' : 'AWAITING COMBAT INITIATION'}
+          </span>
+        </div>
 
-          {/* Centre — combat trigger */}
-          <div className="p-3 flex items-center justify-center">
-            {isCompleted ? (
-              <div className="text-secondary text-[10px] uppercase font-bold text-center">DUEL CONCLUDED</div>
-            ) : isOwnerOfFighter ? (
-              <button
-                onClick={onExecuteCombat}
-                disabled={isSimulating}
-                className="px-4 py-2.5 bg-primary text-background font-headline font-bold text-[10px] uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
-              >
-                <FiTerminal className="w-3 h-3" />
-                <span>{isSimulating ? 'SIMULATING…' : 'TRIGGER ENGINE'}</span>
-              </button>
-            ) : (
-              <div className="flex items-center gap-1.5 text-secondary text-[10px] uppercase">
-                <FiShield className="w-3 h-3 flex-shrink-0" />
-                <span>AWAITING OWNER</span>
-              </div>
-            )}
-          </div>
-
-          {/* Beast B */}
-          <div className="p-3 space-y-1 text-right">
-            <div className="font-bold text-primary uppercase truncate">{battle.beastB.name}</div>
-            <div className="text-secondary text-[10px]">
-              PWR {battle.beastB.stats.power} · DEF {battle.beastB.stats.defense} · SPD {battle.beastB.stats.speed} · SPC {battle.beastB.stats.special}
+        <div>
+          {isCompleted ? (
+            <span className="text-secondary text-[11px] uppercase font-bold">OUTCOME FINALIZED</span>
+          ) : isOwnerOfFighter ? (
+            <button
+              onClick={onExecuteCombat}
+              disabled={isSimulating}
+              className="px-5 py-2 bg-primary text-background font-headline font-bold text-xs uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+            >
+              <FiTerminal className="w-3.5 h-3.5" />
+              <span>{isSimulating ? 'SIMULATING COMBAT…' : 'TRIGGER COMBAT ENGINE'}</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-1.5 text-secondary text-[11px] uppercase">
+              <FiShield className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>AWAITING COMBATANT OWNER</span>
             </div>
-            <div className="text-secondary text-[10px]">
-              {battle.beastB.record.wins}W – {battle.beastB.record.losses}L
-            </div>
-            {battle.marketPulseB?.modifier && (
-              <div className="inline-flex items-center justify-end gap-1 mt-1 px-2 py-0.5 border border-divider bg-surface-container-low text-[10px] text-primary font-bold">
-                <FiZap className="w-2.5 h-2.5 flex-shrink-0" />
-                <span className="truncate">{battle.marketPulseB.modifier.description}</span>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
