@@ -19,6 +19,7 @@ import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { getBattleById, placeBet } from '@/lib/services/battleService';
 import { Battle, CombatTurn } from '@/lib/types';
 import { formatTimeRemaining } from '@/lib/utils/timer';
+import { toast } from 'sonner';
 import Img from '@/components/ui/Img';
 import gsap from 'gsap';
 
@@ -242,6 +243,10 @@ export default function BattleViewPage() {
           });
 
           setBetPlaced(true);
+          toast.success(`Wager Submitted to Escrow!`, {
+            description: `Staked ${amountNum} STT on ${chosenBeast.name}.`,
+            duration: 5000,
+          });
 
           // Bounce animation on the button
           if (betBtnRef.current) {
@@ -254,6 +259,9 @@ export default function BattleViewPage() {
           setTimeout(() => setBetPlaced(false), 3000);
         } catch (err) {
           console.error('Failed to place bet:', err);
+          toast.error('Failed to Place Wager', {
+            description: err instanceof Error ? err.message : 'Please try again.',
+          });
         }
       },
     });

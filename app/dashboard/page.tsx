@@ -30,6 +30,7 @@ import {
 import { Beast, Bet, Challenge } from '@/lib/types';
 import { RouteGuard } from '@/components/wallet/RouteGuard';
 import { formatDate } from '@/lib/utils/timer';
+import { toast } from 'sonner';
 import gsap from 'gsap';
 import Img from '@/components/ui/Img';
 
@@ -118,10 +119,17 @@ export default function DashboardPage() {
     setProcessingChallengeId(challengeId);
     try {
       const { battle } = await acceptChallenge(challengeId, address);
+      toast.success('Challenge Accepted!', {
+        description: 'Duel initialized. 1-hour spectator wagering window is now live.',
+        duration: 5000,
+      });
       // Route immediately to the battle view so the user sees the active 1-hour window
       router.push(`/battle/${battle.id}`);
     } catch (err) {
       console.error('Failed to accept challenge:', err);
+      toast.error('Failed to Accept Challenge', {
+        description: err instanceof Error ? err.message : 'An error occurred.',
+      });
       setProcessingChallengeId(null);
     }
   };
@@ -134,8 +142,15 @@ export default function DashboardPage() {
       setIncomingChallenges((prev) =>
         prev.filter((c) => c.id !== challengeId)
       );
+      toast.info('Challenge Declined', {
+        description: 'The duel proposal has been turned down.',
+        duration: 4000,
+      });
     } catch (err) {
       console.error('Failed to decline challenge:', err);
+      toast.error('Failed to Decline Challenge', {
+        description: err instanceof Error ? err.message : 'An error occurred.',
+      });
     } finally {
       setProcessingChallengeId(null);
     }

@@ -34,6 +34,7 @@ export const metadata: Metadata = {
 
 import { Web3Provider } from "@/components/providers/Web3Provider";
 import { WalletGateProvider } from "@/components/wallet/useWalletGate";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -53,6 +54,14 @@ export default function RootLayout({
               {children}
             </div>
             <Footer />
+            <Toaster 
+              richColors 
+              position="top-right" 
+              theme="dark"
+              toastOptions={{
+                className: 'font-mono text-xs border border-divider bg-background text-foreground shadow-2xl',
+              }}
+            />
           </WalletGateProvider>
         </Web3Provider>
       </body>

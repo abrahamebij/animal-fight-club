@@ -18,6 +18,7 @@ import { BeastStats, BoundAsset } from "@/lib/types";
 import { createBeast } from "@/lib/services/beastService";
 import { uploadImageToImgBB } from "@/lib/services/imageUploadService";
 import { RouteGuard } from "@/components/wallet/RouteGuard";
+import { toast } from "sonner";
 import gsap from "gsap";
 import Img from "@/components/ui/Img";
 
@@ -236,10 +237,18 @@ export default function CreateBeastPage() {
             boundAsset,
           });
 
+          toast.success(`${createdBeast.name} successfully forged!`, {
+            description: "Combatant telemetry recorded on Somnia Shannon.",
+            duration: 5000,
+          });
+
           // Navigate directly to the newly forged beast profile
           router.push(`/beast/${createdBeast.id}`);
         } catch (err) {
           console.error("Failed to create beast:", err);
+          toast.error("Failed to forge combatant", {
+            description: err instanceof Error ? err.message : "Please try again.",
+          });
           setIsSubmitting(false);
         }
       },

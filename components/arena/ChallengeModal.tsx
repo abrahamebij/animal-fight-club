@@ -15,6 +15,7 @@ import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { getBeastsByOwner, getAllBeasts } from '@/lib/services/beastService';
 import { createChallenge } from '@/lib/services/challengeService';
 import { Beast } from '@/lib/types';
+import { toast } from 'sonner';
 import Img from '@/components/ui/Img';
 import gsap from 'gsap';
 
@@ -116,10 +117,18 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
         setIsSubmitting(true);
         try {
           await createChallenge(selectedMyBeast, selectedOpponent);
+          toast.success(`Challenge Transmitted to ${selectedOpponent.name}!`, {
+            description: `Duel proposal sent. Awaiting defender acceptance in Command Center.`,
+            duration: 5000,
+          });
           onClose();
           router.push('/dashboard');
         } catch (err) {
           console.error('Failed to transmit challenge:', err);
+          toast.error('Failed to Transmit Challenge', {
+            description: err instanceof Error ? err.message : 'Please check your connection and try again.',
+            duration: 5000,
+          });
           setIsSubmitting(false);
         }
       },
