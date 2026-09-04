@@ -79,33 +79,72 @@ function getEffectiveStats(beast: Beast, currentHp: number, pulse?: MarketPulse 
 }
 
 /**
- * Calls Gemini API to generate LLM combat simulation
+ * Calls Gemini API to generate LLM combat simulation with strict turn alternation and dual-beast context
  */
 async function generateGeminiCombatSimulation(battle: Battle): Promise<{ turns: CombatTurn[]; winner: 'beastA' | 'beastB' } | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
+  const statsA_init = getEffectiveStats(battle.beastA, 100, battle.marketPulseA);
+  const statsB_init = getEffectiveStats(battle.beastB, 100, battle.marketPulseB);
+  const initialActor: 'beastA' | 'beastB' = statsA_init.speed >= statsB_init.speed ? 'beastA' : 'beastB';
+  const secondActor: 'beastA' | 'beastB' = initialActor === 'beastA' ? 'beastB' : 'beastA';
+
+  const pulseDescA = battle.marketPulseA?.modifier?.description || 'UNBOUND (No market modifier)';
+  const pulseDescB = battle.marketPulseB?.modifier?.description || 'UNBOUND (No market modifier)';
+
   const prompt = `You are the Apex Tactical Combat Reasoner for Animal Fight Club, an agentic Web3 arena on Somnia.
-Two combatants are clashing in a turn-by-turn duel:
-- Combatant A: ${battle.beastA.name} (Power: ${battle.beastA.stats.power}, Defense: ${battle.beastA.stats.defense}, Speed: ${battle.beastA.stats.speed}, Special: ${battle.beastA.stats.special}, Perks: ${battle.beastA.perks.join(', ')}, Market Modifier: ${battle.marketPulseA?.modifier?.description || 'UNBOUND'})
-- Combatant B: ${battle.beastB.name} (Power: ${battle.beastB.stats.power}, Defense: ${battle.beastB.stats.defense}, Speed: ${battle.beastB.stats.speed}, Special: ${battle.beastB.stats.special}, Perks: ${battle.beastB.perks.join(', ')}, Market Modifier: ${battle.marketPulseB?.modifier?.description || 'UNBOUND'})
+Simulate a turn-by-turn duel between two autonomous beasts:
 
-Simulate a thrilling 4 to 7 round combat encounter where each combatant starts with 100 HP.
-Each turn must deplete one combatant's HP until exactly one reaches 0 HP.
+COMBATANT A (beastA):
+- Name: ${battle.beastA.name}
+- Stats: Power ${statsA_init.power}, Defense ${statsA_init.defense}, Speed ${statsA_init.speed}, Special ${statsA_init.special}
+- Active Perks: ${battle.beastA.perks.length > 0 ? battle.beastA.perks.join(', ') : 'None'}
+- Locked Market Modifier: ${pulseDescA}
 
-Output ONLY a JSON object matching this exact TypeScript structure with no markdown backticks:
+COMBATANT B (beastB):
+- Name: ${battle.beastB.name}
+- Stats: Power ${statsB_init.power}, Defense ${statsB_init.defense}, Speed ${statsB_init.speed}, Special ${statsB_init.special}
+- Active Perks: ${battle.beastB.perks.length > 0 ? battle.beastB.perks.join(', ') : 'None'}
+- Locked Market Modifier: ${pulseDescB}
+
+CRITICAL RULES FOR COMBAT RESOLUTION:
+1. STRICT TURN ALTERNATION: Possession of the turn MUST alternate strictly between combatants every single round.
+   - Turn 1 actor: "${initialActor}" (${initialActor === 'beastA' ? battle.beastA.name : battle.beastB.name})
+   - Turn 2 actor: "${secondActor}" (${secondActor === 'beastA' ? battle.beastA.name : battle.beastB.name})
+   - Turn 3 actor: "${initialActor}"
+   - Turn 4 actor: "${secondActor}"
+   - (and so on until exactly one combatant reaches 0 HP).
+   UNDER NO CIRCUMSTANCES should the same combatant take consecutive turns.
+
+2. DUAL-BEAST MATCHUP REASONING: On each turn, the tactical reasoner must evaluate BOTH combatants' full current state:
+   - The acting combatant's remaining HP, offensive stats, perks, and its OWN locked market modifier.
+   - The defending combatant's remaining HP, defensive stats, and armor/perks.
+   - Example: If Kurama is low on HP, the opponent presses advantage; if Lion Heart has a Defense buff, attacks face damage mitigation.
+
+3. MARKET MODIFIER ISOLATION:
+   - When beastA acts, ONLY apply beastA's locked modifier (${pulseDescA}).
+   - When beastB acts, ONLY apply beastB's locked modifier (${pulseDescB}).
+   - Never bleed beastA's modifier into beastB's actions or vice-versa.
+
+4. HEALTH AND DAMAGE:
+   - Both combatants start at 100 HP.
+   - Each turn deals 16 to 34 damage to the DEFENDER's HP only.
+   - Combat concludes immediately in 4 to 7 turns when any combatant's HP drops to 0.
+
+Output ONLY a JSON object matching this exact structure with no markdown formatting:
 {
   "winner": "beastA" or "beastB",
   "turns": [
     {
       "turnNumber": 1,
-      "actor": "beastA" or "beastB",
+      "actor": "${initialActor}",
       "actionName": "UPPERCASE ACTION NAME",
-      "damageDealt": number (between 14 and 34),
-      "beastAHp": number (remaining HP for A, min 0),
-      "beastBHp": number (remaining HP for B, min 0),
-      "combatNarrative": "2 sentences describing the dramatic tactical attack and hit.",
-      "reasoning": "1 sentence explaining why this tactical action was selected by the neural agent based on attributes and market pulse."
+      "damageDealt": number,
+      "beastAHp": number,
+      "beastBHp": number,
+      "combatNarrative": "2 sentences describing attacker hitting defender with specific mechanical detail.",
+      "reasoning": "1 sentence explaining why this tactical action was chosen based on both combatants' current HP and the acting combatant's own market pulse."
     }
   ]
 }`;
@@ -118,7 +157,7 @@ Output ONLY a JSON object matching this exact TypeScript structure with no markd
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.7,
+          temperature: 0.6,
           responseMimeType: 'application/json',
         },
       }),
@@ -131,13 +170,49 @@ Output ONLY a JSON object matching this exact TypeScript structure with no markd
     if (!text) return null;
 
     const parsed = JSON.parse(text);
-    if (parsed.turns && Array.isArray(parsed.turns) && (parsed.winner === 'beastA' || parsed.winner === 'beastB')) {
-      const turnsWithTimestamps = parsed.turns.map((t: CombatTurn, i: number) => ({
+    if (parsed.turns && Array.isArray(parsed.turns) && parsed.turns.length >= 2) {
+      // Validate and enforce strict alternation on returned turns
+      let valid = true;
+      for (let i = 1; i < parsed.turns.length; i++) {
+        if (parsed.turns[i].actor === parsed.turns[i - 1].actor) {
+          valid = false;
+          break;
+        }
+      }
+
+      let finalTurns: CombatTurn[] = parsed.turns;
+      if (!valid) {
+        let curHpA = 100;
+        let curHpB = 100;
+        finalTurns = parsed.turns.map((t: CombatTurn, idx: number) => {
+          const actor: 'beastA' | 'beastB' = idx % 2 === 0 ? initialActor : secondActor;
+          const dmg = typeof t.damageDealt === 'number' && t.damageDealt > 0 ? t.damageDealt : 22;
+          if (actor === 'beastA') {
+            curHpB = Math.max(0, curHpB - dmg);
+          } else {
+            curHpA = Math.max(0, curHpA - dmg);
+          }
+          return {
+            ...t,
+            turnNumber: idx + 1,
+            actor,
+            damageDealt: dmg,
+            beastAHp: curHpA,
+            beastBHp: curHpB,
+          };
+        });
+      }
+
+      const last = finalTurns[finalTurns.length - 1];
+      const determinedWinner: 'beastA' | 'beastB' = last.beastAHp > last.beastBHp ? 'beastA' : 'beastB';
+
+      const turnsWithTimestamps = finalTurns.map((t: CombatTurn, i: number) => ({
         ...t,
         timestamp: Date.now() + i * 1000,
       }));
+
       return {
-        winner: parsed.winner,
+        winner: determinedWinner,
         turns: turnsWithTimestamps,
       };
     }
@@ -149,7 +224,7 @@ Output ONLY a JSON object matching this exact TypeScript structure with no markd
 }
 
 /**
- * Deterministic tactical simulation engine fallback
+ * Deterministic tactical simulation engine with strict turn alternation and dual-beast state evaluation
  */
 function simulateDeterministicCombat(battle: Battle): { turns: CombatTurn[]; winner: 'beastA' | 'beastB' } {
   const turns: CombatTurn[] = [];
@@ -157,25 +232,29 @@ function simulateDeterministicCombat(battle: Battle): { turns: CombatTurn[]; win
   let hpB = 100;
   let turnNumber = 1;
 
+  // Faster combatant seizes initial initiative on Turn 1
+  const statsA_init = getEffectiveStats(battle.beastA, 100, battle.marketPulseA);
+  const statsB_init = getEffectiveStats(battle.beastB, 100, battle.marketPulseB);
+  let currentAttacker: 'beastA' | 'beastB' = statsA_init.speed >= statsB_init.speed ? 'beastA' : 'beastB';
+
   while (hpA > 0 && hpB > 0 && turnNumber <= 12) {
     const statsA = getEffectiveStats(battle.beastA, hpA, battle.marketPulseA);
     const statsB = getEffectiveStats(battle.beastB, hpB, battle.marketPulseB);
 
-    const initiativeA = statsA.speed * 2 + Math.floor(Math.random() * 10);
-    const initiativeB = statsB.speed * 2 + Math.floor(Math.random() * 10);
-
-    const attackerSide: 'beastA' | 'beastB' = initiativeA >= initiativeB ? 'beastA' : 'beastB';
+    const attackerSide = currentAttacker;
     const attacker = attackerSide === 'beastA' ? battle.beastA : battle.beastB;
     const defender = attackerSide === 'beastA' ? battle.beastB : battle.beastA;
     const atkStats = attackerSide === 'beastA' ? statsA : statsB;
     const defStats = attackerSide === 'beastA' ? statsB : statsA;
+    const atkHp = attackerSide === 'beastA' ? hpA : hpB;
+    const defHp = attackerSide === 'beastA' ? hpB : hpA;
     const atkPulse = attackerSide === 'beastA' ? battle.marketPulseA : battle.marketPulseB;
 
     const actionIndex = (turnNumber + Math.floor(Math.random() * TACTICAL_ACTIONS.length)) % TACTICAL_ACTIONS.length;
     const action = TACTICAL_ACTIONS[actionIndex];
 
     const rawDamage = Math.round(
-      (atkStats.power * 2.8 + atkStats.special * 1.2) * action.basePowerMultiplier - (defStats.defense * 1.2) + (Math.random() * 8)
+      (atkStats.power * 2.6 + atkStats.special * 1.1) * action.basePowerMultiplier - (defStats.defense * 1.1) + (Math.random() * 6)
     );
     const damageDealt = Math.max(14, Math.min(36, rawDamage));
 
@@ -185,11 +264,24 @@ function simulateDeterministicCombat(battle: Battle): { turns: CombatTurn[]; win
       hpA = Math.max(0, hpA - damageDealt);
     }
 
-    const pulseContext = atkPulse?.modifier 
-      ? `leveraging ${atkPulse.modifier.description}`
-      : `capitalizing on base ${attacker.stats.power >= defender.stats.defense ? 'power superiority' : 'speed agility'}`;
+    // Contextual dual-beast reasoning: attacker state vs defender state + attacker's own market pulse
+    let pulseContext = '';
+    if (atkPulse?.modifier) {
+      pulseContext = `leveraging ${atkPulse.modifier.description}`;
+    } else {
+      pulseContext = `channeling baseline kinetic power (Unbound — no market edge)`;
+    }
 
-    const reasoning = `Tactical neural core selected ${action.name} to maximize damage while ${pulseContext}.`;
+    let matchupContext = '';
+    if (defHp <= 35) {
+      matchupContext = `exploiting ${defender.name}'s critical integrity (${defHp} HP remaining)`;
+    } else if (defStats.defense > atkStats.power) {
+      matchupContext = `overriding ${defender.name}'s fortified defense barrier`;
+    } else {
+      matchupContext = `pressing offensive tempo against ${defender.name}`;
+    }
+
+    const reasoning = `Tactical neural core selected ${action.name} to ${matchupContext} while ${pulseContext}.`;
     const narrative = action.narrativeTemplate(attacker.name, defender.name, damageDealt, reasoning);
 
     turns.push({
@@ -204,6 +296,8 @@ function simulateDeterministicCombat(battle: Battle): { turns: CombatTurn[]; win
       timestamp: Date.now() + turnNumber * 1000,
     });
 
+    // STRICT ALTERNATION: possession flips to the opposing combatant for the next round
+    currentAttacker = currentAttacker === 'beastA' ? 'beastB' : 'beastA';
     turnNumber++;
   }
 
