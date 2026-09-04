@@ -1,4 +1,4 @@
-﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getOpenChallenges, 
   getChallengesForUser, 
@@ -53,7 +53,8 @@ export function useAcceptChallengeMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (challengeId: string) => acceptChallenge(challengeId),
+    mutationFn: ({ challengeId, defenderAddress }: { challengeId: string; defenderAddress: string }) =>
+      acceptChallenge(challengeId, defenderAddress),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CHALLENGE_KEYS.all });
       queryClient.invalidateQueries({ queryKey: BATTLE_KEYS.all });
@@ -65,9 +66,11 @@ export function useDeclineChallengeMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (challengeId: string) => declineChallenge(challengeId),
+    mutationFn: ({ challengeId, defenderAddress }: { challengeId: string; defenderAddress: string }) =>
+      declineChallenge(challengeId, defenderAddress),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CHALLENGE_KEYS.all });
     },
   });
 }
+

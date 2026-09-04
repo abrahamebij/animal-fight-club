@@ -35,8 +35,9 @@ export default function BattleViewPage() {
     }
   }, [initialBattle, activeBattle]);
 
-  const battle = activeBattle || initialBattle;
+  const battle = activeBattle || initialBattle || null;
   const userBet = userBets.find((b: Bet) => b.battleId === battleId) || null;
+
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {

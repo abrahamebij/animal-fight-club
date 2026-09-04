@@ -134,10 +134,11 @@ export default function CreateBeastPage() {
             avatarUrl: selectedAvatar || '/beasts/lion.png',
             stats,
             perks: selectedPerks,
-            boundAsset: boundAsset === 'UNBOUND' ? undefined : boundAsset,
+            boundAsset: boundAsset === 'UNBOUND' ? null : boundAsset,
             record: { wins: 0, losses: 0 },
             createdAt: Date.now(),
           };
+
 
           await createMutation.mutateAsync(newBeast);
           toast.success(`Beast ${newBeast.name} Forged!`, { description: 'Your autonomous combat agent is now registered.' });

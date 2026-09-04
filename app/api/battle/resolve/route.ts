@@ -68,7 +68,9 @@ function getEffectiveStats(beast: Beast, currentHp: number, pulse?: MarketPulse 
   }
 
   if (pulse?.modifier) {
-    const bonus = pulse.modifier.percentageBonus / 100;
+    const bonus = pulse.modifier.percentageBonus !== undefined
+      ? pulse.modifier.percentageBonus / 100
+      : (pulse.modifier.value ?? 0) / 10;
     if (pulse.modifier.stat === 'power') power = Math.round(power * (1 + bonus));
     if (pulse.modifier.stat === 'defense') defense = Math.round(defense * (1 + bonus));
     if (pulse.modifier.stat === 'speed') speed = Math.round(speed * (1 + bonus));
@@ -76,6 +78,7 @@ function getEffectiveStats(beast: Beast, currentHp: number, pulse?: MarketPulse 
   }
 
   return { power, defense, speed, special };
+
 }
 
 /**
@@ -289,12 +292,15 @@ function simulateDeterministicCombat(battle: Battle): { turns: CombatTurn[]; win
       actor: attackerSide,
       actionName: action.name,
       damageDealt,
+      isCritical: action.basePowerMultiplier > 1.25 || Math.random() < (atkStats.special * 0.05),
       beastAHp: hpA,
       beastBHp: hpB,
       combatNarrative: narrative,
       reasoning,
       timestamp: Date.now() + turnNumber * 1000,
     });
+
+
 
     // STRICT ALTERNATION: possession flips to the opposing combatant for the next round
     currentAttacker = currentAttacker === 'beastA' ? 'beastB' : 'beastA';

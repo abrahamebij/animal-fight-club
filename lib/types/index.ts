@@ -1,4 +1,4 @@
-export type BoundAsset = 'BTC' | 'ETH' | null;
+export type BoundAsset = 'BTC' | 'ETH' | 'UNBOUND' | null;
 
 export interface BeastStats {
   power: number;      // Offensive damage capacity (1-10)
@@ -48,22 +48,25 @@ export interface Challenge {
 }
 
 export interface MarketPulse {
-  asset: 'BTC' | 'ETH';
-  marketId: string;
+  asset?: 'BTC' | 'ETH';
+  marketId?: string;
   symbol: string;
-  intervalSec: number;
+  intervalSec?: number;
   upProbability: number;
-  bestBid?: number;
-  bestAsk?: number;
+  bestBid?: number | string;
+  bestAsk?: number | string;
   modifier: {
     stat: keyof BeastStats;
-    value: number; // e.g. +2 Speed
+    value?: number; // e.g. +2 Speed
+    percentageBonus?: number;
     description: string;
   };
-  locked: boolean;
+  locked?: boolean;
+  lockedAt?: number;
   oracleQuestionId?: string;
-  readTimestamp: number;
+  readTimestamp?: number;
 }
+
 
 export interface CombatTurn {
   turnNumber: number;

@@ -74,10 +74,15 @@ export async function createBattle(beastA: Beast, beastB: Beast): Promise<Battle
     status: 'pending',
     challengeAcceptedAt: now,
     bettingWindowClosesAt: now + ONE_HOUR_MS,
+    marketPulseA: null,
+    marketPulseB: null,
+    winner: null,
     totalPoolA: 0,
     totalPoolB: 0,
     combatLog: [],
+    createdAt: now,
   };
+
 
   // Lock in live DreamDEX market pulse modifiers
   const newBattle = await lockMarketPulseForBattle(baseBattle);

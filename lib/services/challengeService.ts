@@ -139,6 +139,49 @@ export async function getOutgoingChallenges(walletAddress: string): Promise<Chal
 }
 
 /**
+ * Fetches all challenges associated with a user address
+ */
+export async function getChallengesForUser(walletAddress: string): Promise<Challenge[]> {
+  const [incoming, outgoing] = await Promise.all([
+    getIncomingChallenges(walletAddress),
+    getOutgoingChallenges(walletAddress),
+  ]);
+  const map = new Map<string, Challenge>();
+  incoming.forEach((c) => map.set(c.id, c));
+  outgoing.forEach((c) => map.set(c.id, c));
+  return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/**
+ * Fetches all open challenges awaiting response
+ */
+export async function getOpenChallenges(): Promise<Challenge[]> {
+  const results: Challenge[] = getLocalChallenges().filter(
+    (c) => c.status === 'awaiting_response'
+  );
+
+  try {
+    const q = query(
+      collection(db, 'challenges'),
+      where('status', '==', 'awaiting_response'),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    snap.forEach((d) => {
+      const c = d.data() as Challenge;
+      if (!results.some((r) => r.id === c.id)) {
+        results.push(c);
+      }
+    });
+  } catch (error) {
+    console.warn('Error querying open challenges from Firestore:', error);
+  }
+
+  return results;
+}
+
+
+/**
  * Accepts a challenge:
  * 1. Strictly verifies the caller is the challenged beast owner.
  * 2. Creates the official pending battle document and opens the 1-hour betting window.

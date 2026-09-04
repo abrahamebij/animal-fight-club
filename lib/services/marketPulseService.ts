@@ -145,8 +145,8 @@ export async function fetchMarketPulseForAsset(asset: 'BTC' | 'ETH'): Promise<Ma
  * Locks in real-time Market Pulse modifiers for both combatants in a Battle
  */
 export async function lockMarketPulseForBattle(battle: Battle): Promise<Battle> {
-  let pulseA: MarketPulse | undefined = battle.marketPulseA;
-  let pulseB: MarketPulse | undefined = battle.marketPulseB;
+  let pulseA: MarketPulse | null = battle.marketPulseA ?? null;
+  let pulseB: MarketPulse | null = battle.marketPulseB ?? null;
 
   if (battle.beastA.boundAsset && battle.beastA.boundAsset !== 'UNBOUND' && !pulseA) {
     const pulse = await fetchMarketPulseForAsset(battle.beastA.boundAsset as 'BTC' | 'ETH');
@@ -164,3 +164,4 @@ export async function lockMarketPulseForBattle(battle: Battle): Promise<Battle> 
     marketPulseB: pulseB,
   };
 }
+

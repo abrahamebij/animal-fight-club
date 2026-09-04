@@ -23,9 +23,10 @@ interface ChallengeModalProps {
   isOpen: boolean;
   onClose: () => void;
   targetOpponent?: Beast | null;
+  initialOpponent?: Beast | null;
 }
 
-export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeModalProps) {
+export function ChallengeModal({ isOpen, onClose, targetOpponent, initialOpponent }: ChallengeModalProps) {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const { requireAuth } = useWalletGate();
@@ -33,8 +34,9 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
   const [myBeasts, setMyBeasts] = useState<Beast[]>([]);
   const [availableOpponents, setAvailableOpponents] = useState<Beast[]>([]);
   const [selectedMyBeast, setSelectedMyBeast] = useState<Beast | null>(null);
-  const [selectedOpponent, setSelectedOpponent] = useState<Beast | null>(targetOpponent || null);
+  const [selectedOpponent, setSelectedOpponent] = useState<Beast | null>(targetOpponent || initialOpponent || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const panelRef = useRef<HTMLDivElement>(null);
 
