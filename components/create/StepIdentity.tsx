@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
-import { FiUploadCloud, FiRefreshCw } from 'react-icons/fi';
+import { FiUploadCloud, FiRefreshCw, FiCheck } from 'react-icons/fi';
 import Img from '@/components/ui/Img';
+import { AVATAR_PRESETS } from '@/lib/constants/game';
 
 interface StepIdentityProps {
   name: string;
@@ -11,6 +11,7 @@ interface StepIdentityProps {
   description: string;
   onChangeDescription: (desc: string) => void;
   selectedAvatar: string;
+  onSelectAvatar: (url: string) => void;
   isUploading: boolean;
   uploadError: string | null;
   dragActive: boolean;
@@ -26,6 +27,7 @@ export function StepIdentity({
   description,
   onChangeDescription,
   selectedAvatar,
+  onSelectAvatar,
   isUploading,
   uploadError,
   dragActive,
@@ -71,19 +73,50 @@ export function StepIdentity({
           />
         </div>
 
-        {/* ImgBB Image Upload Box */}
-        <div>
-          <label className="block font-mono text-xs uppercase tracking-wider text-primary mb-1.5 font-bold">
-            CUSTOM AVATAR UPLOAD (IMGBB CLOUD)
+        {/* Combatant Avatar Selection: Presets + Custom Upload */}
+        <div className="space-y-3">
+          <label className="block font-mono text-xs uppercase tracking-wider text-primary font-bold">
+            COMBATANT AVATAR (CHOOSE PRESET OR UPLOAD CUSTOM)
           </label>
           
+          {/* Presets Grid */}
+          <div className="grid grid-cols-5 gap-2">
+            {AVATAR_PRESETS.map((preset) => {
+              const isSelected = selectedAvatar === preset.imageUrl;
+              return (
+                <button
+                  type="button"
+                  key={preset.id}
+                  onClick={() => onSelectAvatar(preset.imageUrl)}
+                  className={`relative aspect-square border overflow-hidden transition-all group cursor-pointer ${
+                    isSelected ? 'border-primary ring-2 ring-primary' : 'border-divider hover:border-primary opacity-75 hover:opacity-100'
+                  }`}
+                  title={preset.name}
+                >
+                  <Img
+                    src={preset.imageUrl}
+                    alt={preset.name}
+                    fill
+                    className="object-cover"
+                  />
+                  {isSelected && (
+                    <div className="absolute top-1 right-1 bg-primary text-background p-0.5 z-10">
+                      <FiCheck className="w-3 h-3" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ImgBB Custom Image Upload Box */}
           <div
             onDragEnter={onDrag}
             onDragLeave={onDrag}
             onDragOver={onDrag}
             onDrop={onDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed p-4 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 relative overflow-hidden bg-surface-container-low ${
+            className={`border-2 border-dashed p-3 text-center cursor-pointer transition-colors flex items-center justify-center gap-3 relative overflow-hidden bg-surface-container-low ${
               dragActive ? 'border-primary bg-primary/5' : 'border-divider hover:border-primary'
             }`}
           >
@@ -95,30 +128,17 @@ export function StepIdentity({
               onChange={onFileInputChange}
             />
 
-            {selectedAvatar ? (
-              <div className="relative w-28 h-28 aspect-square border border-divider overflow-hidden bg-zinc-900 my-1">
-                <Img
-                  src={selectedAvatar}
-                  alt="Uploaded Avatar"
-                  fill
-                  className="object-cover"
-                />
-              </div>
+            {isUploading ? (
+              <FiRefreshCw className="w-5 h-5 text-primary animate-spin flex-shrink-0" />
             ) : (
-              <div className="py-4 space-y-1">
-                {isUploading ? (
-                  <FiRefreshCw className="w-8 h-8 mx-auto text-primary animate-spin" />
-                ) : (
-                  <FiUploadCloud className="w-8 h-8 mx-auto text-secondary" />
-                )}
-                <p className="font-mono text-xs text-primary font-bold">
-                  {isUploading ? 'UPLOADING TO IMGBB...' : 'CLICK OR DRAG IMAGE FILE TO UPLOAD'}
-                </p>
-                <p className="font-mono text-[10px] text-secondary">
-                  Supports PNG, JPG, WEBP up to 32MB
-                </p>
-              </div>
+              <FiUploadCloud className="w-5 h-5 text-secondary flex-shrink-0" />
             )}
+            <div className="text-left font-mono">
+              <p className="text-xs text-primary font-bold">
+                {isUploading ? 'UPLOADING TO IMGBB...' : 'OR UPLOAD CUSTOM AVATAR'}
+              </p>
+              <p className="text-[10px] text-secondary">Supports PNG, JPG, WEBP up to 32MB</p>
+            </div>
           </div>
 
           {uploadError && (

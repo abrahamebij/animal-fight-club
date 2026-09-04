@@ -9,6 +9,7 @@ import { formatBalance } from '@/lib/utils/format';
 import { useUserBeasts } from '@/hooks/useBeasts';
 import { useUserBets } from '@/hooks/useBattles';
 import { DashboardChallengesPanel } from '@/components/dashboard/DashboardChallengesPanel';
+import { RouteGuard } from '@/components/wallet/RouteGuard';
 import Img from '@/components/ui/Img';
 
 export default function DashboardPage() {
@@ -26,7 +27,8 @@ export default function DashboardPage() {
     : 'NOT CONNECTED';
 
   return (
-    <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
+    <RouteGuard routeName="COMMAND CENTER">
+      <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header */}
       <section className="border-b border-divider bg-background pt-12 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
@@ -235,7 +237,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </RouteGuard>
   );
 }
-
