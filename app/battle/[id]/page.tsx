@@ -335,7 +335,7 @@ export default function BattleViewPage() {
           <div className="fighter-panel lg:col-span-4 border border-divider p-6 bg-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-divider pb-2">
-                <span className="font-mono text-xs text-secondary font-bold">COMBATANT 01 // ALPHA</span>
+                <span className="font-mono text-xs text-secondary font-bold">COMBATANT 01 (ALPHA)</span>
                 <span className="font-mono text-xs text-secondary">{activeBattle.beastA.ownerAddress}</span>
               </div>
 
@@ -452,7 +452,7 @@ export default function BattleViewPage() {
                 {/* Combat Trigger / Resolution Status */}
                 {activeBattle.status === 'completed' ? (
                   <div className="bg-background text-primary p-3 text-center font-headline font-extrabold text-sm uppercase tracking-wider border border-background">
-                    DUEL CONCLUDED // VICTOR: {activeBattle.winner === 'beastA' ? activeBattle.beastA.name : activeBattle.beastB.name}
+                    DUEL CONCLUDED - VICTOR: {activeBattle.winner === 'beastA' ? activeBattle.beastA.name : activeBattle.beastB.name}
                   </div>
                 ) : (
                   <button
@@ -487,7 +487,7 @@ export default function BattleViewPage() {
           <div className="fighter-panel lg:col-span-4 border border-divider p-6 bg-background flex flex-col justify-between gap-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-divider pb-2">
-                <span className="font-mono text-xs text-secondary font-bold">COMBATANT 02 // BRAVO</span>
+                <span className="font-mono text-xs text-secondary font-bold">COMBATANT 02 (BRAVO)</span>
                 <span className="font-mono text-xs text-secondary">{activeBattle.beastB.ownerAddress}</span>
               </div>
 
@@ -591,7 +591,7 @@ export default function BattleViewPage() {
                 <div className="border border-divider p-4 bg-surface-container-low space-y-3 font-mono text-xs">
                   <div className="flex items-center justify-between">
                     <div className="font-bold uppercase text-primary">
-                      {activeBattle.beastA.name} // {activeBattle.marketPulseA.symbol}
+                      {activeBattle.beastA.name} ({activeBattle.marketPulseA.symbol})
                     </div>
                     <span className="text-primary font-bold">
                       UP PROBABILITY: {Math.round(activeBattle.marketPulseA.upProbability * 100)}%
@@ -610,7 +610,7 @@ export default function BattleViewPage() {
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] text-secondary">
-                    <span>BEST BID: {activeBattle.marketPulseA.bestBid} // BEST ASK: {activeBattle.marketPulseA.bestAsk}</span>
+                    <span>BEST BID: {activeBattle.marketPulseA.bestBid} | BEST ASK: {activeBattle.marketPulseA.bestAsk}</span>
                     {activeBattle.marketPulseA.oracleQuestionId && (
                       <a
                         href={`https://prd.oracle.somnia.host/questions/${activeBattle.marketPulseA.oracleQuestionId}?view=graph`}
@@ -631,7 +631,7 @@ export default function BattleViewPage() {
                 <div className="border border-divider p-4 bg-surface-container-low space-y-3 font-mono text-xs">
                   <div className="flex items-center justify-between">
                     <div className="font-bold uppercase text-primary">
-                      {activeBattle.beastB.name} // {activeBattle.marketPulseB.symbol}
+                      {activeBattle.beastB.name} ({activeBattle.marketPulseB.symbol})
                     </div>
                     <span className="text-primary font-bold">
                       UP PROBABILITY: {Math.round(activeBattle.marketPulseB.upProbability * 100)}%

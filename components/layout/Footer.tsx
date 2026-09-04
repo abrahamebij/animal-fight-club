@@ -86,7 +86,7 @@ export function Footer() {
 
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px] text-background/40">
           <div>
-            APEX COMBAT TERMINAL // PROTOCOL v0.1.0
+            APEX COMBAT TERMINAL - PROTOCOL v0.1.0
           </div>
           <div className="flex items-center gap-6">
             <span>SOMNIA × DREAMDEX HACKATHON</span>

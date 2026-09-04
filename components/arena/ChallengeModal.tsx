@@ -286,7 +286,7 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
               ? 'TRANSMITTING CHALLENGE...'
               : selectedMyBeast?.id === selectedOpponent?.id
               ? 'CANNOT CHALLENGE OWN COMBATANT'
-              : 'TRANSMIT FORMAL CHALLENGE // AWAITS DEFENDER ACCEPTANCE'}
+              : 'TRANSMIT FORMAL CHALLENGE - AWAITS DEFENDER ACCEPTANCE'}
           </span>
         </button>
       </div>

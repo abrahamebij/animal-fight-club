@@ -206,7 +206,7 @@ export default function BeastProfilePage() {
                 <div className="space-y-3 pt-2">
                   <div className="p-3 bg-surface-container-low border border-divider text-center font-mono text-xs text-secondary uppercase font-bold flex items-center justify-center gap-2">
                     <FiShield className="w-4 h-4 text-primary" />
-                    <span>YOUR COMBATANT // CONNECTED OWNER</span>
+                    <span>YOUR COMBATANT (CONNECTED OWNER)</span>
                   </div>
                   <Link
                     href="/dashboard"
@@ -250,7 +250,7 @@ export default function BeastProfilePage() {
                 {/* Power */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between font-bold">
-                    <span>POWER // KINETIC OUTPUT</span>
+                    <span>POWER (KINETIC OUTPUT)</span>
                     <span className="text-primary">{beast.stats.power} / 20</span>
                   </div>
                   <div className="h-3 w-full bg-surface-container-low border border-divider overflow-hidden">
@@ -261,7 +261,7 @@ export default function BeastProfilePage() {
                 {/* Defense */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between font-bold">
-                    <span>DEFENSE // REINFORCED PLATING</span>
+                    <span>DEFENSE (REINFORCED PLATING)</span>
                     <span className="text-primary">{beast.stats.defense} / 20</span>
                   </div>
                   <div className="h-3 w-full bg-surface-container-low border border-divider overflow-hidden">
@@ -272,7 +272,7 @@ export default function BeastProfilePage() {
                 {/* Speed */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between font-bold">
-                    <span>SPEED // ACTUATOR VELOCITY</span>
+                    <span>SPEED (ACTUATOR VELOCITY)</span>
                     <span className="text-primary">{beast.stats.speed} / 20</span>
                   </div>
                   <div className="h-3 w-full bg-surface-container-low border border-divider overflow-hidden">
@@ -283,7 +283,7 @@ export default function BeastProfilePage() {
                 {/* Special */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between font-bold">
-                    <span>SPECIAL // NEURAL OVERCLOCK</span>
+                    <span>SPECIAL (NEURAL OVERCLOCK)</span>
                     <span className="text-primary">{beast.stats.special} / 20</span>
                   </div>
                   <div className="h-3 w-full bg-surface-container-low border border-divider overflow-hidden">

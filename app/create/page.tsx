@@ -258,7 +258,7 @@ export default function CreateBeastPage() {
             <div className="lg:col-span-7 space-y-4">
               <div className="forge-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
                 <span className="w-2 h-2 bg-secondary" />
-                <span>GENETIC FORGE // ATTRIBUTE MATRIX</span>
+                <span>GENETIC FORGE - ATTRIBUTE MATRIX</span>
               </div>
               <h1 className="forge-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
                 FORGE YOUR COMBAT BEAST
@@ -296,7 +296,7 @@ export default function CreateBeastPage() {
               <div className="forge-panel border border-divider p-6 bg-background space-y-4">
                 <div className="flex items-center justify-between border-b border-divider pb-2">
                   <span className="font-mono text-xs text-secondary uppercase font-bold">
-                    01 // CUSTOM AVATAR SYNTHESIS
+                    STEP 01: CUSTOM AVATAR SYNTHESIS
                   </span>
                   <span className="font-mono text-xs text-primary font-bold">
                     IMGBB STORAGE
@@ -398,7 +398,7 @@ export default function CreateBeastPage() {
               <div className="forge-panel border border-divider p-6 bg-background space-y-4">
                 <div className="flex items-center justify-between border-b border-divider pb-2">
                   <span className="font-mono text-xs text-secondary uppercase font-bold">
-                    02 // COMBAT IDENTIFIER
+                    STEP 02: COMBAT IDENTIFIER
                   </span>
                   <span className="font-mono text-xs text-secondary">
                     REQUIRED
@@ -443,7 +443,7 @@ export default function CreateBeastPage() {
                 <div className="flex items-center justify-between border-b border-divider pb-3">
                   <div>
                     <span className="font-mono text-xs text-secondary uppercase font-bold">
-                      03 // ATTRIBUTE MATRIX
+                      STEP 03: ATTRIBUTE MATRIX
                     </span>
                     <h2 className="font-headline font-bold text-2xl uppercase tracking-tight text-primary">
                       POINT ALLOCATION
@@ -472,7 +472,7 @@ export default function CreateBeastPage() {
                   <div className="border border-divider p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="font-headline font-bold text-base uppercase text-primary">
-                        POWER // KINETIC OUTPUT
+                        POWER (KINETIC OUTPUT)
                       </div>
                       <div className="font-mono text-xs text-secondary">
                         Governs raw strike damage and critical hit potency.
@@ -513,7 +513,7 @@ export default function CreateBeastPage() {
                   <div className="border border-divider p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="font-headline font-bold text-base uppercase text-primary">
-                        DEFENSE // REINFORCED PLATING
+                        DEFENSE (REINFORCED PLATING)
                       </div>
                       <div className="font-mono text-xs text-secondary">
                         Reduces incoming kinetic & energy damage from opponent
@@ -555,7 +555,7 @@ export default function CreateBeastPage() {
                   <div className="border border-divider p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="font-headline font-bold text-base uppercase text-primary">
-                        SPEED // ACTUATOR VELOCITY
+                        SPEED (ACTUATOR VELOCITY)
                       </div>
                       <div className="font-mono text-xs text-secondary">
                         Determines turn initiative and evasion counter chances.
@@ -596,7 +596,7 @@ export default function CreateBeastPage() {
                   <div className="border border-divider p-4 bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                       <div className="font-headline font-bold text-base uppercase text-primary">
-                        SPECIAL // NEURAL OVERCLOCK
+                        SPECIAL (NEURAL OVERCLOCK)
                       </div>
                       <div className="font-mono text-xs text-secondary">
                         Amplifies Market Pulse modifiers and execution moves.
@@ -640,7 +640,7 @@ export default function CreateBeastPage() {
                 <div className="flex items-center justify-between border-b border-divider pb-2">
                   <div>
                     <span className="font-mono text-xs text-secondary uppercase font-bold">
-                      04 // TACTICAL PASSIVES
+                      STEP 04: TACTICAL PASSIVES
                     </span>
                     <div className="font-headline font-bold text-lg uppercase text-primary">
                       SELECT UP TO 2 PERKS ({selectedPerks.length} / 2)
@@ -691,7 +691,7 @@ export default function CreateBeastPage() {
                 <div className="flex items-center justify-between border-b border-divider pb-2">
                   <div>
                     <span className="font-mono text-xs text-secondary uppercase font-bold">
-                      05 // DREAMDEX MARKET BINDING
+                      STEP 05: DREAMDEX MARKET BINDING
                     </span>
                     <div className="font-headline font-bold text-lg uppercase text-primary">
                       EVENT CONTRACT TELEMETRY

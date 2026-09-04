@@ -156,7 +156,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-7 space-y-4">
             <div className="dash-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
               <span className="w-2 h-2 bg-secondary" />
-              <span>COMMAND CENTER // USER TERMINAL</span>
+              <span>COMMAND CENTER TERMINAL</span>
             </div>
             <h1 className="dash-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
               COMMAND CENTER
@@ -389,7 +389,7 @@ export default function DashboardPage() {
                             )}
                             {c.status === 'accepted' && (
                               <span className="px-2 py-0.5 bg-primary text-background font-bold text-[10px] uppercase">
-                                ACCEPTED // LIVE
+                                ACCEPTED (LIVE)
                               </span>
                             )}
                             {c.status === 'declined' && (

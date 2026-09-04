@@ -341,7 +341,7 @@ function ArenaContent() {
                   {isPending && (
                     <>
                       <FiClock className="w-4 h-4" />
-                      <span>Place Wager // {countdown?.formatted || '40:00'} Left</span>
+                      <span>Place Wager ({countdown?.formatted || '40:00'} Left)</span>
                     </>
                   )}
                   {isCompleted && (

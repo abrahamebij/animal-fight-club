@@ -77,7 +77,7 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
               />
             </div>
             <span className="font-headline font-extrabold text-xl uppercase tracking-wider text-primary">
-              {isConnected ? 'TERMINAL WALLET // AUTH' : 'CONNECT WALLET // ACCESS'}
+              {isConnected ? 'TERMINAL WALLET - AUTHENTICATED' : 'CONNECT WALLET TO ACCESS'}
             </span>
           </div>
           <button

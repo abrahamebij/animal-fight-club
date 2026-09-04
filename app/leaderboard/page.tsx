@@ -139,7 +139,7 @@ export default function LeaderboardPage() {
           <div className="lg:col-span-7 space-y-4">
             <div className="lb-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
               <span className="w-2 h-2 bg-secondary" />
-              <span>GLOBAL RANKINGS // PROVING GROUNDS</span>
+              <span>GLOBAL RANKINGS - PROVING GROUNDS</span>
             </div>
             <h1 className="lb-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
               ARENA LEADERBOARDS
