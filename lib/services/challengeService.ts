@@ -6,14 +6,28 @@ import {
   getDocs, 
   query, 
   where, 
-  orderBy, 
   updateDoc 
 } from 'firebase/firestore';
+import { getAddress, isAddress } from 'viem';
 import { db } from '@/lib/firebase';
 import { Challenge, Beast, Battle } from '@/lib/types';
 import { createBattle } from '@/lib/services/battleService';
 
 const LOCAL_STORAGE_CHALLENGES = 'afc_custom_challenges';
+
+function getAddressVariants(address: string): string[] {
+  if (!address) return [];
+  const lower = address.toLowerCase();
+  const variants = [address, lower];
+  try {
+    if (isAddress(address)) {
+      variants.push(getAddress(address));
+    }
+  } catch {
+    // Ignore invalid address error
+  }
+  return Array.from(new Set(variants));
+}
 
 function getLocalChallenges(): Challenge[] {
   if (typeof window === 'undefined') return [];
@@ -68,74 +82,77 @@ export async function createChallenge(
     createdAt: now,
   };
 
-  saveLocalChallenge(newChallenge);
-
   try {
     const challengeDocRef = doc(db, 'challenges', id);
     await setDoc(challengeDocRef, newChallenge);
+    saveLocalChallenge(newChallenge);
   } catch (error) {
     console.warn('Firestore challenge write error, saved locally:', error);
+    saveLocalChallenge(newChallenge);
   }
 
   return newChallenge;
 }
 
 /**
- * Fetches all incoming challenges for a specific wallet address
+ * Fetches all incoming challenges for a specific wallet address directly from Firestore database
  */
 export async function getIncomingChallenges(walletAddress: string): Promise<Challenge[]> {
   if (!walletAddress) return [];
   const normalized = walletAddress.toLowerCase();
-  const results: Challenge[] = getLocalChallenges().filter(
-    (c) => c.challengedAddress.toLowerCase() === normalized
-  );
+  const variants = getAddressVariants(walletAddress);
 
   try {
     const q = query(
       collection(db, 'challenges'),
-      where('challengedAddress', '==', walletAddress)
+      where('challengedAddress', 'in', variants)
     );
     const snap = await getDocs(q);
+    const results: Challenge[] = [];
     snap.forEach((d) => {
-      const c = d.data() as Challenge;
-      if (!results.some((r) => r.id === c.id)) {
-        results.push(c);
-      }
+      results.push(d.data() as Challenge);
     });
-  } catch (error) {
-    console.warn('Error querying incoming challenges from Firestore:', error);
-  }
 
-  return results.sort((a, b) => b.createdAt - a.createdAt);
+    // Sync to local cache so stale entries are updated with database truth
+    results.forEach(saveLocalChallenge);
+
+    return results.sort((a, b) => b.createdAt - a.createdAt);
+  } catch (error) {
+    console.warn('Error querying incoming challenges from Firestore, falling back to local cache:', error);
+    return getLocalChallenges()
+      .filter((c) => c.challengedAddress && c.challengedAddress.toLowerCase() === normalized)
+      .sort((a, b) => b.createdAt - a.createdAt);
+  }
 }
 
 /**
- * Fetches all outgoing challenges sent by a specific wallet address
+ * Fetches all outgoing challenges sent by a specific wallet address directly from Firestore database
  */
 export async function getOutgoingChallenges(walletAddress: string): Promise<Challenge[]> {
   if (!walletAddress) return [];
   const normalized = walletAddress.toLowerCase();
-  const results: Challenge[] = getLocalChallenges().filter(
-    (c) => c.challengerAddress.toLowerCase() === normalized
-  );
+  const variants = getAddressVariants(walletAddress);
 
   try {
     const q = query(
       collection(db, 'challenges'),
-      where('challengerAddress', '==', walletAddress)
+      where('challengerAddress', 'in', variants)
     );
     const snap = await getDocs(q);
+    const results: Challenge[] = [];
     snap.forEach((d) => {
-      const c = d.data() as Challenge;
-      if (!results.some((r) => r.id === c.id)) {
-        results.push(c);
-      }
+      results.push(d.data() as Challenge);
     });
-  } catch (error) {
-    console.warn('Error querying outgoing challenges from Firestore:', error);
-  }
 
-  return results.sort((a, b) => b.createdAt - a.createdAt);
+    results.forEach(saveLocalChallenge);
+
+    return results.sort((a, b) => b.createdAt - a.createdAt);
+  } catch (error) {
+    console.warn('Error querying outgoing challenges from Firestore, falling back to local cache:', error);
+    return getLocalChallenges()
+      .filter((c) => c.challengerAddress && c.challengerAddress.toLowerCase() === normalized)
+      .sort((a, b) => b.createdAt - a.createdAt);
+  }
 }
 
 /**
@@ -153,31 +170,27 @@ export async function getChallengesForUser(walletAddress: string): Promise<Chall
 }
 
 /**
- * Fetches all open challenges awaiting response
+ * Fetches all open challenges awaiting response directly from Firestore database
  */
 export async function getOpenChallenges(): Promise<Challenge[]> {
-  const results: Challenge[] = getLocalChallenges().filter(
-    (c) => c.status === 'awaiting_response'
-  );
-
   try {
     const q = query(
       collection(db, 'challenges'),
-      where('status', '==', 'awaiting_response'),
-      orderBy('createdAt', 'desc')
+      where('status', '==', 'awaiting_response')
     );
     const snap = await getDocs(q);
+    const results: Challenge[] = [];
     snap.forEach((d) => {
-      const c = d.data() as Challenge;
-      if (!results.some((r) => r.id === c.id)) {
-        results.push(c);
-      }
+      results.push(d.data() as Challenge);
     });
+    results.forEach(saveLocalChallenge);
+    return results.sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
-    console.warn('Error querying open challenges from Firestore:', error);
+    console.warn('Error querying open challenges from Firestore, falling back to local cache:', error);
+    return getLocalChallenges()
+      .filter((c) => c.status === 'awaiting_response')
+      .sort((a, b) => b.createdAt - a.createdAt);
   }
-
-  return results;
 }
 
 
@@ -191,18 +204,20 @@ export async function acceptChallenge(
   challengeId: string,
   defenderAddress: string
 ): Promise<{ challenge: Challenge; battle: Battle }> {
-  // Retrieve challenge from local or firestore
-  let targetChallenge = getLocalChallenges().find((c) => c.id === challengeId);
+  // Retrieve challenge from Firestore database first
+  let targetChallenge: Challenge | null = null;
+
+  try {
+    const snap = await getDoc(doc(db, 'challenges', challengeId));
+    if (snap.exists()) {
+      targetChallenge = snap.data() as Challenge;
+    }
+  } catch (err) {
+    console.warn('Error fetching challenge from Firestore for acceptance:', err);
+  }
 
   if (!targetChallenge) {
-    try {
-      const snap = await getDoc(doc(db, 'challenges', challengeId));
-      if (snap.exists()) {
-        targetChallenge = snap.data() as Challenge;
-      }
-    } catch (err) {
-      console.warn('Error fetching challenge for acceptance:', err);
-    }
+    targetChallenge = getLocalChallenges().find((c) => c.id === challengeId) || null;
   }
 
   if (!targetChallenge) {
@@ -224,15 +239,13 @@ export async function acceptChallenge(
     targetChallenge.challengedBeast
   );
 
-  // 2. Update challenge document state
+  // 2. Update challenge document state in Firestore database
   const updatedChallenge: Challenge = {
     ...targetChallenge,
     status: 'accepted',
     respondedAt: Date.now(),
     battleId: battle.id,
   };
-
-  saveLocalChallenge(updatedChallenge);
 
   try {
     const docRef = doc(db, 'challenges', challengeId);
@@ -244,6 +257,8 @@ export async function acceptChallenge(
   } catch (error) {
     console.warn('Error updating accepted challenge in Firestore:', error);
   }
+
+  saveLocalChallenge(updatedChallenge);
 
   return { challenge: updatedChallenge, battle };
 }
@@ -258,21 +273,20 @@ export async function declineChallenge(
   challengeId: string,
   defenderAddress: string
 ): Promise<Challenge> {
-  let targetChallenge = getLocalChallenges().find((c) => c.id === challengeId);
+  // Retrieve challenge from Firestore database first
+  let targetChallenge: Challenge | null = null;
 
-  if (!targetChallenge) {
-    try {
-      const snap = await getDoc(doc(db, 'challenges', challengeId));
-      if (snap.exists()) {
-        targetChallenge = snap.data() as Challenge;
-      }
-    } catch (err) {
-      console.warn('Error fetching challenge for declining:', err);
+  try {
+    const snap = await getDoc(doc(db, 'challenges', challengeId));
+    if (snap.exists()) {
+      targetChallenge = snap.data() as Challenge;
     }
+  } catch (err) {
+    console.warn('Error fetching challenge from Firestore for declining:', err);
   }
 
   if (!targetChallenge) {
-    throw new Error('Challenge not found');
+    targetChallenge = getLocalChallenges().find((c) => c.id === challengeId) || null;
   }
 
   // Security check: Only the challenged beast's owner can decline

@@ -19,7 +19,9 @@ export function useOpenChallenges() {
   return useQuery({
     queryKey: CHALLENGE_KEYS.open(),
     queryFn: () => getOpenChallenges(),
-    staleTime: 1000 * 15,
+    staleTime: 1000 * 3,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -28,7 +30,9 @@ export function useUserChallenges(address?: string) {
     queryKey: CHALLENGE_KEYS.forUser(address),
     queryFn: () => (address ? getChallengesForUser(address) : []),
     enabled: Boolean(address),
-    staleTime: 1000 * 15,
+    staleTime: 1000 * 3,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 }
 
