@@ -116,3 +116,81 @@ export async function fetchOnChainWager(
     return null;
   }
 }
+
+/**
+ * Registers battle on-chain via protocolAdmin wallet
+ */
+export async function registerBattleOnChain(
+  battleId: string,
+  ownerA: string,
+  ownerB: string,
+  bettingClosesAtMs: number
+): Promise<string | null> {
+  const privateKey = process.env.METAMASK_PRIVATE_KEY || process.env.PRIVATE_KEY;
+  if (!ESCROW_CONTRACT_CONFIG.isConfigured || !privateKey) return null;
+
+  try {
+    const { privateKeyToAccount } = await import('viem/accounts');
+    const { createWalletClient } = await import('viem');
+    const formattedKey = (privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`) as `0x${string}`;
+    const account = privateKeyToAccount(formattedKey);
+    const walletClient = createWalletClient({
+      account,
+      chain: somniaShannon,
+      transport: http(somniaShannon.rpcUrls.default.http[0]),
+    });
+
+    const bytes32Id = battleIdToBytes32(battleId);
+    const bettingClosesAtSec = BigInt(Math.floor(bettingClosesAtMs / 1000));
+
+    const hash = await walletClient.writeContract({
+      address: ESCROW_CONTRACT_CONFIG.address,
+      abi: ESCROW_ABI,
+      functionName: 'registerBattle',
+      args: [bytes32Id, ownerA as `0x${string}`, ownerB as `0x${string}`, bettingClosesAtSec],
+    });
+
+    return hash;
+  } catch (err) {
+    console.warn('registerBattleOnChain error:', err);
+    return null;
+  }
+}
+
+/**
+ * Resolves battle on-chain via protocolAdmin wallet
+ */
+export async function resolveBattleOnChain(
+  battleId: string,
+  winner: 'beastA' | 'beastB'
+): Promise<string | null> {
+  const privateKey = process.env.METAMASK_PRIVATE_KEY || process.env.PRIVATE_KEY;
+  if (!ESCROW_CONTRACT_CONFIG.isConfigured || !privateKey) return null;
+
+  try {
+    const { privateKeyToAccount } = await import('viem/accounts');
+    const { createWalletClient } = await import('viem');
+    const formattedKey = (privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`) as `0x${string}`;
+    const account = privateKeyToAccount(formattedKey);
+    const walletClient = createWalletClient({
+      account,
+      chain: somniaShannon,
+      transport: http(somniaShannon.rpcUrls.default.http[0]),
+    });
+
+    const bytes32Id = battleIdToBytes32(battleId);
+    const winnerSide = sideToEscrowEnum(winner);
+
+    const hash = await walletClient.writeContract({
+      address: ESCROW_CONTRACT_CONFIG.address,
+      abi: ESCROW_ABI,
+      functionName: 'resolveBattle',
+      args: [bytes32Id, winnerSide],
+    });
+
+    return hash;
+  } catch (err) {
+    console.warn('resolveBattleOnChain error:', err);
+    return null;
+  }
+}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { Battle, CombatTurn, Beast, MarketPulse } from '@/lib/types';
+import { resolveBattleOnChain } from '@/lib/services/escrowService';
 
 interface TacticalAction {
   name: string;
@@ -258,6 +259,11 @@ export async function POST(req: NextRequest) {
 
         const loseBeastRef = doc(db, 'beasts', losingBeast.id);
         await updateDoc(loseBeastRef, { 'record.losses': increment(1) });
+
+        // Resolve on-chain in escrow contract
+        resolveBattleOnChain(battle.id, winner).catch((err) => {
+          console.warn('On-chain escrow resolveBattle error:', err);
+        });
       }
     } catch (err) {
       console.warn('Firestore battle settlement update error:', err);

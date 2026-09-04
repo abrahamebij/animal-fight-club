@@ -87,6 +87,22 @@ export async function createBattle(beastA: Beast, beastB: Beast): Promise<Battle
   try {
     const battleDocRef = doc(db, 'battles', id);
     await setDoc(battleDocRef, newBattle);
+
+    // Register on-chain with escrow contract
+    if (typeof window !== 'undefined' && beastA.ownerAddress && beastB.ownerAddress) {
+      fetch('/api/battle/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          battleId: id,
+          ownerA: beastA.ownerAddress,
+          ownerB: beastB.ownerAddress,
+          bettingClosesAt: newBattle.bettingWindowClosesAt,
+        }),
+      }).catch((err) => {
+        console.warn('Escrow contract registerBattle call failed:', err);
+      });
+    }
   } catch (error) {
     console.warn('Firestore write failed, falling back to local cache:', error);
   }
