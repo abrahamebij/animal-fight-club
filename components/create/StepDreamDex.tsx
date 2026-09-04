@@ -13,7 +13,7 @@ export function StepDreamDex({ boundAsset, onSelectBoundAsset }: StepDreamDexPro
   return (
     <div className="forge-panel border border-divider p-6 bg-background space-y-6">
       <div className="flex items-center justify-between border-b border-divider pb-3">
-        <span className="font-mono text-xs text-secondary font-bold">STEP 04 // DREAMDEX MARKET PULSE</span>
+        <span className="font-mono text-xs text-secondary font-bold">STEP 04 - MARKET PULSE</span>
         <span className="font-mono text-xs text-secondary font-bold">OPTIONAL BINDING</span>
       </div>
 

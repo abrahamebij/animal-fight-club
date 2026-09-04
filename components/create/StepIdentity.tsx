@@ -37,7 +37,7 @@ export function StepIdentity({
   return (
     <div className="forge-panel border border-divider p-6 bg-background space-y-6">
       <div className="flex items-center justify-between border-b border-divider pb-3">
-        <span className="font-mono text-xs text-secondary font-bold">STEP 01 // IDENTITY MATRIX</span>
+        <span className="font-mono text-xs text-secondary font-bold">STEP 01 - IDENTITY</span>
         <span className="font-mono text-xs text-secondary font-bold">MANDATORY</span>
       </div>
 

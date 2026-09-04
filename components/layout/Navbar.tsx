@@ -24,7 +24,7 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-divider divider-ash">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-divider">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-16 flex items-center justify-between">
         {/* Brand & Wordmark */}
         <div className="flex items-center gap-10">

@@ -17,7 +17,7 @@ export default function LeaderboardPage() {
 
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
-      <section className="border-b border-divider divider-ash bg-background pt-8 pb-8">
+      <section className="border-b border-divider bg-background pt-8 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-7 space-y-4">
             <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">

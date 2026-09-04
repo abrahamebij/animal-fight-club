@@ -8,6 +8,7 @@ import { somniaShannon } from '@/lib/config/wagmi';
 import { formatBalance } from '@/lib/utils/format';
 import { useUserBeasts } from '@/hooks/useBeasts';
 import { useUserBets } from '@/hooks/useBattles';
+import { DashboardChallengesPanel } from '@/components/dashboard/DashboardChallengesPanel';
 import Img from '@/components/ui/Img';
 
 export default function DashboardPage() {
@@ -27,7 +28,7 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       {/* Header */}
-      <section className="border-b border-primary bg-background pt-12 pb-8">
+      <section className="border-b border-divider bg-background pt-12 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-3">
             <span className="w-2 h-2 bg-secondary" />
@@ -39,7 +40,7 @@ export default function DashboardPage() {
                 COMMAND CENTER
               </h1>
               <p className="font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
-                Manage your minted combatants, track pending challenges, and review active spectator wagers.
+                Manage your minted combatants, respond to duel challenges, and track active spectator wagers.
               </p>
             </div>
 
@@ -55,25 +56,25 @@ export default function DashboardPage() {
       </section>
 
       {/* Account Metric Summary */}
-      <section className="border-b border-primary bg-background">
+      <section className="border-b border-divider bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 py-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-xs">
-            <div className="border border-primary p-4 bg-surface-container-low">
+            <div className="border border-divider p-4 bg-surface-container-low">
               <span className="text-secondary block text-[10px] uppercase">CONNECTED ADDRESS</span>
               <span className="font-bold text-sm text-primary">{displayAddress}</span>
             </div>
 
-            <div className="border border-primary p-4 bg-surface-container-low">
+            <div className="border border-divider p-4 bg-surface-container-low">
               <span className="text-secondary block text-[10px] uppercase">FORGED BEASTS</span>
               <span className="font-headline font-extrabold text-2xl text-primary">{myBeasts.length}</span>
             </div>
 
-            <div className="border border-primary p-4 bg-surface-container-low">
+            <div className="border border-divider p-4 bg-surface-container-low">
               <span className="text-secondary block text-[10px] uppercase">ACTIVE WAGERS</span>
               <span className="font-headline font-extrabold text-2xl text-primary">{myActiveBets.length}</span>
             </div>
 
-            <div className="border border-primary p-4 bg-surface-container-low">
+            <div className="border border-divider p-4 bg-surface-container-low">
               <span className="text-secondary block text-[10px] uppercase">NATIVE BALANCE</span>
               <span className="font-headline font-extrabold text-2xl text-primary">
                 {formatBalance(balance, 2)}
@@ -85,9 +86,13 @@ export default function DashboardPage() {
 
       {/* Content Grid */}
       <section className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10 space-y-12">
-        {/* 1. My Beasts Roster */}
+        {/* 1. Challenge Control Matrix (Incoming & Outgoing with Accept / Decline actions) */}
+        <DashboardChallengesPanel address={address} />
+
+        {/* 2. My Beasts Roster */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between border-b border-primary pb-3">
+
+          <div className="flex items-center justify-between border-b border-divider pb-3">
             <div className="flex items-center gap-2">
               <FiShield className="w-5 h-5 text-primary" />
               <h2 className="font-headline font-bold text-2xl uppercase tracking-tight">
@@ -117,9 +122,9 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {myBeasts.map((beast) => (
-                <div key={beast.id} className="border-2 border-primary p-6 bg-background flex flex-col justify-between gap-6">
+                <div key={beast.id} className="border border-divider p-6 bg-background flex flex-col justify-between gap-6">
                   <div className="space-y-4">
-                    <div className="relative aspect-square w-full border border-primary overflow-hidden bg-zinc-900">
+                    <div className="relative aspect-square w-full border border-divider overflow-hidden bg-zinc-900">
                       <Img src={beast.avatarUrl} alt={beast.name} fill className="object-cover" />
                       {beast.boundAsset && (
                         <div className="absolute top-2 right-2 bg-primary text-background font-mono text-[10px] font-bold px-2 py-0.5 border border-background/30">
@@ -137,7 +142,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs border-t border-neutral pt-3">
+                    <div className="grid grid-cols-4 gap-1 text-center font-mono text-xs border-t border-divider pt-3">
                       <div className="bg-surface-container-low p-1.5">
                         <div className="text-[10px] text-secondary">PWR</div>
                         <div className="font-bold">{beast.stats.power}</div>
@@ -173,7 +178,7 @@ export default function DashboardPage() {
 
         {/* 2. Active Wagers */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between border-b border-primary pb-3">
+          <div className="flex items-center justify-between border-b border-divider pb-3">
             <div className="flex items-center gap-2">
               <FiTrendingUp className="w-5 h-5 text-primary" />
               <h2 className="font-headline font-bold text-2xl uppercase tracking-tight">
@@ -183,10 +188,10 @@ export default function DashboardPage() {
             <span className="font-mono text-xs text-secondary">ESCROW BACKED</span>
           </div>
 
-          <div className="border border-primary bg-background overflow-x-auto">
+          <div className="border border-divider bg-background overflow-x-auto">
             <table className="w-full text-left border-collapse font-mono text-xs">
               <thead>
-                <tr className="border-b border-primary bg-surface-container-low text-secondary uppercase">
+                <tr className="border-b border-divider bg-surface-container-low text-secondary uppercase">
                   <th className="p-4">BET ID</th>
                   <th className="p-4">BATTLE</th>
                   <th className="p-4">PREDICTED VICTOR</th>
@@ -195,7 +200,7 @@ export default function DashboardPage() {
                   <th className="p-4 text-right">ACTION</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral">
+              <tbody className="divide-y divide-divider">
                 {myActiveBets.length > 0 ? (
                   myActiveBets.map((bet) => (
                     <tr key={bet.id} className="hover:bg-surface-container-low transition-colors">

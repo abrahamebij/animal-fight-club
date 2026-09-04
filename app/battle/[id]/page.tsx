@@ -107,9 +107,9 @@ export default function BattleViewPage() {
   return (
     <div ref={containerRef} className="flex-1 flex flex-col pb-16 bg-surface-container-lowest">
       {/* Top Breadcrumb & Status Bar */}
-      <div className="border-b border-divider divider-ash bg-background">
+      <div className="border-b border-divider bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
-          <p onClick={() => window.history.back()} className="flex items-center gap-1.5 text-secondary hover:text-primary transition-colors">
+          <p onClick={() => window.history.back()} className="flex items-center gap-1.5 text-secondary cursor-pointer hover:text-primary transition-colors">
             <FiArrowLeft className="w-4 h-4" />
             <span>BACK</span>
           </p>

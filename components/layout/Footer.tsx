@@ -7,7 +7,7 @@ import Img from '@/components/ui/Img';
 
 export function Footer() {
   return (
-    <footer className="border-t border-primary bg-primary text-background mt-auto">
+    <footer className="border-t border-divider bg-primary text-background mt-auto">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-10 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-12 border-b border-background/20">
           {/* Col 1 */}

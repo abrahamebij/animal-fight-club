@@ -57,10 +57,6 @@ export default function RootLayout({
             <Toaster 
               richColors 
               position="top-right" 
-              // theme="dark"
-              // toastOptions={{
-              //   className: 'font-mono text-xs border border-divider bg-background text-foreground shadow-2xl',
-              // }}
             />
           </WalletGateProvider>
         </Web3Provider>

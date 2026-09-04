@@ -47,9 +47,9 @@ export default function BeastProfilePage() {
 
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
-      <div className="border-b border-divider divider-ash bg-background">
+      <div className="border-b border-divider bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
-          <p onClick={() => window.history.back()} className="flex items-center gap-1.5 text-secondary hover:text-primary transition-colors">
+          <p onClick={() => window.history.back()} className="flex items-center gap-1.5 cursor-pointer text-secondary hover:text-primary transition-colors">
             <FiArrowLeft className="w-4 h-4" />
             <span>BACK</span>
           </p>

@@ -154,11 +154,11 @@ export default function CreateBeastPage() {
 
   return (
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
-      <section ref={headerRef} className="border-b border-divider divider-ash bg-background pt-8 pb-8">
+      <section ref={headerRef} className="border-b border-divider bg-background pt-8 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 space-y-3">
           <div className="forge-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider">
             <span className="w-2 h-2 bg-secondary" />
-            <span>GENETIC FORGE // AGENT INCUBATOR</span>
+            <span>GENETIC FORGE</span>
           </div>
           <h1 className="forge-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
             FORGE COMBATANT
