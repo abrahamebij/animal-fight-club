@@ -8,7 +8,6 @@ import {
   FiX, 
   FiShield, 
   FiCrosshair, 
-  FiZap, 
   FiPlusSquare, 
   FiAlertTriangle 
 } from 'react-icons/fi';
@@ -68,9 +67,14 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
         setSelectedMyBeast(userBeasts[0] || null);
 
         const opps = all.filter((b) => !userBeasts.some((ub) => ub.id === b.id));
-        setAvailableOpponents(opps.length > 0 ? opps : all);
-        if (!targetOpponent && (opps[0] || all[0])) {
-          setSelectedOpponent(opps[0] || all[0]);
+        const finalOpps = targetOpponent && !opps.some((b) => b.id === targetOpponent.id)
+          ? [targetOpponent, ...opps]
+          : opps.length > 0 ? opps : all;
+        setAvailableOpponents(finalOpps);
+        if (targetOpponent) {
+          setSelectedOpponent(targetOpponent);
+        } else if (finalOpps[0]) {
+          setSelectedOpponent(finalOpps[0]);
         }
       }
     }
@@ -244,7 +248,7 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
           disabled={!selectedMyBeast || !selectedOpponent || isSubmitting}
           className="w-full py-4 bg-primary text-background font-headline font-extrabold text-xl uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          <FiZap className="w-5 h-5 text-warning" />
+          <FiCrosshair className="w-5 h-5" />
           <span>{isSubmitting ? 'TRANSMITTING CHALLENGE...' : 'TRANSMIT FORMAL CHALLENGE // AWAITS DEFENDER ACCEPTANCE'}</span>
         </button>
       </div>

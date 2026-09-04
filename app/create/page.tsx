@@ -352,8 +352,14 @@ export default function CreateBeastPage() {
                     }`}
                   >
                     {isUploading ? (
-                      <div className="space-y-3">
-                        <div className="w-8 h-8 border-2 border-primary border-t-transparent animate-spin mx-auto" />
+                      <div className="space-y-3 flex flex-col items-center justify-center">
+                        <div className="w-10 h-10 relative flex items-center justify-center overflow-hidden animate-spin">
+                          <Img
+                            src="/logo.png"
+                            alt="Uploading..."
+                            className="w-10 h-10 object-contain"
+                          />
+                        </div>
                         <p className="font-mono text-xs text-primary font-bold uppercase tracking-wider">
                           UPLOADING AVATAR TO IMGBB...
                         </p>
@@ -449,10 +455,10 @@ export default function CreateBeastPage() {
                     </span>
                     <span
                       ref={pointsBadgeRef}
-                      className={`inline-block font-headline font-bold text-lg px-2.5 py-0.5 border ${
+                      className={`text-white inline-block font-headline font-bold text-lg px-2.5 py-0.5 border ${
                         remainingPoints === 0
-                          ? "bg-primary text-background border-primary"
-                          : "bg-surface-container-low text-primary border-divider"
+                          ? "bg-primary border-primary"
+                          : "bg-surface-container-low border-divider"
                       }`}
                     >
                       {remainingPoints} / {STAT_BUDGET.TOTAL_POINTS}

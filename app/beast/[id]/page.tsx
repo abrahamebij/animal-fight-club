@@ -8,25 +8,29 @@ import {
   FiCrosshair, 
   FiArrowLeft,
   FiShield,
-  FiZap,
 } from 'react-icons/fi';
+import { useAccount } from 'wagmi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { getBeastById } from '@/lib/services/beastService';
 import { getAllBattles } from '@/lib/services/battleService';
 import { Beast, Battle } from '@/lib/types';
 import { AVAILABLE_PERKS } from '@/lib/constants/game';
 import { formatDate } from '@/lib/utils/timer';
+import { ChallengeModal } from '@/components/arena/ChallengeModal';
+import Img from '@/components/ui/Img';
 import gsap from 'gsap';
 
 export default function BeastProfilePage() {
   const params = useParams();
   const router = useRouter();
+  const { address } = useAccount();
   const { requireAuth } = useWalletGate();
   const beastId = (params?.id as string) || '';
 
   const [beast, setBeast] = useState<Beast | null>(null);
   const [beastBattles, setBeastBattles] = useState<Battle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [challengeModalOpen, setChallengeModalOpen] = useState(false);
 
   const pageRef = useRef<HTMLDivElement>(null);
 
@@ -90,8 +94,14 @@ export default function BeastProfilePage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] bg-background text-foreground font-mono text-sm space-y-4">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent animate-spin" />
-        <p className="uppercase tracking-widest text-secondary">LOADING COMBATANT TELEMETRY...</p>
+        <div className="w-10 h-10 relative flex items-center justify-center overflow-hidden animate-spin">
+          <Img 
+            src="/logo.png" 
+            alt="Loading Combatant Telemetry..." 
+            className="w-10 h-10 object-contain"
+          />
+        </div>
+        <p className="uppercase tracking-widest text-secondary text-xs">LOADING COMBATANT TELEMETRY...</p>
       </div>
     );
   }
@@ -121,6 +131,10 @@ export default function BeastProfilePage() {
   const winRate = beast.record.wins + beast.record.losses > 0
     ? Math.round((beast.record.wins / (beast.record.wins + beast.record.losses)) * 100)
     : 0;
+
+  const isOwner = Boolean(
+    address && beast.ownerAddress && beast.ownerAddress.toLowerCase() === address.toLowerCase()
+  );
 
   return (
     <div ref={pageRef} className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
@@ -186,21 +200,37 @@ export default function BeastProfilePage() {
                 </div>
               </div>
 
-              {/* Challenge Beast CTA */}
-              <button
-                onClick={() => {
-                  requireAuth({
-                    actionTitle: `issue duel challenge to ${beast.name}`,
-                    onSuccess: () => {
-                      router.push(`/arena?challenge=${beast.id}`);
-                    },
-                  });
-                }}
-                className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border border-primary flex items-center justify-center gap-2"
-              >
-                <FiCrosshair className="w-5 h-5" />
-                <span>CHALLENGE IN ARENA</span>
-              </button>
+              {/* Action Area: Owner Command Center Link vs Opponent Challenge Modal */}
+              {isOwner ? (
+                <div className="space-y-3 pt-2">
+                  <div className="p-3 bg-surface-container-low border border-divider text-center font-mono text-xs text-secondary uppercase font-bold flex items-center justify-center gap-2">
+                    <FiShield className="w-4 h-4 text-primary" />
+                    <span>YOUR COMBATANT // CONNECTED OWNER</span>
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    className="w-full py-3.5 bg-surface-container-low text-primary font-headline font-bold text-sm uppercase tracking-wider hover:bg-primary hover:text-background transition-colors border border-divider flex items-center justify-center gap-2"
+                  >
+                    <span>MANAGE IN COMMAND CENTER</span>
+                    <FiArrowLeft className="w-4 h-4 rotate-180" />
+                  </Link>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    requireAuth({
+                      actionTitle: `issue duel challenge to ${beast.name}`,
+                      onSuccess: () => {
+                        setChallengeModalOpen(true);
+                      },
+                    });
+                  }}
+                  className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border border-primary flex items-center justify-center gap-2"
+                >
+                  <FiCrosshair className="w-5 h-5" />
+                  <span>CHALLENGE THIS BEAST</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -339,6 +369,12 @@ export default function BeastProfilePage() {
           </div>
         </div>
       </div>
+
+      <ChallengeModal
+        isOpen={challengeModalOpen}
+        onClose={() => setChallengeModalOpen(false)}
+        targetOpponent={beast}
+      />
     </div>
   );
 }

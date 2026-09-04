@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { 
   FiCrosshair, 
-  FiZap, 
   FiClock, 
   FiCheckCircle, 
   FiPlusSquare, 
@@ -341,7 +340,7 @@ function ArenaContent() {
                   )}
                   {isPending && (
                     <>
-                      <FiZap className="w-4 h-4" />
+                      <FiClock className="w-4 h-4" />
                       <span>Place Wager // {countdown?.formatted || '40:00'} Left</span>
                     </>
                   )}

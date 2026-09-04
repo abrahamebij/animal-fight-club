@@ -29,7 +29,13 @@ export function RouteGuard({ children, routeName = 'PROTECTED PROTOCOL ROUTE' }:
   if (!isHydrated || isConnecting || isReconnecting) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] bg-background text-foreground font-mono text-sm space-y-4">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent animate-spin" />
+        <div className="w-10 h-10 relative flex items-center justify-center overflow-hidden animate-spin">
+          <Img 
+            src="/logo.png" 
+            alt="Loading..." 
+            className="w-10 h-10 object-contain"
+          />
+        </div>
         <p className="uppercase tracking-widest text-secondary text-xs">
           VERIFYING SOMNIA WALLET AUTHENTICATION...
         </p>

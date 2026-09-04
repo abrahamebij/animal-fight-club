@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import { 
   FiPlusSquare, 
   FiShield, 
-  FiZap,
   FiCrosshair,
+  FiTrendingUp,
   FiCheck,
   FiX,
   FiClock,
@@ -516,7 +516,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between border-b border-divider pb-3">
             <div className="flex items-center gap-2">
-              <FiZap className="w-5 h-5 text-warning" />
+              <FiTrendingUp className="w-5 h-5 text-primary" />
               <h2 className="font-headline font-bold text-2xl uppercase tracking-tight">
                 ACTIVE SPECTATOR WAGERS
               </h2>

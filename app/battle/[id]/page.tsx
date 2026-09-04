@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { 
   FiCrosshair, 
-  FiZap, 
   FiClock, 
   FiActivity, 
   FiTrendingUp, 
@@ -20,6 +19,7 @@ import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { getBattleById, placeBet } from '@/lib/services/battleService';
 import { Battle, CombatTurn } from '@/lib/types';
 import { formatTimeRemaining } from '@/lib/utils/timer';
+import Img from '@/components/ui/Img';
 import gsap from 'gsap';
 
 export default function BattleViewPage() {
@@ -262,8 +262,14 @@ export default function BattleViewPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] bg-background text-foreground font-mono text-sm space-y-4">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent animate-spin" />
-        <p className="uppercase tracking-widest text-secondary">LOADING COMBAT TELEMETRY...</p>
+        <div className="w-10 h-10 relative flex items-center justify-center overflow-hidden animate-spin">
+          <Img 
+            src="/logo.png" 
+            alt="Loading Combat Telemetry..." 
+            className="w-10 h-10 object-contain"
+          />
+        </div>
+        <p className="uppercase tracking-widest text-secondary text-xs">LOADING COMBAT TELEMETRY...</p>
       </div>
     );
   }
@@ -454,7 +460,7 @@ export default function BattleViewPage() {
                     disabled={isSimulating}
                     className="w-full py-3 bg-background text-primary font-headline font-bold text-xs uppercase tracking-wider hover:bg-neutral transition-colors border border-background disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    <FiZap className="w-4 h-4 text-warning" />
+                    <FiTerminal className="w-4 h-4 text-primary" />
                     <span>{isSimulating ? 'SIMULATING COMBAT ROUNDS...' : 'TRIGGER AGENTIC COMBAT ENGINE'}</span>
                   </button>
                 )}
@@ -655,7 +661,7 @@ export default function BattleViewPage() {
           <div className="bottom-panel lg:col-span-5 border border-divider p-6 bg-background space-y-6">
             <div className="flex items-center justify-between border-b border-divider pb-3">
               <div className="flex items-center gap-2">
-                <FiZap className="w-5 h-5 text-warning" />
+                <FiTrendingUp className="w-5 h-5 text-primary" />
                 <h3 className="font-headline font-bold text-2xl uppercase tracking-tight">
                   SPECTATOR WAGERING
                 </h3>
@@ -741,7 +747,7 @@ export default function BattleViewPage() {
                   disabled={!isPending && !isLive}
                   className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  <FiZap className="w-4 h-4" />
+                  <FiCrosshair className="w-4 h-4" />
                   <span>{betPlaced ? 'WAGER SUBMITTED TO ESCROW' : 'CONFIRM SPECTATOR WAGER'}</span>
                 </button>
               </form>
