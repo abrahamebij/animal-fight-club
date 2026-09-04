@@ -93,8 +93,7 @@ export async function getIncomingChallenges(walletAddress: string): Promise<Chal
   try {
     const q = query(
       collection(db, 'challenges'),
-      where('challengedAddress', '==', walletAddress),
-      orderBy('createdAt', 'desc')
+      where('challengedAddress', '==', walletAddress)
     );
     const snap = await getDocs(q);
     snap.forEach((d) => {
@@ -123,8 +122,7 @@ export async function getOutgoingChallenges(walletAddress: string): Promise<Chal
   try {
     const q = query(
       collection(db, 'challenges'),
-      where('challengerAddress', '==', walletAddress),
-      orderBy('createdAt', 'desc')
+      where('challengerAddress', '==', walletAddress)
     );
     const snap = await getDocs(q);
     snap.forEach((d) => {

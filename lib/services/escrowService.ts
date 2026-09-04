@@ -117,6 +117,45 @@ export async function fetchOnChainWager(
   }
 }
 
+function getAdminPrivateKey(): `0x${string}` | null {
+  let key = process.env.METAMASK_PRIVATE_KEY || process.env.PRIVATE_KEY;
+  if (!key && typeof window === 'undefined') {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const envPath = path.resolve('.env.local');
+      if (fs.existsSync(envPath)) {
+        const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#')) continue;
+          const eqIdx = trimmed.indexOf('=');
+          if (eqIdx !== -1) {
+            const k = trimmed.slice(0, eqIdx).trim();
+            const v = trimmed.slice(eqIdx + 1).trim();
+            if (k === 'METAMASK_PRIVATE_KEY' || k === 'PRIVATE_KEY') {
+              key = v;
+              break;
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore file read error
+    }
+  }
+
+  if (!key) return null;
+  return (key.startsWith('0x') ? key : `0x${key}`) as `0x${string}`;
+}
+
+function normalizeAddress(addr?: string | null): `0x${string}` {
+  if (addr && addr.startsWith('0x') && addr.length === 42) {
+    return addr as `0x${string}`;
+  }
+  return '0x0000000000000000000000000000000000000001' as `0x${string}`;
+}
+
 /**
  * Registers battle on-chain via protocolAdmin wallet
  */
@@ -126,14 +165,18 @@ export async function registerBattleOnChain(
   ownerB: string,
   bettingClosesAtMs: number
 ): Promise<string | null> {
-  const privateKey = process.env.METAMASK_PRIVATE_KEY || process.env.PRIVATE_KEY;
+  const privateKey = getAdminPrivateKey();
   if (!ESCROW_CONTRACT_CONFIG.isConfigured || !privateKey) return null;
 
   try {
+    const existing = await fetchOnChainBattle(battleId);
+    if (existing && existing.status !== EscrowBattleStatus.Uninitialized) {
+      return 'ALREADY_REGISTERED';
+    }
+
     const { privateKeyToAccount } = await import('viem/accounts');
     const { createWalletClient } = await import('viem');
-    const formattedKey = (privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`) as `0x${string}`;
-    const account = privateKeyToAccount(formattedKey);
+    const account = privateKeyToAccount(privateKey);
     const walletClient = createWalletClient({
       account,
       chain: somniaShannon,
@@ -141,13 +184,19 @@ export async function registerBattleOnChain(
     });
 
     const bytes32Id = battleIdToBytes32(battleId);
-    const bettingClosesAtSec = BigInt(Math.floor(bettingClosesAtMs / 1000));
+    const nowSec = Math.floor(Date.now() / 1000);
+    const minDeadline = nowSec + 3600; // at least 1 hour in the future
+    const candidateDeadline = Math.floor(bettingClosesAtMs / 1000);
+    const bettingClosesAtSec = BigInt(Math.max(minDeadline, candidateDeadline));
+
+    const validOwnerA = normalizeAddress(ownerA);
+    const validOwnerB = normalizeAddress(ownerB);
 
     const hash = await walletClient.writeContract({
       address: ESCROW_CONTRACT_CONFIG.address,
       abi: ESCROW_ABI,
       functionName: 'registerBattle',
-      args: [bytes32Id, ownerA as `0x${string}`, ownerB as `0x${string}`, bettingClosesAtSec],
+      args: [bytes32Id, validOwnerA, validOwnerB, bettingClosesAtSec],
     });
 
     return hash;
@@ -164,14 +213,18 @@ export async function resolveBattleOnChain(
   battleId: string,
   winner: 'beastA' | 'beastB'
 ): Promise<string | null> {
-  const privateKey = process.env.METAMASK_PRIVATE_KEY || process.env.PRIVATE_KEY;
+  const privateKey = getAdminPrivateKey();
   if (!ESCROW_CONTRACT_CONFIG.isConfigured || !privateKey) return null;
 
   try {
+    const existing = await fetchOnChainBattle(battleId);
+    if (existing && existing.status === EscrowBattleStatus.Resolved) {
+      return 'ALREADY_RESOLVED';
+    }
+
     const { privateKeyToAccount } = await import('viem/accounts');
     const { createWalletClient } = await import('viem');
-    const formattedKey = (privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`) as `0x${string}`;
-    const account = privateKeyToAccount(formattedKey);
+    const account = privateKeyToAccount(privateKey);
     const walletClient = createWalletClient({
       account,
       chain: somniaShannon,

@@ -19,8 +19,8 @@ export const DREAMDEX_CONTRACTS = {
 } as const;
 
 export const ESCROW_CONTRACT_CONFIG = {
-  address: (process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`,
-  isConfigured: Boolean(process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS && process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS.startsWith('0x') && process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS !== '0x0000000000000000000000000000000000000000'),
+  address: (process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS || '0xc5b68a7a3282f66255aa5a11be165a1f817abbdc') as `0x${string}`,
+  isConfigured: true,
 } as const;
 
 export const STAT_BUDGET = {

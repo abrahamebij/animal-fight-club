@@ -13,7 +13,8 @@ import {
   FiArrowLeft,
   FiTerminal,
   FiAlertCircle,
-  FiCheck
+  FiCheck,
+  FiShield
 } from 'react-icons/fi';
 import { useAccount, useWriteContract } from 'wagmi';
 import { parseEther } from 'viem';
@@ -23,7 +24,8 @@ import { Battle, CombatTurn, Bet } from '@/lib/types';
 import { formatTimeRemaining } from '@/lib/utils/timer';
 import { ESCROW_ABI } from '@/lib/contracts/escrowAbi';
 import { ESCROW_CONTRACT_CONFIG } from '@/lib/constants/game';
-import { battleIdToBytes32, sideToEscrowEnum } from '@/lib/services/escrowService';
+import { somniaShannon } from '@/lib/config/wagmi';
+import { battleIdToBytes32, sideToEscrowEnum, fetchOnChainBattle, EscrowBattleStatus } from '@/lib/services/escrowService';
 import { toast } from 'sonner';
 import Img from '@/components/ui/Img';
 import gsap from 'gsap';
@@ -77,6 +79,10 @@ export default function BattleViewPage() {
   const countdown = battle?.status === 'pending' && battle.bettingWindowClosesAt
     ? formatTimeRemaining(battle.bettingWindowClosesAt)
     : null;
+
+  const isLive = battle?.status === 'live';
+  const isPending = battle?.status === 'pending';
+  const isCompleted = battle?.status === 'completed';
 
   const lastTurn: CombatTurn | undefined = battle?.combatLog[battle.combatLog.length - 1];
   const hpA = lastTurn?.beastAHp ?? 100;
@@ -169,7 +175,7 @@ export default function BattleViewPage() {
 
   // Animate new combat log entries as they appear
   useEffect(() => {
-    const currentLength = activeBattle.combatLog.length;
+    const currentLength = battle?.combatLog.length || 0;
     if (currentLength > prevLogLength.current && logRef.current) {
       const entries = logRef.current.querySelectorAll('.log-entry');
       const newEntries = Array.from(entries).slice(prevLogLength.current);
@@ -182,20 +188,33 @@ export default function BattleViewPage() {
       });
     }
     prevLogLength.current = currentLength;
-  }, [activeBattle.combatLog.length]);
+  }, [battle?.combatLog.length]);
 
   const handleExecuteCombat = async () => {
-    if (isSimulating || isCompleted) return;
+    if (!battle || isSimulating || isCompleted) return;
+    if (!isOwnerOfFighter) {
+      toast.error('Combat Trigger Unauthorized', {
+        description: 'Only the owners of the combatants can trigger the AI combat simulation.',
+      });
+      return;
+    }
     setIsSimulating(true);
 
     try {
       const res = await fetch('/api/battle/resolve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ battleId: activeBattle.id, battle: activeBattle }),
+        body: JSON.stringify({
+          battleId: battle.id,
+          battle,
+          callerAddress: address,
+        }),
       });
 
-      if (!res.ok) throw new Error('Failed to resolve combat');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to resolve combat');
+      }
 
       const data = await res.json();
       const allTurns: CombatTurn[] = data.turns || [];
@@ -225,36 +244,58 @@ export default function BattleViewPage() {
 
   const isOwnerOfFighter = Boolean(
     address &&
-    activeBattle && (
-      activeBattle.beastA.ownerAddress?.toLowerCase() === address.toLowerCase() ||
-      activeBattle.beastB.ownerAddress?.toLowerCase() === address.toLowerCase()
+    battle && (
+      battle.beastA.ownerAddress?.toLowerCase() === address.toLowerCase() ||
+      battle.beastB.ownerAddress?.toLowerCase() === address.toLowerCase()
     )
   );
 
   const handlePlaceBet = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isOwnerOfFighter) return;
+    if (!battle || isOwnerOfFighter) return;
     const amountNum = Number(betAmount);
     if (isNaN(amountNum) || amountNum <= 0) return;
 
+    const chosenBeast = selectedSide === 'beastA' ? battle.beastA : battle.beastB;
+
     requireAuth({
-      actionTitle: `place a ${betAmount} STT wager on ${selectedSide === 'beastA' ? activeBattle.beastA.name : activeBattle.beastB.name}`,
+      actionTitle: `place a ${betAmount} STT wager on ${chosenBeast.name}`,
       onSuccess: async () => {
         try {
-          if (!address) return;
+          if (!address || !battle) return;
           if (isOwnerOfFighter) return;
 
           if (ESCROW_CONTRACT_CONFIG.isConfigured) {
+            // Check and ensure the battle is initialized on-chain before placing wager
+            try {
+              const onChain = await fetchOnChainBattle(battle.id);
+              if (!onChain || onChain.status === EscrowBattleStatus.Uninitialized) {
+                await fetch('/api/battle/register', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    battleId: battle.id,
+                    ownerA: battle.beastA.ownerAddress,
+                    ownerB: battle.beastB.ownerAddress,
+                    bettingClosesAt: battle.bettingWindowClosesAt || (Date.now() + 3600 * 1000),
+                  }),
+                });
+              }
+            } catch (regErr) {
+              console.warn('Auto battle registration on-chain attempt:', regErr);
+            }
+
             await writeContractAsync({
               address: ESCROW_CONTRACT_CONFIG.address,
               abi: ESCROW_ABI,
               functionName: 'placeWager',
-              args: [battleIdToBytes32(activeBattle.id), sideToEscrowEnum(selectedSide)],
+              args: [battleIdToBytes32(battle.id), sideToEscrowEnum(selectedSide)],
               value: parseEther(betAmount),
+              chainId: somniaShannon.id,
             });
           }
 
-          const newBet = await placeBet(activeBattle.id, address, selectedSide, amountNum);
+          const newBet = await placeBet(battle.id, address, selectedSide, amountNum);
           setUserBet(newBet);
 
           // Update local battle pool state
@@ -282,23 +323,42 @@ export default function BattleViewPage() {
             );
           }
           setTimeout(() => setBetPlaced(false), 3000);
-        } catch (err) {
+        } catch (err: unknown) {
           console.error('Failed to place bet:', err);
-          toast.error('Failed to Place Wager', {
-            description: err instanceof Error ? err.message : 'Please try again.',
+          let errorMessage = 'Transaction was cancelled or rejected by network.';
+          if (err instanceof Error) {
+            if (err.message.includes('User rejected') || err.message.includes('User denied')) {
+              errorMessage = 'Transaction rejected in wallet.';
+            } else if (err.message.includes('insufficient funds') || err.message.includes('exceeds balance')) {
+              errorMessage = 'Insufficient STT balance to cover wager amount + gas.';
+            } else if (err.message.includes('OwnerCannotWagerOnOwnBattle')) {
+              errorMessage = 'Combatant owners cannot wager on their own duels.';
+            } else if (err.message.includes('CannotWagerOnBothSides')) {
+              errorMessage = 'You have already wagered on the opposing combatant.';
+            } else if (err.message.includes('BettingWindowClosed')) {
+              errorMessage = 'The 1-hour spectator betting window has expired.';
+            } else if (err.message.includes('ZeroWagerAmount')) {
+              errorMessage = 'Wager amount must be greater than 0 STT.';
+            } else {
+              errorMessage = err.message.slice(0, 100);
+            }
+          }
+          toast.error('Wager Submission Failed', {
+            description: errorMessage,
+            duration: 6000,
           });
         }
       },
     });
   };
 
-  const winningPool = activeBattle.winner === 'beastA' ? (activeBattle.totalPoolA || 0) : (activeBattle.totalPoolB || 0);
-  const losingPool = activeBattle.winner === 'beastA' ? (activeBattle.totalPoolB || 0) : (activeBattle.totalPoolA || 0);
+  const winningPool = battle?.winner === 'beastA' ? (battle.totalPoolA || 0) : (battle?.totalPoolB || 0);
+  const losingPool = battle?.winner === 'beastA' ? (battle.totalPoolB || 0) : (battle?.totalPoolA || 0);
   const profit = userBet && winningPool > 0 ? (userBet.amount * losingPool) / winningPool : 0;
   const estimatedPayout = userBet ? Math.round((userBet.amount + profit) * 100) / 100 : 0;
 
   const handleClaimPayout = async () => {
-    if (!userBet || !address || userBet.status === 'claimed') return;
+    if (!battle || !userBet || !address || userBet.status === 'claimed') return;
     setIsClaiming(true);
     try {
       if (ESCROW_CONTRACT_CONFIG.isConfigured) {
@@ -306,7 +366,8 @@ export default function BattleViewPage() {
           address: ESCROW_CONTRACT_CONFIG.address,
           abi: ESCROW_ABI,
           functionName: 'claimPayout',
-          args: [battleIdToBytes32(activeBattle.id)],
+          args: [battleIdToBytes32(battle.id)],
+          chainId: somniaShannon.id,
         });
       }
 
@@ -316,10 +377,23 @@ export default function BattleViewPage() {
         description: 'Pari-mutuel winnings transferred to your connected wallet.',
         duration: 5000,
       });
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to claim payout:', err);
+      let errorMsg = 'Transaction was rejected or failed on-chain.';
+      if (err instanceof Error) {
+        if (err.message.includes('AlreadyClaimed')) {
+          errorMsg = 'Payout has already been claimed for this wager.';
+        } else if (err.message.includes('WagerLost')) {
+          errorMsg = 'Wager was on the losing combatant.';
+        } else if (err.message.includes('BattleNotClaimable')) {
+          errorMsg = 'This duel is not yet resolved for payout claims.';
+        } else {
+          errorMsg = err.message.slice(0, 100);
+        }
+      }
       toast.error('Payout Claim Failed', {
-        description: err instanceof Error ? err.message : 'Please try again.',
+        description: errorMsg,
+        duration: 5000,
       });
     } finally {
       setIsClaiming(false);
@@ -363,9 +437,6 @@ export default function BattleViewPage() {
     );
   }
 
-  const isLive = battle.status === 'live';
-  const isPending = battle.status === 'pending';
-  const isCompleted = battle.status === 'completed';
   const activeBattle = battle;
 
   return (
@@ -521,7 +592,7 @@ export default function BattleViewPage() {
                   <div className="bg-background text-primary p-3 text-center font-headline font-extrabold text-sm uppercase tracking-wider border border-background">
                     DUEL CONCLUDED - VICTOR: {activeBattle.winner === 'beastA' ? activeBattle.beastA.name : activeBattle.beastB.name}
                   </div>
-                ) : (
+                ) : isOwnerOfFighter ? (
                   <button
                     onClick={handleExecuteCombat}
                     disabled={isSimulating}
@@ -530,6 +601,11 @@ export default function BattleViewPage() {
                     <FiTerminal className="w-4 h-4 text-primary" />
                     <span>{isSimulating ? 'SIMULATING COMBAT ROUNDS...' : 'TRIGGER AGENTIC COMBAT ENGINE'}</span>
                   </button>
+                ) : (
+                  <div className="bg-background/10 border border-background/20 p-3 text-center font-mono text-xs text-background/80 flex items-center justify-center gap-2">
+                    <FiShield className="w-3.5 h-3.5 text-warning flex-shrink-0" />
+                    <span>AWAITING COMBATANT OWNER TRIGGER</span>
+                  </div>
                 )}
               </div>
             </div>

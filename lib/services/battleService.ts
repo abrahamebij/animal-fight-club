@@ -111,46 +111,64 @@ export async function createBattle(beastA: Beast, beastB: Beast): Promise<Battle
 }
 
 /**
- * Fetches a single battle by ID from Firestore
+ * Fetches a single battle by ID from Firestore, dynamically calculating pools from existing bets
  */
 export async function getBattleById(id: string): Promise<Battle | null> {
-  const localList = getLocalBattles();
-  const localMatch = localList.find((b) => b.id === id);
-  if (localMatch) return localMatch;
-
   try {
     const docRef = doc(db, 'battles', id);
     const snap = await getDoc(docRef);
     if (snap.exists()) {
-      return snap.data() as Battle;
+      const battleData = snap.data() as Battle;
+
+      // Query real existing bets in Firestore to dynamically calculate accurate pools
+      try {
+        const betsQuery = query(collection(db, 'bets'), where('battleId', '==', id));
+        const betsSnap = await getDocs(betsQuery);
+        let calcPoolA = 0;
+        let calcPoolB = 0;
+        betsSnap.forEach((d) => {
+          const bet = d.data() as Bet;
+          if (bet.beastPicked === 'beastA') calcPoolA += bet.amount;
+          else if (bet.beastPicked === 'beastB') calcPoolB += bet.amount;
+        });
+        battleData.totalPoolA = calcPoolA;
+        battleData.totalPoolB = calcPoolB;
+      } catch (err) {
+        console.warn('Error computing live bet pools:', err);
+      }
+
+      saveLocalBattle(battleData);
+      return battleData;
     }
   } catch (error) {
-    console.warn('Error fetching battle from Firestore:', error);
+    console.warn('Error fetching battle from Firestore, falling back to cache:', error);
   }
 
-  return null;
+  // Offline fallback
+  const localList = getLocalBattles();
+  return localList.find((b) => b.id === id) || null;
 }
 
 /**
  * Fetches all battles across all statuses from Firestore
  */
 export async function getAllBattles(): Promise<Battle[]> {
-  const results: Battle[] = [...getLocalBattles()];
-
   try {
     const q = query(collection(db, 'battles'), orderBy('challengeAcceptedAt', 'desc'));
     const snap = await getDocs(q);
+    const results: Battle[] = [];
     snap.forEach((d) => {
-      const b = d.data() as Battle;
-      if (!results.some((r) => r.id === b.id)) {
-        results.push(b);
-      }
+      results.push(d.data() as Battle);
     });
+    if (typeof window !== 'undefined' && results.length > 0) {
+      localStorage.setItem(LOCAL_STORAGE_BATTLES, JSON.stringify(results));
+    }
+    return results;
   } catch (error) {
-    console.warn('Error fetching all battles from Firestore:', error);
+    console.warn('Error fetching all battles from Firestore, falling back to cache:', error);
   }
 
-  return results;
+  return getLocalBattles();
 }
 
 /**
@@ -208,28 +226,34 @@ export async function placeBet(
 export async function getBetsByBettor(bettorAddress: string): Promise<Bet[]> {
   if (!bettorAddress) return [];
   const normalized = bettorAddress.toLowerCase();
-  const results: Bet[] = getLocalBets().filter(
-    (b) => b.bettorAddress.toLowerCase() === normalized
-  );
 
   try {
     const q = query(
       collection(db, 'bets'),
-      where('bettorAddress', '==', bettorAddress),
-      orderBy('placedAt', 'desc')
+      where('bettorAddress', '==', bettorAddress)
     );
     const snap = await getDocs(q);
+    const results: Bet[] = [];
     snap.forEach((d) => {
-      const b = d.data() as Bet;
-      if (!results.some((r) => r.id === b.id)) {
-        results.push(b);
-      }
+      results.push(d.data() as Bet);
     });
+
+    if (typeof window !== 'undefined') {
+      // Sync local cache with current Firestore bets
+      const allLocal = getLocalBets().filter((b) => b.bettorAddress.toLowerCase() !== normalized);
+      localStorage.setItem(LOCAL_STORAGE_BETS, JSON.stringify([...results, ...allLocal]));
+    }
+
+    return results.sort((a, b) => b.placedAt - a.placedAt);
   } catch (error) {
-    console.warn('Error fetching bets from Firestore:', error);
+    console.warn('Error fetching bets from Firestore, falling back to cache:', error);
   }
 
-  return results;
+  // Offline fallback
+  const localBets = getLocalBets().filter(
+    (b) => b.bettorAddress.toLowerCase() === normalized
+  );
+  return localBets.sort((a, b) => b.placedAt - a.placedAt);
 }
 
 /**

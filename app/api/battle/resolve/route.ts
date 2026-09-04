@@ -214,7 +214,11 @@ function simulateDeterministicCombat(battle: Battle): { turns: CombatTurn[]; win
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { battleId, battle: clientBattle } = body as { battleId?: string; battle?: Battle };
+    const { battleId, battle: clientBattle, callerAddress } = body as { 
+      battleId?: string; 
+      battle?: Battle; 
+      callerAddress?: string;
+    };
 
     let battle = clientBattle;
 
@@ -227,6 +231,20 @@ export async function POST(req: NextRequest) {
 
     if (!battle) {
       return NextResponse.json({ error: 'Battle not found' }, { status: 404 });
+    }
+
+    // Strict combatant owner authorization
+    const ownerA = battle.beastA.ownerAddress?.toLowerCase();
+    const ownerB = battle.beastB.ownerAddress?.toLowerCase();
+    const normalizedCaller = callerAddress?.toLowerCase();
+
+    if (ownerA && ownerB && normalizedCaller) {
+      if (normalizedCaller !== ownerA && normalizedCaller !== ownerB) {
+        return NextResponse.json(
+          { error: 'Unauthorized: Only the owners of the combatants can trigger combat simulation.' },
+          { status: 403 }
+        );
+      }
     }
 
     // 1. Try Gemini LLM first, falling back to deterministic combat engine
