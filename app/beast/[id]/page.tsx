@@ -119,10 +119,10 @@ export default function BeastProfilePage() {
           No genetic record exists for identifier <span className="text-primary font-bold">[{beastId}]</span>.
         </p>
         <Link
-          href="/leaderboard"
-          className="inline-block px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border border-primary"
+          href="#"
+          className="inline-block px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border border-primary" onClick={() => window.history.back()}
         >
-          Return to Leaderboard
+          Go back
         </Link>
       </div>
     );
@@ -142,11 +142,12 @@ export default function BeastProfilePage() {
       <div className="border-b border-divider divider-ash bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
           <Link
-            href="/leaderboard"
+            href="#"
             className="flex items-center gap-1.5 text-secondary hover:text-primary transition-colors"
+            onClick={() => window.history.back()}
           >
             <FiArrowLeft className="w-4 h-4" />
-            <span>BACK TO ARENA LEADERBOARD</span>
+            <span>BACK</span>
           </Link>
           <span className="text-secondary">BEAST_ID: {beast.id}</span>
         </div>
