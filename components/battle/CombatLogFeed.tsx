@@ -10,6 +10,7 @@ interface CombatLogFeedProps {
   isOwnerOfFighter: boolean;
   isSimulating: boolean;
   onExecuteCombat: () => void;
+  className?: string;
 }
 
 export function CombatLogFeed({
@@ -17,6 +18,7 @@ export function CombatLogFeed({
   isOwnerOfFighter,
   isSimulating,
   onExecuteCombat,
+  className = 'fighter-panel lg:col-span-4',
 }: CombatLogFeedProps) {
   const logRef = useRef<HTMLDivElement>(null);
   const prevLogLength = useRef(battle.combatLog.length);
@@ -44,7 +46,7 @@ export function CombatLogFeed({
   }, [battle.combatLog.length]);
 
   return (
-    <div className="fighter-panel lg:col-span-4 border border-divider p-6 bg-primary text-background flex flex-col justify-between gap-6">
+    <div className={`${className} border border-divider p-6 bg-primary text-background flex flex-col justify-between gap-6`}>
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b border-background/20 pb-2 font-mono text-xs">
           <div className="flex items-center gap-2 text-background/80">

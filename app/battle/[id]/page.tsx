@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useLayoutEffect, useRef, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { FiArrowLeft } from 'react-icons/fi';
 import { useAccount } from 'wagmi';
@@ -9,11 +8,10 @@ import { Battle, CombatTurn, Bet } from '@/lib/types';
 import { formatTimeRemaining } from '@/lib/utils/timer';
 import { useBattle, useUserBets } from '@/hooks/useBattles';
 import { useBattleCombat, useBattleWager } from '@/hooks/useBattleActions';
-import { BattleFighterCard } from '@/components/battle/BattleFighterCard';
+import { BattleArenaRing } from '@/components/battle/BattleArenaRing';
 import { CombatLogFeed } from '@/components/battle/CombatLogFeed';
 import { MarketPulsePanel } from '@/components/battle/MarketPulsePanel';
 import { SpectatorWageringPanel } from '@/components/battle/SpectatorWageringPanel';
-import gsap from 'gsap';
 
 export default function BattleViewPage() {
   const params = useParams();
@@ -27,8 +25,6 @@ export default function BattleViewPage() {
   const [selectedSide, setSelectedSide] = useState<'beastA' | 'beastB'>('beastA');
   const [betAmount, setBetAmount] = useState<string>('50');
 
-  const containerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (initialBattle && !activeBattle) {
       setActiveBattle(initialBattle);
@@ -37,29 +33,6 @@ export default function BattleViewPage() {
 
   const battle = activeBattle || initialBattle || null;
   const userBet = userBets.find((b: Bet) => b.battleId === battleId) || null;
-
-
-  useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from('.fighter-panel', {
-        opacity: 0,
-        x: (i) => (i === 0 ? -80 : i === 2 ? 80 : 0),
-        y: (i) => (i === 1 ? 30 : 0),
-        duration: 0.7,
-        stagger: 0.12,
-        ease: 'power3.out',
-      });
-      gsap.from('.bottom-panel', {
-        opacity: 0,
-        y: 40,
-        duration: 0.6,
-        stagger: 0.15,
-        ease: 'power2.out',
-        delay: 0.5,
-      });
-    }, containerRef);
-    return () => ctx.revert();
-  }, [isLoading]);
 
   const isOwnerOfFighter = Boolean(
     address &&
@@ -105,19 +78,30 @@ export default function BattleViewPage() {
     : null;
 
   return (
-    <div ref={containerRef} className="flex-1 flex flex-col pb-16 bg-surface-container-lowest">
-      {/* Top Breadcrumb & Status Bar */}
+    <div className="flex-1 flex flex-col pb-16 bg-surface-container-lowest">
+      {/* Top breadcrumb + status bar */}
       <div className="border-b border-divider bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
-          <p onClick={() => window.history.back()} className="flex items-center gap-1.5 text-secondary cursor-pointer hover:text-primary transition-colors">
+          <p
+            onClick={() => window.history.back()}
+            className="flex items-center gap-1.5 text-secondary cursor-pointer hover:text-primary transition-colors"
+          >
             <FiArrowLeft className="w-4 h-4" />
             <span>BACK</span>
           </p>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 ${battle.status === 'live' ? 'bg-secondary animate-pulse' : 'bg-primary'}`} />
+              <span
+                className={`w-2.5 h-2.5 ${
+                  battle.status === 'live' ? 'bg-secondary animate-pulse' : 'bg-primary'
+                }`}
+              />
               <span className="font-bold uppercase">
-                {battle.status === 'live' ? 'LIVE COMBAT FEED' : battle.status === 'pending' ? `PENDING BETTING WINDOW (${countdown?.formatted || '60:00'})` : 'COMBAT CONCLUDED'}
+                {battle.status === 'live'
+                  ? 'LIVE COMBAT FEED'
+                  : battle.status === 'pending'
+                  ? `PENDING BETTING WINDOW (${countdown?.formatted || '60:00'})`
+                  : 'COMBAT CONCLUDED'}
               </span>
             </div>
             <span className="text-divider">|</span>
@@ -126,32 +110,30 @@ export default function BattleViewPage() {
         </div>
       </div>
 
-      {/* Main Battle Arena Grid */}
-      <div className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-8 space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-          <BattleFighterCard
-            label="COMBATANT 01"
-            role="ALPHA"
-            beast={battle.beastA}
-            hp={hpA}
-            marketPulse={battle.marketPulseA}
-          />
-          <CombatLogFeed
-            battle={battle}
-            isOwnerOfFighter={isOwnerOfFighter}
-            isSimulating={isSimulating}
-            onExecuteCombat={executeCombat}
-          />
-          <BattleFighterCard
-            label="COMBATANT 02"
-            role="BRAVO"
-            beast={battle.beastB}
-            hp={hpB}
-            marketPulse={battle.marketPulseB}
-          />
-        </div>
+      {/* Main content */}
+      <div className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-8 space-y-6">
+        {/* ① Boxing ring — hero visual */}
+        <BattleArenaRing
+          battle={battle}
+          hpA={hpA}
+          hpB={hpB}
+          lastTurn={lastTurn}
+          isSimulating={isSimulating}
+          isOwnerOfFighter={isOwnerOfFighter}
+          onExecuteCombat={executeCombat}
+        />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* ② Combat log feed — full width below ring */}
+        <CombatLogFeed
+          battle={battle}
+          isOwnerOfFighter={isOwnerOfFighter}
+          isSimulating={isSimulating}
+          onExecuteCombat={executeCombat}
+          className="w-full"
+        />
+
+        {/* ③ Market pulse + wagering panels */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-8">
           <MarketPulsePanel battle={battle} />
           <SpectatorWageringPanel
             battle={battle}
@@ -172,3 +154,4 @@ export default function BattleViewPage() {
     </div>
   );
 }
+
