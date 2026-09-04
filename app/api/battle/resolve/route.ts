@@ -132,8 +132,8 @@ CRITICAL RULES FOR COMBAT RESOLUTION:
 
 4. HEALTH AND DAMAGE:
    - Both combatants start at 100 HP.
-   - Each turn deals 16 to 34 damage to the DEFENDER's HP only.
-   - Combat concludes immediately in 4 to 7 turns when any combatant's HP drops to 0.
+   - Each turn deals 7 to 15 damage (up to 18 on critical/special hits) to the DEFENDER's HP only.
+   - Combat develops through a suspenseful, tactical duel typically lasting 9 to 15 turns until exactly one combatant's HP drops to 0.
 
 Output ONLY a JSON object matching this exact structure with no markdown formatting:
 {
@@ -240,7 +240,7 @@ function simulateDeterministicCombat(battle: Battle): { turns: CombatTurn[]; win
   const statsB_init = getEffectiveStats(battle.beastB, 100, battle.marketPulseB);
   let currentAttacker: 'beastA' | 'beastB' = statsA_init.speed >= statsB_init.speed ? 'beastA' : 'beastB';
 
-  while (hpA > 0 && hpB > 0 && turnNumber <= 12) {
+  while (hpA > 0 && hpB > 0 && turnNumber <= 24) {
     const statsA = getEffectiveStats(battle.beastA, hpA, battle.marketPulseA);
     const statsB = getEffectiveStats(battle.beastB, hpB, battle.marketPulseB);
 
@@ -257,9 +257,12 @@ function simulateDeterministicCombat(battle: Battle): { turns: CombatTurn[]; win
     const action = TACTICAL_ACTIONS[actionIndex];
 
     const rawDamage = Math.round(
-      (atkStats.power * 2.6 + atkStats.special * 1.1) * action.basePowerMultiplier - (defStats.defense * 1.1) + (Math.random() * 6)
+      (atkStats.power * 1.2 + atkStats.special * 0.5) * action.basePowerMultiplier - (defStats.defense * 0.55) + (Math.random() * 4)
     );
-    const damageDealt = Math.max(14, Math.min(36, rawDamage));
+    const isCrit = action.basePowerMultiplier > 1.25 || Math.random() < (atkStats.special * 0.05);
+    const damageDealt = isCrit 
+      ? Math.max(10, Math.min(18, Math.round(rawDamage * 1.2)))
+      : Math.max(7, Math.min(15, rawDamage));
 
     if (attackerSide === 'beastA') {
       hpB = Math.max(0, hpB - damageDealt);
