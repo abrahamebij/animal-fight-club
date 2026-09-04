@@ -109,10 +109,10 @@ export default function BattleViewPage() {
       {/* Top Breadcrumb & Status Bar */}
       <div className="border-b border-divider divider-ash bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
-          <Link href="/arena" className="flex items-center gap-1.5 text-secondary hover:text-primary transition-colors">
+          <p onClick={() => window.history.back()} className="flex items-center gap-1.5 text-secondary hover:text-primary transition-colors">
             <FiArrowLeft className="w-4 h-4" />
-            <span>BACK TO ARENA</span>
-          </Link>
+            <span>BACK</span>
+          </p>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className={`w-2.5 h-2.5 ${battle.status === 'live' ? 'bg-secondary animate-pulse' : 'bg-primary'}`} />
