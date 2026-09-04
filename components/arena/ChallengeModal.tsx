@@ -48,33 +48,45 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
   }, [isOpen]);
 
   useEffect(() => {
-    if (targetOpponent) {
-      setSelectedOpponent(targetOpponent);
-    }
-  }, [targetOpponent]);
-
-  useEffect(() => {
     if (!isOpen) return;
 
     let mounted = true;
     async function loadData() {
-      const owner = address || '';
-      const userBeasts = owner ? await getBeastsByOwner(owner) : [];
+      const owner = address?.toLowerCase() || '';
       const all = await getAllBeasts();
+      const userBeasts = owner 
+        ? all.filter((b) => b.ownerAddress?.toLowerCase() === owner)
+        : [];
 
       if (mounted) {
         setMyBeasts(userBeasts);
-        setSelectedMyBeast(userBeasts[0] || null);
+        const defaultMyBeast = userBeasts[0] || null;
+        setSelectedMyBeast(defaultMyBeast);
 
-        const opps = all.filter((b) => !userBeasts.some((ub) => ub.id === b.id));
-        const finalOpps = targetOpponent && !opps.some((b) => b.id === targetOpponent.id)
+        // Filter out ALL user's beasts, plus selected beast
+        const opps = all.filter(
+          (b) => !userBeasts.some((ub) => ub.id === b.id) && 
+                 (!owner || b.ownerAddress?.toLowerCase() !== owner) &&
+                 (!defaultMyBeast || b.id !== defaultMyBeast.id)
+        );
+
+        // Check if targetOpponent is valid (not owned by user, not self)
+        const isTargetValid = targetOpponent && 
+          (!owner || targetOpponent.ownerAddress?.toLowerCase() !== owner) &&
+          (!defaultMyBeast || targetOpponent.id !== defaultMyBeast.id);
+
+        const finalOpps = isTargetValid && !opps.some((b) => b.id === targetOpponent.id)
           ? [targetOpponent, ...opps]
-          : opps.length > 0 ? opps : all;
+          : opps;
+
         setAvailableOpponents(finalOpps);
-        if (targetOpponent) {
+
+        if (isTargetValid) {
           setSelectedOpponent(targetOpponent);
-        } else if (finalOpps[0]) {
+        } else if (finalOpps.length > 0) {
           setSelectedOpponent(finalOpps[0]);
+        } else {
+          setSelectedOpponent(null);
         }
       }
     }
@@ -86,8 +98,17 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
 
   if (!isOpen) return null;
 
+  const handleSelectMyBeast = (beast: Beast) => {
+    setSelectedMyBeast(beast);
+    // If selected opponent is the same beast, clear or re-select
+    if (selectedOpponent?.id === beast.id) {
+      const fallback = availableOpponents.find((b) => b.id !== beast.id) || null;
+      setSelectedOpponent(fallback);
+    }
+  };
+
   const handleInitiateDuel = () => {
-    if (!selectedMyBeast || !selectedOpponent) return;
+    if (!selectedMyBeast || !selectedOpponent || selectedMyBeast.id === selectedOpponent.id) return;
 
     requireAuth({
       actionTitle: `challenge ${selectedOpponent.name} to an arena duel`,
@@ -170,7 +191,7 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
                     value={selectedMyBeast?.id || ''}
                     onChange={(e) => {
                       const found = myBeasts.find((b) => b.id === e.target.value);
-                      if (found) setSelectedMyBeast(found);
+                      if (found) handleSelectMyBeast(found);
                     }}
                     className="w-full bg-background border border-divider p-2 font-headline font-bold text-sm uppercase"
                   >
@@ -209,47 +230,64 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
               OPPONENT COMBATANT (BRAVO)
             </div>
 
-            <div className="relative aspect-video w-full border border-divider overflow-hidden bg-zinc-900">
-              {selectedOpponent && (
-                <Image
-                  src={selectedOpponent.avatarUrl}
-                  alt={selectedOpponent.name}
-                  fill
-                  className="object-cover"
-                />
-              )}
-            </div>
+            {availableOpponents.length > 0 ? (
+              <div className="space-y-3">
+                <div className="relative aspect-video w-full border border-divider overflow-hidden bg-zinc-900">
+                  {selectedOpponent && (
+                    <Image
+                      src={selectedOpponent.avatarUrl}
+                      alt={selectedOpponent.name}
+                      fill
+                      className="object-cover"
+                    />
+                  )}
+                </div>
 
-            <div>
-              <label className="block font-mono text-[10px] text-secondary uppercase mb-1 font-bold">
-                SELECT TARGET DEFENDER
-              </label>
-              <select
-                value={selectedOpponent?.id || ''}
-                onChange={(e) => {
-                  const found = availableOpponents.find((b) => b.id === e.target.value);
-                  if (found) setSelectedOpponent(found);
-                }}
-                className="w-full bg-background border border-divider p-2 font-headline font-bold text-sm uppercase"
-              >
-                {availableOpponents.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name} ({b.stats.power}P / {b.stats.defense}D)
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div>
+                  <label className="block font-mono text-[10px] text-secondary uppercase mb-1 font-bold">
+                    SELECT TARGET DEFENDER
+                  </label>
+                  <select
+                    value={selectedOpponent?.id || ''}
+                    onChange={(e) => {
+                      const found = availableOpponents.find((b) => b.id === e.target.value);
+                      if (found) setSelectedOpponent(found);
+                    }}
+                    className="w-full bg-background border border-divider p-2 font-headline font-bold text-sm uppercase"
+                  >
+                    {availableOpponents.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} ({b.stats.power}P / {b.stats.defense}D)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center space-y-2 border border-dashed border-divider p-4">
+                <p className="font-mono text-xs text-primary uppercase font-bold">NO ELIGIBLE DEFENDERS</p>
+                <p className="font-mono text-xs text-secondary">
+                  No beasts from other gladiators are currently available to challenge.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Submit CTA */}
         <button
           onClick={handleInitiateDuel}
-          disabled={!selectedMyBeast || !selectedOpponent || isSubmitting}
+          disabled={!selectedMyBeast || !selectedOpponent || selectedMyBeast.id === selectedOpponent.id || isSubmitting || availableOpponents.length === 0}
           className="w-full py-4 bg-primary text-background font-headline font-extrabold text-xl uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           <FiCrosshair className="w-5 h-5" />
-          <span>{isSubmitting ? 'TRANSMITTING CHALLENGE...' : 'TRANSMIT FORMAL CHALLENGE // AWAITS DEFENDER ACCEPTANCE'}</span>
+          <span>
+            {isSubmitting
+              ? 'TRANSMITTING CHALLENGE...'
+              : selectedMyBeast?.id === selectedOpponent?.id
+              ? 'CANNOT CHALLENGE OWN COMBATANT'
+              : 'TRANSMIT FORMAL CHALLENGE // AWAITS DEFENDER ACCEPTANCE'}
+          </span>
         </button>
       </div>
     </div>

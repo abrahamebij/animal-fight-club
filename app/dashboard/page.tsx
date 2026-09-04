@@ -493,18 +493,12 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="pt-2">
                   <Link
                     href={`/beast/${beast.id}`}
-                    className="py-2.5 bg-surface-container-low text-primary font-headline font-bold text-center text-sm uppercase tracking-wider hover:bg-primary hover:text-background border border-primary transition-colors"
+                    className="w-full py-2.5 bg-surface-container-low text-primary font-headline font-bold text-center text-sm uppercase tracking-wider hover:bg-primary hover:text-background border border-primary transition-colors block"
                   >
-                    Profile
-                  </Link>
-                  <Link
-                    href="/arena"
-                    className="py-2.5 bg-primary text-background font-headline font-bold text-center text-sm uppercase tracking-wider hover:bg-secondary transition-colors"
-                  >
-                    Deploy Duel
+                    View Combatant Profile
                   </Link>
                 </div>
               </div>

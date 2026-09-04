@@ -44,6 +44,17 @@ export async function createChallenge(
   challengerBeast: Beast,
   challengedBeast: Beast
 ): Promise<Challenge> {
+  if (challengerBeast.id === challengedBeast.id) {
+    throw new Error("A combatant cannot challenge itself.");
+  }
+  if (
+    challengerBeast.ownerAddress &&
+    challengedBeast.ownerAddress &&
+    challengerBeast.ownerAddress.toLowerCase() === challengedBeast.ownerAddress.toLowerCase()
+  ) {
+    throw new Error("Cannot challenge another combatant owned by the same address.");
+  }
+
   const id = `challenge_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
   const now = Date.now();
 
