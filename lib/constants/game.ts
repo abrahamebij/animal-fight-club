@@ -102,3 +102,22 @@ export const AVATAR_PRESETS = [
     imageUrl: '/assets/stitch/home/asset_5.jpg',
   },
 ];
+
+export const BOUND_ASSET_OPTIONS = [
+  {
+    value: 'UNBOUND',
+    label: 'UNBOUND',
+    description: 'No Market Ties',
+  },
+  {
+    value: 'BTC',
+    label: 'BTC/USD',
+    description: 'Bitcoin Volatility',
+  },
+  {
+    value: 'ETH',
+    label: 'ETH/USD',
+    description: 'Ethereum Volatility',
+  },
+] as const;
+

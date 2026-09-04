@@ -64,6 +64,22 @@ export async function createBeast(
 }
 
 /**
+ * Persists an existing or constructed Beast into Firestore and local cache
+ */
+export async function saveBeast(beast: Beast): Promise<Beast> {
+  saveLocalCustomBeast(beast);
+
+  try {
+    const beastDocRef = doc(db, 'beasts', beast.id);
+    await setDoc(beastDocRef, beast);
+  } catch (error) {
+    console.warn('Firestore write error:', error);
+  }
+
+  return beast;
+}
+
+/**
  * Fetches a single beast by ID from Firestore (with local cache fallback)
  */
 export async function getBeastById(id: string): Promise<Beast | null> {

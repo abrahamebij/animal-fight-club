@@ -1,7 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
-import { useAccount, useWriteContract } from 'wagmi';
+import { useWriteContract } from 'wagmi';
 import { parseEther } from 'viem';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { Battle, CombatTurn, Bet } from '@/lib/types';
@@ -127,7 +127,7 @@ export function useBattleWager({
     const chosenBeast = selectedSide === 'beastA' ? battle.beastA : battle.beastB;
 
     requireAuth({
-      actionTitle: place a  STT wager on ,
+      actionTitle: `place a ${betAmount} STT wager on ${chosenBeast.name}`,
       onSuccess: async () => {
         try {
           if (!address || !battle || isOwnerOfFighter) return;
@@ -185,7 +185,7 @@ export function useBattleWager({
 
           setBetPlaced(true);
           toast.success('Wager Confirmed On-Chain!', {
-            description: Staked  STT on .,
+            description: `Staked ${amountNum} STT on ${chosenBeast.name}.`,
           });
           setTimeout(() => setBetPlaced(false), 3000);
         } catch (err: unknown) {
@@ -229,7 +229,7 @@ export function useBattleWager({
       const estimatedPayout = Math.round((userBet.amount + profit) * 100) / 100;
 
       await claimPayoutMutation.mutateAsync({ betId: userBet.id, payoutAmount: estimatedPayout });
-      toast.success(Claimed  STT Payout!, {
+      toast.success(`Claimed ${estimatedPayout} STT Payout!`, {
         description: 'Pari-mutuel winnings transferred to your connected wallet.',
       });
     } catch (err: unknown) {
@@ -242,3 +242,4 @@ export function useBattleWager({
 
   return { placeWager, claimPayout, betPlaced, isClaiming };
 }
+
