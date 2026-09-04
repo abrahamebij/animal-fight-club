@@ -215,7 +215,7 @@ export default function DashboardPage() {
             <div className="dash-metric border border-divider p-4 bg-surface-container-low">
               <span className="text-secondary block text-[10px] uppercase">SOMNIA STT BALANCE</span>
               <span className="font-headline font-extrabold text-2xl text-primary">
-                {balance ? `${formatBalance(balance.value, 18, 2)} ${balance.symbol}` : '0.00 STT'}
+                {formatBalance(balance, 2)}
               </span>
             </div>
           </div>
