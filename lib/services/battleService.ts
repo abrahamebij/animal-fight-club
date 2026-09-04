@@ -180,15 +180,39 @@ export async function placeBet(
   beastPicked: 'beastA' | 'beastB',
   amount: number
 ): Promise<Bet> {
-  const betId = `bet_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  const normalized = bettorAddress.toLowerCase();
+
+  // Check if a bet already exists for this bettor on this battle
+  let existingBet: Bet | null = null;
+  try {
+    const q = query(
+      collection(db, 'bets'),
+      where('battleId', '==', battleId),
+      where('bettorAddress', '==', normalized)
+    );
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      existingBet = snap.docs[0].data() as Bet;
+    }
+  } catch (err) {
+    console.warn('Firestore existing bet check error:', err);
+  }
+
+  if (existingBet && existingBet.beastPicked !== beastPicked) {
+    throw new Error('Cannot wager on both combatants in the same battle.');
+  }
+
+  const betId = existingBet ? existingBet.id : `bet_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  const totalAmount = existingBet ? existingBet.amount + amount : amount;
+
   const newBet: Bet = {
     id: betId,
     battleId,
-    bettorAddress,
+    bettorAddress: normalized,
     beastPicked,
-    amount,
+    amount: totalAmount,
     status: 'active',
-    placedAt: Date.now(),
+    placedAt: existingBet ? existingBet.placedAt : Date.now(),
   };
 
   saveLocalBet(newBet);
@@ -230,13 +254,25 @@ export async function getBetsByBettor(bettorAddress: string): Promise<Bet[]> {
   try {
     const q = query(
       collection(db, 'bets'),
-      where('bettorAddress', '==', bettorAddress)
+      where('bettorAddress', '==', normalized)
     );
     const snap = await getDocs(q);
     const results: Bet[] = [];
     snap.forEach((d) => {
       results.push(d.data() as Bet);
     });
+
+    // Check if any bets were stored under non-normalized address
+    if (results.length === 0 && bettorAddress !== normalized) {
+      const qAlt = query(
+        collection(db, 'bets'),
+        where('bettorAddress', '==', bettorAddress)
+      );
+      const snapAlt = await getDocs(qAlt);
+      snapAlt.forEach((d) => {
+        results.push(d.data() as Bet);
+      });
+    }
 
     if (typeof window !== 'undefined') {
       // Sync local cache with current Firestore bets

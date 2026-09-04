@@ -14,7 +14,8 @@ import {
   FiTerminal,
   FiAlertCircle,
   FiCheck,
-  FiShield
+  FiShield,
+  FiLock
 } from 'react-icons/fi';
 import { useAccount, useWriteContract } from 'wagmi';
 import { parseEther } from 'viem';
@@ -25,7 +26,15 @@ import { formatTimeRemaining } from '@/lib/utils/timer';
 import { ESCROW_ABI } from '@/lib/contracts/escrowAbi';
 import { ESCROW_CONTRACT_CONFIG } from '@/lib/constants/game';
 import { somniaShannon } from '@/lib/config/wagmi';
-import { battleIdToBytes32, sideToEscrowEnum, fetchOnChainBattle, EscrowBattleStatus } from '@/lib/services/escrowService';
+import { 
+  battleIdToBytes32, 
+  sideToEscrowEnum, 
+  fetchOnChainBattle, 
+  fetchOnChainWager,
+  getEscrowPublicClient,
+  EscrowBattleStatus,
+  EscrowSide
+} from '@/lib/services/escrowService';
 import { toast } from 'sonner';
 import Img from '@/components/ui/Img';
 import gsap from 'gsap';
@@ -54,14 +63,23 @@ export default function BattleViewPage() {
     async function loadBattle() {
       if (!battleId) return;
       setLoading(true);
-      const [data, userBets] = await Promise.all([
+      const [data, userBets, onChainWager] = await Promise.all([
         getBattleById(battleId),
         address ? getBetsByBettor(address) : Promise.resolve([]),
+        address ? fetchOnChainWager(battleId, address) : Promise.resolve(null),
       ]);
       if (mounted) {
         setBattle(data);
         const match = userBets.find((b) => b.battleId === battleId);
-        setUserBet(match || null);
+        if (match) {
+          setUserBet(match);
+          setSelectedSide(match.beastPicked);
+        } else if (onChainWager && onChainWager.amount > 0n && onChainWager.side !== EscrowSide.None) {
+          const sideStr = onChainWager.side === EscrowSide.BeastA ? 'beastA' : 'beastB';
+          setSelectedSide(sideStr);
+        } else {
+          setUserBet(null);
+        }
         setLoading(false);
       }
     }
@@ -254,7 +272,21 @@ export default function BattleViewPage() {
     e.preventDefault();
     if (!battle || isOwnerOfFighter) return;
     const amountNum = Number(betAmount);
-    if (isNaN(amountNum) || amountNum <= 0) return;
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error('Invalid Wager Amount', {
+        description: 'Please enter a valid STT amount greater than 0.',
+      });
+      return;
+    }
+
+    // Pre-validation: Verify user has not already placed a wager on this duel
+    if (userBet) {
+      toast.error('Single Wager Limit', {
+        description: 'You have already placed a wager on this match. Each spectator is limited to one wager per duel.',
+        duration: 5000,
+      });
+      return;
+    }
 
     const chosenBeast = selectedSide === 'beastA' ? battle.beastA : battle.beastB;
 
@@ -263,10 +295,15 @@ export default function BattleViewPage() {
       onSuccess: async () => {
         try {
           if (!address || !battle) return;
-          if (isOwnerOfFighter) return;
+          if (isOwnerOfFighter) {
+            toast.error('Combatant Owner Exclusion', {
+              description: 'Combatant owners cannot wager on their own duels.',
+            });
+            return;
+          }
 
           if (ESCROW_CONTRACT_CONFIG.isConfigured) {
-            // Check and ensure the battle is initialized on-chain before placing wager
+            // 1. Check and ensure the battle is initialized on-chain before placing wager
             try {
               const onChain = await fetchOnChainBattle(battle.id);
               if (!onChain || onChain.status === EscrowBattleStatus.Uninitialized) {
@@ -285,7 +322,8 @@ export default function BattleViewPage() {
               console.warn('Auto battle registration on-chain attempt:', regErr);
             }
 
-            await writeContractAsync({
+            // 2. Execute on-chain wager transaction
+            const txHash = await writeContractAsync({
               address: ESCROW_CONTRACT_CONFIG.address,
               abi: ESCROW_ABI,
               functionName: 'placeWager',
@@ -293,8 +331,16 @@ export default function BattleViewPage() {
               value: parseEther(betAmount),
               chainId: somniaShannon.id,
             });
+
+            // 3. Wait for on-chain receipt confirmation
+            const client = getEscrowPublicClient();
+            const receipt = await client.waitForTransactionReceipt({ hash: txHash });
+            if (receipt.status !== 'success') {
+              throw new Error('On-chain wager transaction was reverted.');
+            }
           }
 
+          // 4. ONLY record to Firestore once on-chain transaction is verified successful
           const newBet = await placeBet(battle.id, address, selectedSide, amountNum);
           setUserBet(newBet);
 
@@ -309,8 +355,8 @@ export default function BattleViewPage() {
           });
 
           setBetPlaced(true);
-          toast.success(`Wager Submitted to Escrow!`, {
-            description: `Staked ${amountNum} STT on ${chosenBeast.name}.`,
+          toast.success(`Wager Confirmed On-Chain!`, {
+            description: `Staked ${amountNum} STT on ${chosenBeast.name}. Total wager: ${newBet.amount} STT.`,
             duration: 5000,
           });
 
@@ -327,20 +373,24 @@ export default function BattleViewPage() {
           console.error('Failed to place bet:', err);
           let errorMessage = 'Transaction was cancelled or rejected by network.';
           if (err instanceof Error) {
-            if (err.message.includes('User rejected') || err.message.includes('User denied')) {
+            const msg = err.message || '';
+            if (msg.includes('User rejected') || msg.includes('User denied') || msg.includes('rejected the request')) {
               errorMessage = 'Transaction rejected in wallet.';
-            } else if (err.message.includes('insufficient funds') || err.message.includes('exceeds balance')) {
+            } else if (msg.includes('insufficient funds') || msg.includes('exceeds balance')) {
               errorMessage = 'Insufficient STT balance to cover wager amount + gas.';
-            } else if (err.message.includes('OwnerCannotWagerOnOwnBattle')) {
+            } else if (msg.includes('OwnerCannotWagerOnOwnBattle')) {
               errorMessage = 'Combatant owners cannot wager on their own duels.';
-            } else if (err.message.includes('CannotWagerOnBothSides')) {
-              errorMessage = 'You have already wagered on the opposing combatant.';
-            } else if (err.message.includes('BettingWindowClosed')) {
+            } else if (msg.includes('CannotWagerOnBothSides')) {
+              errorMessage = 'Protocol violation: You have already wagered on the opposing combatant.';
+            } else if (msg.includes('BettingWindowClosed')) {
               errorMessage = 'The 1-hour spectator betting window has expired.';
-            } else if (err.message.includes('ZeroWagerAmount')) {
+            } else if (msg.includes('ZeroWagerAmount')) {
               errorMessage = 'Wager amount must be greater than 0 STT.';
+            } else if (msg.includes('BattleNotPending')) {
+              errorMessage = 'Wagering is closed because this duel has concluded or was cancelled.';
             } else {
-              errorMessage = err.message.slice(0, 100);
+              const firstLine = msg.split('\n')[0].replace(/^Error:\s*/, '');
+              errorMessage = firstLine.length > 100 ? firstLine.slice(0, 100) + '...' : firstLine;
             }
           }
           toast.error('Wager Submission Failed', {
@@ -454,7 +504,7 @@ export default function BattleViewPage() {
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 ${isLive ? 'bg-secondary animate-pulse' : isPending ? 'bg-warning' : 'bg-primary'}`} />
+              <span className={`w-2.5 h-2.5 ${isLive ? 'bg-secondary animate-pulse' : isPending ? 'bg-secondary' : 'bg-primary'}`} />
               <span className="font-bold uppercase">
                 {isLive ? 'LIVE COMBAT FEED' : isPending ? `PENDING BETTING WINDOW (${countdown?.formatted || '60:00'})` : 'COMBAT CONCLUDED'}
               </span>
@@ -558,7 +608,7 @@ export default function BattleViewPage() {
                   <FiTerminal className="w-4 h-4 text-secondary" />
                   <span>LLM COMBAT REASONER</span>
                 </div>
-                <span className="text-warning font-bold">
+                <span className="text-background font-bold">
                   {isLive ? `ROUND ${activeBattle.combatLog.length}` : isPending ? 'WINDOW OPEN' : 'CONCLUDED'}
                 </span>
               </div>
@@ -575,13 +625,13 @@ export default function BattleViewPage() {
                       {lastTurn.combatNarrative}
                     </p>
                     <div className="text-background/60 text-[11px] border-t border-background/10 pt-2">
-                      <span className="text-warning font-bold">AGENT REASONING: </span>
+                      <span className="text-background/90 font-bold">AGENT REASONING: </span>
                       {lastTurn.reasoning}
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-12 font-mono text-xs text-background/60 space-y-2">
-                    <FiClock className="w-8 h-8 mx-auto text-warning" />
+                    <FiClock className="w-8 h-8 mx-auto text-background/80" />
                     <p className="text-sm font-bold text-background">Awaiting Window Expiry</p>
                     <p>Combat will execute turn-by-turn with LLM reasoning when betting window closes.</p>
                   </div>
@@ -603,7 +653,7 @@ export default function BattleViewPage() {
                   </button>
                 ) : (
                   <div className="bg-background/10 border border-background/20 p-3 text-center font-mono text-xs text-background/80 flex items-center justify-center gap-2">
-                    <FiShield className="w-3.5 h-3.5 text-warning flex-shrink-0" />
+                    <FiShield className="w-3.5 h-3.5 text-background/80 flex-shrink-0" />
                     <span>AWAITING COMBATANT OWNER TRIGGER</span>
                   </div>
                 )}
@@ -830,7 +880,7 @@ export default function BattleViewPage() {
             {isOwnerOfFighter ? (
               <div className="p-4 bg-surface-container-low border border-divider space-y-2">
                 <div className="flex items-center gap-2 text-primary font-headline font-bold text-sm uppercase">
-                  <FiAlertCircle className="w-4 h-4 text-warning flex-shrink-0" />
+                  <FiAlertCircle className="w-4 h-4 text-primary flex-shrink-0" />
                   <span>COMBATANT OWNER EXCLUSION</span>
                 </div>
                 <p className="font-mono text-xs text-secondary leading-relaxed">
@@ -890,6 +940,39 @@ export default function BattleViewPage() {
                   </div>
                 )}
               </div>
+            ) : userBet ? (
+              <div className="border border-divider p-5 bg-surface-container-low space-y-4 font-mono text-xs">
+                <div className="flex items-center justify-between border-b border-divider pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <FiCheck className="w-4 h-4 text-primary" />
+                    <span className="font-headline font-bold text-sm uppercase text-primary">WAGER SECURED IN ESCROW</span>
+                  </div>
+                  <span className="px-2 py-0.5 bg-primary text-background text-[10px] font-bold uppercase">
+                    1 BET LIMIT REACHED
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-secondary uppercase">STAKED COMBATANT</span>
+                    <span className="font-bold text-primary text-sm uppercase">
+                      {userBet.beastPicked === 'beastA' ? activeBattle.beastA.name : activeBattle.beastB.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-secondary uppercase">STAKED AMOUNT</span>
+                    <span className="font-bold text-primary text-sm">{userBet.amount} STT</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-secondary uppercase">STATUS</span>
+                    <span className="font-bold text-primary uppercase">ACTIVE ON-CHAIN</span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-background border border-divider text-secondary text-[11px] leading-relaxed">
+                  Your spectator stake of <strong className="text-primary">{userBet.amount} STT</strong> on <strong className="text-primary">{userBet.beastPicked === 'beastA' ? activeBattle.beastA.name : activeBattle.beastB.name}</strong> is locked in the Somnia escrow contract. Each spectator is permitted one wager per duel. Winnings will become claimable upon combat conclusion.
+                </div>
+              </div>
             ) : (
               <form onSubmit={handlePlaceBet} className="space-y-4">
                 <div>
@@ -903,7 +986,7 @@ export default function BattleViewPage() {
                       className={`p-3 font-headline font-bold text-sm uppercase tracking-wider border text-left transition-colors ${
                         selectedSide === 'beastA'
                           ? 'bg-primary text-background border-primary'
-                          : 'bg-surface-container-low text-primary border-divider'
+                          : 'bg-surface-container-low text-primary border-divider hover:border-primary'
                       }`}
                     >
                       {activeBattle.beastA.name}
@@ -915,7 +998,7 @@ export default function BattleViewPage() {
                       className={`p-3 font-headline font-bold text-sm uppercase tracking-wider border text-left transition-colors ${
                         selectedSide === 'beastB'
                           ? 'bg-primary text-background border-primary'
-                          : 'bg-surface-container-low text-primary border-divider'
+                          : 'bg-surface-container-low text-primary border-divider hover:border-primary'
                       }`}
                     >
                       {activeBattle.beastB.name}
