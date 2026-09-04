@@ -33,6 +33,20 @@ export interface Beast {
 
 export type BattleStatus = 'pending' | 'live' | 'completed';
 
+export type ChallengeStatus = 'awaiting_response' | 'accepted' | 'declined';
+
+export interface Challenge {
+  id: string;
+  challengerBeast: Beast;
+  challengedBeast: Beast;
+  challengerAddress: string;
+  challengedAddress: string;
+  status: ChallengeStatus;
+  createdAt: number;
+  respondedAt?: number;
+  battleId?: string;
+}
+
 export interface MarketPulse {
   asset: 'BTC' | 'ETH';
   marketId: string;

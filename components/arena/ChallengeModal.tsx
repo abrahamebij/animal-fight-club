@@ -14,7 +14,7 @@ import {
 } from 'react-icons/fi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { getBeastsByOwner, getAllBeasts } from '@/lib/services/beastService';
-import { createBattle } from '@/lib/services/battleService';
+import { createChallenge } from '@/lib/services/challengeService';
 import { Beast } from '@/lib/types';
 import Img from '@/components/ui/Img';
 import gsap from 'gsap';
@@ -86,15 +86,15 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
     if (!selectedMyBeast || !selectedOpponent) return;
 
     requireAuth({
-      actionTitle: `challenge ${selectedOpponent.name} to a 1-hour arena duel`,
+      actionTitle: `challenge ${selectedOpponent.name} to an arena duel`,
       onSuccess: async () => {
         setIsSubmitting(true);
         try {
-          const battle = await createBattle(selectedMyBeast, selectedOpponent);
+          await createChallenge(selectedMyBeast, selectedOpponent);
           onClose();
-          router.push(`/battle/${battle.id}`);
+          router.push('/dashboard');
         } catch (err) {
-          console.error('Failed to create battle:', err);
+          console.error('Failed to transmit challenge:', err);
           setIsSubmitting(false);
         }
       },
@@ -133,8 +133,8 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
 
         {/* 1-Hour Window Info Banner */}
         <div className="border border-divider bg-surface-container-low p-3 font-mono text-xs text-secondary flex items-center justify-between">
-          <span>WINDOW DURATION: 1 HOUR (3600S)</span>
-          <span className="font-bold text-primary">PUBLIC SPECTATOR BETTING OPENS</span>
+          <span>WINDOW DURATION: 1 HOUR UPON ACCEPTANCE</span>
+          <span className="font-bold text-primary">REQUIRES DEFENDER CONSENT</span>
         </div>
 
         {/* Matchup Duel Stage Selector */}
@@ -245,7 +245,7 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent }: ChallengeMod
           className="w-full py-4 bg-primary text-background font-headline font-extrabold text-xl uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           <FiZap className="w-5 h-5 text-warning" />
-          <span>{isSubmitting ? 'OPENING BATTLE WINDOW...' : 'CONFIRM CHALLENGE // INITIATE 1-HR BETTING WINDOW'}</span>
+          <span>{isSubmitting ? 'TRANSMITTING CHALLENGE...' : 'TRANSMIT FORMAL CHALLENGE // AWAITS DEFENDER ACCEPTANCE'}</span>
         </button>
       </div>
     </div>
