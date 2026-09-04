@@ -130,6 +130,7 @@ export default function CreateBeastPage() {
           const newBeast: Beast = {
             id: `beast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
             name: name.trim().toUpperCase(),
+            description: description.trim() || `${name.trim().toUpperCase()} autonomous combatant.`,
             ownerAddress: address || '0x0000000000000000000000000000000000000000',
             avatarUrl: selectedAvatar || '/beasts/lion.png',
             stats,
@@ -138,6 +139,7 @@ export default function CreateBeastPage() {
             record: { wins: 0, losses: 0 },
             createdAt: Date.now(),
           };
+
 
 
           await createMutation.mutateAsync(newBeast);
