@@ -12,13 +12,18 @@ import {
   FiExternalLink, 
   FiArrowLeft,
   FiTerminal,
-  FiAlertCircle
+  FiAlertCircle,
+  FiCheck
 } from 'react-icons/fi';
-import { useAccount } from 'wagmi';
+import { useAccount, useWriteContract } from 'wagmi';
+import { parseEther } from 'viem';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
-import { getBattleById, placeBet } from '@/lib/services/battleService';
-import { Battle, CombatTurn } from '@/lib/types';
+import { getBattleById, placeBet, getBetsByBettor, claimBetPayout } from '@/lib/services/battleService';
+import { Battle, CombatTurn, Bet } from '@/lib/types';
 import { formatTimeRemaining } from '@/lib/utils/timer';
+import { ESCROW_ABI } from '@/lib/contracts/escrowAbi';
+import { ESCROW_CONTRACT_CONFIG } from '@/lib/constants/game';
+import { battleIdToBytes32, sideToEscrowEnum } from '@/lib/services/escrowService';
 import { toast } from 'sonner';
 import Img from '@/components/ui/Img';
 import gsap from 'gsap';
@@ -27,8 +32,11 @@ export default function BattleViewPage() {
   const params = useParams();
   const battleId = (params?.id as string) || '';
   const { address } = useAccount();
+  const { writeContractAsync } = useWriteContract();
 
   const [battle, setBattle] = useState<Battle | null>(null);
+  const [userBet, setUserBet] = useState<Bet | null>(null);
+  const [isClaiming, setIsClaiming] = useState(false);
   const [loading, setLoading] = useState(true);
   const [timeNow, setTimeNow] = useState(Date.now());
 
@@ -44,9 +52,14 @@ export default function BattleViewPage() {
     async function loadBattle() {
       if (!battleId) return;
       setLoading(true);
-      const data = await getBattleById(battleId);
+      const [data, userBets] = await Promise.all([
+        getBattleById(battleId),
+        address ? getBetsByBettor(address) : Promise.resolve([]),
+      ]);
       if (mounted) {
         setBattle(data);
+        const match = userBets.find((b) => b.battleId === battleId);
+        setUserBet(match || null);
         setLoading(false);
       }
     }
@@ -54,7 +67,7 @@ export default function BattleViewPage() {
     return () => {
       mounted = false;
     };
-  }, [battleId]);
+  }, [battleId, address]);
 
   // Betting state for spectators
   const [selectedSide, setSelectedSide] = useState<'beastA' | 'beastB'>('beastA');
@@ -230,7 +243,19 @@ export default function BattleViewPage() {
         try {
           if (!address) return;
           if (isOwnerOfFighter) return;
-          await placeBet(activeBattle.id, address, selectedSide, amountNum);
+
+          if (ESCROW_CONTRACT_CONFIG.isConfigured) {
+            await writeContractAsync({
+              address: ESCROW_CONTRACT_CONFIG.address,
+              abi: ESCROW_ABI,
+              functionName: 'placeWager',
+              args: [battleIdToBytes32(activeBattle.id), sideToEscrowEnum(selectedSide)],
+              value: parseEther(betAmount),
+            });
+          }
+
+          const newBet = await placeBet(activeBattle.id, address, selectedSide, amountNum);
+          setUserBet(newBet);
 
           // Update local battle pool state
           setBattle((prev) => {
@@ -265,6 +290,40 @@ export default function BattleViewPage() {
         }
       },
     });
+  };
+
+  const winningPool = activeBattle.winner === 'beastA' ? (activeBattle.totalPoolA || 0) : (activeBattle.totalPoolB || 0);
+  const losingPool = activeBattle.winner === 'beastA' ? (activeBattle.totalPoolB || 0) : (activeBattle.totalPoolA || 0);
+  const profit = userBet && winningPool > 0 ? (userBet.amount * losingPool) / winningPool : 0;
+  const estimatedPayout = userBet ? Math.round((userBet.amount + profit) * 100) / 100 : 0;
+
+  const handleClaimPayout = async () => {
+    if (!userBet || !address || userBet.status === 'claimed') return;
+    setIsClaiming(true);
+    try {
+      if (ESCROW_CONTRACT_CONFIG.isConfigured) {
+        await writeContractAsync({
+          address: ESCROW_CONTRACT_CONFIG.address,
+          abi: ESCROW_ABI,
+          functionName: 'claimPayout',
+          args: [battleIdToBytes32(activeBattle.id)],
+        });
+      }
+
+      await claimBetPayout(userBet.id, estimatedPayout);
+      setUserBet((prev) => prev ? { ...prev, status: 'claimed', payoutAmount: estimatedPayout } : null);
+      toast.success(`Claimed ${estimatedPayout} STT Payout!`, {
+        description: 'Pari-mutuel winnings transferred to your connected wallet.',
+        duration: 5000,
+      });
+    } catch (err) {
+      console.error('Failed to claim payout:', err);
+      toast.error('Payout Claim Failed', {
+        description: err instanceof Error ? err.message : 'Please try again.',
+      });
+    } finally {
+      setIsClaiming(false);
+    }
   };
 
   if (loading) {
@@ -691,7 +750,7 @@ export default function BattleViewPage() {
               </div>
             </div>
 
-            {/* Wagering Form or Owner Exclusion Notice */}
+            {/* Wagering Form, Outcome Claim, or Owner Exclusion Notice */}
             {isOwnerOfFighter ? (
               <div className="p-4 bg-surface-container-low border border-divider space-y-2">
                 <div className="flex items-center gap-2 text-primary font-headline font-bold text-sm uppercase">
@@ -701,6 +760,59 @@ export default function BattleViewPage() {
                 <p className="font-mono text-xs text-secondary leading-relaxed">
                   You own a combatant in this duel (<span className="text-primary font-bold">{activeBattle.beastA.ownerAddress?.toLowerCase() === address?.toLowerCase() ? activeBattle.beastA.name : activeBattle.beastB.name}</span>). Protocol rules prohibit beast owners from placing spectator wagers on their own matches.
                 </p>
+              </div>
+            ) : isCompleted ? (
+              <div className="space-y-4">
+                {userBet ? (
+                  <div className="border border-divider p-4 bg-surface-container-low space-y-4 font-mono text-xs">
+                    <div className="flex items-center justify-between border-b border-divider pb-2">
+                      <span className="text-secondary uppercase">YOUR SPECTATOR WAGER</span>
+                      <span className="font-bold text-primary">{userBet.amount} STT</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-secondary uppercase">PICKED VICTOR</span>
+                      <span className="font-bold text-primary uppercase">
+                        {userBet.beastPicked === 'beastA' ? activeBattle.beastA.name : activeBattle.beastB.name}
+                      </span>
+                    </div>
+
+                    {userBet.beastPicked === activeBattle.winner ? (
+                      <div className="space-y-3 pt-2">
+                        <div className="p-3 bg-primary/10 border border-primary text-primary flex items-center justify-between">
+                          <span className="font-headline font-bold uppercase">OUTCOME: WON</span>
+                          <span className="font-bold">{estimatedPayout} STT PAYOUT</span>
+                        </div>
+
+                        {userBet.status === 'claimed' ? (
+                          <div className="p-3 bg-surface-container-low border border-divider text-center text-secondary uppercase font-bold">
+                            PAYOUT CLAIMED & TRANSFERRED
+                          </div>
+                        ) : (
+                          <button
+                            onClick={handleClaimPayout}
+                            disabled={isClaiming}
+                            className="w-full py-3.5 bg-primary text-background font-headline font-extrabold text-base uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-50 flex items-center justify-center gap-2"
+                          >
+                            <FiCheck className="w-4 h-4" />
+                            <span>{isClaiming ? 'CLAIMING FROM ESCROW...' : `CLAIM ${estimatedPayout} STT PAYOUT`}</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-surface-container-low border border-divider text-secondary space-y-1">
+                        <span className="font-headline font-bold text-sm block uppercase text-primary">OUTCOME: LOSS</span>
+                        <p className="text-[11px] leading-relaxed">
+                          Your wager was distributed proportionally to the winning pool according to pari-mutuel protocol rules.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-6 border border-divider bg-surface-container-low text-center space-y-2 font-mono text-xs text-secondary">
+                    <span className="font-headline font-bold text-sm uppercase text-primary block">WAGERING RESOLVED</span>
+                    <p>This duel has concluded. Spectator betting is closed for this match.</p>
+                  </div>
+                )}
               </div>
             ) : (
               <form onSubmit={handlePlaceBet} className="space-y-4">

@@ -237,3 +237,30 @@ export async function getAllBets(): Promise<Bet[]> {
 
   return results;
 }
+
+/**
+ * Marks a bet as claimed and saves the payout amount
+ */
+export async function claimBetPayout(
+  betId: string,
+  payoutAmount: number
+): Promise<void> {
+  const localBets = getLocalBets();
+  const target = localBets.find((b) => b.id === betId);
+  if (target) {
+    target.status = 'claimed';
+    target.payoutAmount = payoutAmount;
+    saveLocalBet(target);
+  }
+
+  try {
+    const betDocRef = doc(db, 'bets', betId);
+    await updateDoc(betDocRef, {
+      status: 'claimed',
+      payoutAmount,
+    });
+  } catch (error) {
+    console.warn('Error updating claimed bet in Firestore:', error);
+  }
+}
+

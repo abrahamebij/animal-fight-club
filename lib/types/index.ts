@@ -100,8 +100,9 @@ export interface Bet {
   bettorAddress: string;
   beastPicked: 'beastA' | 'beastB';
   amount: number;
-  status: 'active' | 'won' | 'lost' | 'refunded';
+  status: 'active' | 'won' | 'lost' | 'refunded' | 'claimed';
   placedAt: number;
+  payoutAmount?: number;
 }
 
 export interface LeaderboardEntry {
