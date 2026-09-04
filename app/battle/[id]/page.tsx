@@ -202,6 +202,7 @@ export default function BattleViewPage() {
               overrideHpB={replayHpB}
               replayReset={replayReset}
               suppressVictory={isReplayActive && !isFinalTurn}
+              backgroundImageUrl="/boxing-ring.webp"
             />
 
             {canReplay && (

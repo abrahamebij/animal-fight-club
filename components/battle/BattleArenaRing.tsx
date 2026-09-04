@@ -335,122 +335,128 @@ export function BattleArenaRing({
       {/* ── BOXING RING CANVAS ─────────────────────────────────────────────────────── */}
       <div
         className="relative w-full overflow-hidden border-2 border-divider bg-black select-none"
-        style={{ aspectRatio: '16 / 8.5' }}
+        style={{ aspectRatio: '16 / 9' }}
       >
-        {/* Arena stadium background with subtle atmospheric haze */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0d] via-[#101015] to-[#08080a]" />
-
         {/* Custom background image if provided */}
-        {backgroundImageUrl && (
+        {backgroundImageUrl ? (
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-85 z-0"
+            className="absolute inset-0 bg-cover bg-center z-0"
             style={{ backgroundImage: `url(${backgroundImageUrl})` }}
           />
-        )}
+        ) : (
+          <>
+            {/* Arena stadium background with subtle atmospheric haze */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0d] via-[#101015] to-[#08080a]" />
 
-        {/* Overhead arena spotlights illuminating the fighting ring */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse 70% 65% at 50% 35%, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.03) 50%, transparent 75%)',
-          }}
-        />
-        <div
-          className="absolute top-0 left-1/4 w-1/2 h-full pointer-events-none opacity-20"
-          style={{
-            background: 'conic-gradient(from 180deg at 50% 0%, transparent 45deg, rgba(255,255,255,0.12) 65deg, rgba(255,255,255,0.12) 115deg, transparent 135deg)',
-          }}
-        />
+            {/* Overhead arena spotlights illuminating the fighting ring */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'radial-gradient(ellipse 70% 65% at 50% 35%, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.03) 50%, transparent 75%)',
+              }}
+            />
+            <div
+              className="absolute top-0 left-1/4 w-1/2 h-full pointer-events-none opacity-20"
+              style={{
+                background: 'conic-gradient(from 180deg at 50% 0%, transparent 45deg, rgba(255,255,255,0.12) 65deg, rgba(255,255,255,0.12) 115deg, transparent 135deg)',
+              }}
+            />
 
-        {/* ── 3D ELEVATED RING CANVAS PLATFORM ── */}
-        {/* Ring apron skirt (front face of elevated stage) */}
-        <div className="absolute bottom-0 left-0 right-0 h-[12%] bg-[#121216] border-t-2 border-[#3f3f46] shadow-2xl flex items-center justify-between px-6 font-mono text-[10px] text-zinc-500 uppercase tracking-widest z-10">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-            <span className="font-bold text-zinc-300">RED CORNER</span>
-          </div>
-          <span className="hidden sm:inline font-headline tracking-widest text-zinc-600 font-extrabold text-xs">
-            SOMNIA SHANNON TESTNET · APEX ARENA RING
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-zinc-300">BLUE CORNER</span>
-            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-          </div>
-        </div>
+            {/* ── 3D ELEVATED RING CANVAS PLATFORM ── */}
+            {/* Ring apron skirt (front face of elevated stage) */}
+            <div className="absolute bottom-0 left-0 right-0 h-[12%] bg-[#121216] border-t-2 border-[#3f3f46] shadow-2xl flex items-center justify-between px-6 font-mono text-[10px] text-zinc-500 uppercase tracking-widest z-10">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+                <span className="font-bold text-zinc-300">RED CORNER</span>
+              </div>
+              <span className="hidden sm:inline font-headline tracking-widest text-zinc-600 font-extrabold text-xs">
+                SOMNIA SHANNON TESTNET · APEX ARENA RING
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-zinc-300">BLUE CORNER</span>
+                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+              </div>
+            </div>
 
-        {/* Ring Canvas Surface (textured mat floor) */}
-        <div 
-          className="absolute bottom-[11%] left-[5%] right-[5%] top-[16%] pointer-events-none"
-          style={{
-            background: 'linear-gradient(180deg, #18181d 0%, #202028 55%, #252530 100%)',
-            boxShadow: 'inset 0 0 60px rgba(0,0,0,0.85), 0 10px 30px rgba(0,0,0,0.9)',
-            border: '1px solid rgba(255,255,255,0.09)',
-          }}
-        >
-          {/* Canvas texture weave lines */}
-          <div
-            className="absolute inset-0 opacity-[0.07]"
-            style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.8) 20px, rgba(255,255,255,0.8) 21px), repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,255,255,0.8) 20px, rgba(255,255,255,0.8) 21px)',
-            }}
-          />
+            {/* Ring Canvas Surface (textured mat floor) */}
+            <div 
+              className="absolute bottom-[11%] left-[5%] right-[5%] top-[16%] pointer-events-none"
+              style={{
+                background: 'linear-gradient(180deg, #18181d 0%, #202028 55%, #252530 100%)',
+                boxShadow: 'inset 0 0 60px rgba(0,0,0,0.85), 0 10px 30px rgba(0,0,0,0.9)',
+                border: '1px solid rgba(255,255,255,0.09)',
+              }}
+            >
+              {/* Canvas texture weave lines */}
+              <div
+                className="absolute inset-0 opacity-[0.07]"
+                style={{
+                  backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,255,255,0.8) 20px, rgba(255,255,255,0.8) 21px), repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,255,255,0.8) 20px, rgba(255,255,255,0.8) 21px)',
+                }}
+              />
 
-          {/* Inner ring perimeter line (boundary line inside ring) */}
-          <div className="absolute inset-[6%] border border-red-500/25 pointer-events-none" />
-          <div className="absolute inset-[6.5%] border border-white/10 pointer-events-none" />
+              {/* Inner ring perimeter line (boundary line inside ring) */}
+              <div className="absolute inset-[6%] border border-red-500/25 pointer-events-none" />
+              <div className="absolute inset-[6.5%] border border-white/10 pointer-events-none" />
 
-          {/* Center ring canvas logo / combat insignia */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none opacity-20">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border border-white/40 flex items-center justify-center">
-              <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border border-dashed border-white/50 flex items-center justify-center">
-                <span className="font-headline font-black text-2xl sm:text-3xl text-white tracking-tighter">
-                  AFC
+              {/* Center ring canvas logo / combat insignia */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none opacity-20">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border border-white/40 flex items-center justify-center">
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full border border-dashed border-white/50 flex items-center justify-center">
+                    <span className="font-headline font-black text-2xl sm:text-3xl text-white tracking-tighter">
+                      AFC
+                    </span>
+                  </div>
+                </div>
+                <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/70 mt-1">
+                  FIGHT CLUB
                 </span>
               </div>
             </div>
-            <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/70 mt-1">
-              FIGHT CLUB
-            </span>
-          </div>
-        </div>
 
-        {/* ── BACK RING ROPES (Behind Fighters for true 3D spatial depth) ── */}
-        {[26, 40, 54, 68].map((topPct, i) => (
-          <div
-            key={`back-rope-${i}`}
-            className="absolute pointer-events-none"
-            style={{
-              top: `${topPct}%`,
-              left: '8%',
-              right: '8%',
-              height: '3px',
-              background: 'linear-gradient(90deg, #333 0%, #666 20%, #888 50%, #666 80%, #333 100%)',
-              opacity: 0.45,
-            }}
-          />
-        ))}
+            {/* ── BACK RING ROPES (Behind Fighters for true 3D spatial depth) ── */}
+            {[26, 40, 54, 68].map((topPct, i) => (
+              <div
+                key={`back-rope-${i}`}
+                className="absolute pointer-events-none"
+                style={{
+                  top: `${topPct}%`,
+                  left: '8%',
+                  right: '8%',
+                  height: '3px',
+                  background: 'linear-gradient(90deg, #333 0%, #666 20%, #888 50%, #666 80%, #333 100%)',
+                  opacity: 0.45,
+                }}
+              />
+            ))}
 
-        {/* ── BACK CORNER POSTS ── */}
-        <div 
-          className="absolute pointer-events-none"
-          style={{ top: '14%', left: '8%', width: '10px', height: '62%', transform: 'translateX(-50%)' }}
-        >
-          <div className="w-full h-full bg-gradient-to-r from-[#1a1a1a] via-[#444] to-[#1a1a1a] border-x border-white/10" />
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-zinc-600 border border-white/30" />
-        </div>
-        <div 
-          className="absolute pointer-events-none"
-          style={{ top: '14%', right: '8%', width: '10px', height: '62%', transform: 'translateX(50%)' }}
-        >
-          <div className="w-full h-full bg-gradient-to-r from-[#1a1a1a] via-[#444] to-[#1a1a1a] border-x border-white/10" />
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-zinc-600 border border-white/30" />
-        </div>
+            {/* ── BACK CORNER POSTS ── */}
+            <div 
+              className="absolute pointer-events-none"
+              style={{ top: '14%', left: '8%', width: '10px', height: '62%', transform: 'translateX(-50%)' }}
+            >
+              <div className="w-full h-full bg-gradient-to-r from-[#1a1a1a] via-[#444] to-[#1a1a1a] border-x border-white/10" />
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-zinc-600 border border-white/30" />
+            </div>
+            <div 
+              className="absolute pointer-events-none"
+              style={{ top: '14%', right: '8%', width: '10px', height: '62%', transform: 'translateX(50%)' }}
+            >
+              <div className="w-full h-full bg-gradient-to-r from-[#1a1a1a] via-[#444] to-[#1a1a1a] border-x border-white/10" />
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-zinc-600 border border-white/30" />
+            </div>
+          </>
+        )}
 
         {/* ── FIGHTER A (Red Corner / Alpha) ── */}
         <div
           ref={figARef}
           className="absolute z-10"
-          style={{ left: '18%', bottom: '11%', width: 'clamp(72px, 14%, 120px)' }}
+          style={{
+            left: backgroundImageUrl ? '22%' : '18%',
+            bottom: backgroundImageUrl ? '22%' : '11%',
+            width: 'clamp(70px, 13%, 115px)',
+          }}
         >
           <div className="w-3/4 h-2.5 bg-black/60 rounded-full blur-[2px] mx-auto translate-y-1" />
           <div
@@ -465,7 +471,11 @@ export function BattleArenaRing({
         <div
           ref={figBRef}
           className="absolute z-10"
-          style={{ right: '18%', bottom: '11%', width: 'clamp(72px, 14%, 120px)' }}
+          style={{
+            right: backgroundImageUrl ? '22%' : '18%',
+            bottom: backgroundImageUrl ? '22%' : '11%',
+            width: 'clamp(70px, 13%, 115px)',
+          }}
         >
           <div className="w-3/4 h-2.5 bg-black/60 rounded-full blur-[2px] mx-auto translate-y-1" />
           <div
@@ -476,101 +486,94 @@ export function BattleArenaRing({
           <FighterFigure avatarUrl={battle.beastB.avatarUrl} clipId={clipIdB} flipped={true} gloveColor="#2563eb" />
         </div>
 
-        {/* ── FRONT RING ROPES (In front of fighters, authentic boxing ring) ── */}
-        {[24, 38, 52, 66].map((topPct, i) => {
-          const ropeGradients = [
-            'linear-gradient(90deg, #991b1b 0%, #ef4444 20%, #fca5a5 50%, #ef4444 80%, #991b1b 100%)',
-            'linear-gradient(90deg, #555 0%, #fff 20%, #fff 50%, #fff 80%, #555 100%)',
-            'linear-gradient(90deg, #1e3a8a 0%, #3b82f6 20%, #93c5fd 50%, #3b82f6 80%, #1e3a8a 100%)',
-            'linear-gradient(90deg, #991b1b 0%, #ef4444 20%, #fca5a5 50%, #ef4444 80%, #991b1b 100%)',
-          ];
-          return (
+        {/* ── FRONT RING ROPES & TURNBUCKLES (Only if no custom background image) ── */}
+        {!backgroundImageUrl && (
+          <>
+            {[24, 38, 52, 66].map((topPct, i) => {
+              const ropeGradients = [
+                'linear-gradient(90deg, #991b1b 0%, #ef4444 20%, #fca5a5 50%, #ef4444 80%, #991b1b 100%)',
+                'linear-gradient(90deg, #555 0%, #fff 20%, #fff 50%, #fff 80%, #555 100%)',
+                'linear-gradient(90deg, #1e3a8a 0%, #3b82f6 20%, #93c5fd 50%, #3b82f6 80%, #1e3a8a 100%)',
+                'linear-gradient(90deg, #991b1b 0%, #ef4444 20%, #fca5a5 50%, #ef4444 80%, #991b1b 100%)',
+              ];
+              return (
+                <div
+                  key={`front-rope-${i}`}
+                  className="absolute z-20 pointer-events-none"
+                  style={{
+                    top: `${topPct}%`,
+                    left: '6%',
+                    right: '6%',
+                    height: '4px',
+                    borderRadius: 9999,
+                    background: ropeGradients[i],
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.6), 0 0 6px rgba(255,255,255,0.15)',
+                  }}
+                />
+              );
+            })}
+
+            {/* Vertical rope spacers / straps */}
+            {['32%', '68%'].map((leftPos, idx) => (
+              <div
+                key={`rope-strap-${idx}`}
+                className="absolute z-20 pointer-events-none w-2 bg-neutral border border-black/50"
+                style={{
+                  left: leftPos,
+                  top: '24%',
+                  height: '42%',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                }}
+              />
+            ))}
+
+            {/* LEFT CORNER POST (Red Corner) */}
             <div
-              key={`front-rope-${i}`}
-              className="absolute z-20 pointer-events-none"
-              style={{
-                top: `${topPct}%`,
-                left: '6%',
-                right: '6%',
-                height: '4px',
-                borderRadius: 9999,
-                background: ropeGradients[i],
-                boxShadow: '0 2px 4px rgba(0,0,0,0.6), 0 0 6px rgba(255,255,255,0.15)',
-              }}
-            />
-          );
-        })}
+              className="absolute z-30 pointer-events-none flex flex-col items-center"
+              style={{ top: '12%', left: '6%', transform: 'translateX(-50%)', height: '77%' }}
+            >
+              <div className="w-5 h-5 rounded-full bg-red-600 border-2 border-white/60 shadow-lg mb-1" />
+              <div 
+                className="w-5 flex-1 rounded-sm shadow-2xl relative flex flex-col justify-between py-2 items-center"
+                style={{
+                  background: 'linear-gradient(90deg, #7f1d1d 0%, #dc2626 50%, #991b1b 100%)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                }}
+              >
+                {[0.12, 0.35, 0.58, 0.82].map((_, idx) => (
+                  <div key={idx} className="w-7 h-1.5 bg-zinc-300 border border-black rounded-sm shadow-sm" />
+                ))}
+                <span className="font-headline font-extrabold text-[8px] text-white tracking-widest [writing-mode:vertical-lr] uppercase">
+                  RED CORNER
+                </span>
+              </div>
+              <div className="w-4 h-3 bg-zinc-700 border border-zinc-500 mt-0.5" />
+            </div>
 
-        {/* Vertical rope spacers / straps (clamps holding the 4 ropes together in parallel) */}
-        {['32%', '68%'].map((leftPos, idx) => (
-          <div
-            key={`rope-strap-${idx}`}
-            className="absolute z-20 pointer-events-none w-2 bg-neutral border border-black/50"
-            style={{
-              left: leftPos,
-              top: '24%',
-              height: '42%',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
-            }}
-          />
-        ))}
-
-        {/* ── MAIN FRONT CORNER POSTS WITH PADDED TURNBUCKLES ── */}
-        {/* LEFT CORNER POST (Red Corner) */}
-        <div
-          className="absolute z-30 pointer-events-none flex flex-col items-center"
-          style={{ top: '12%', left: '6%', transform: 'translateX(-50%)', height: '77%' }}
-        >
-          {/* Post top cap */}
-          <div className="w-5 h-5 rounded-full bg-red-600 border-2 border-white/60 shadow-lg mb-1" />
-          
-          {/* Padded Turnbuckle Cushion */}
-          <div 
-            className="w-5 flex-1 rounded-sm shadow-2xl relative flex flex-col justify-between py-2 items-center"
-            style={{
-              background: 'linear-gradient(90deg, #7f1d1d 0%, #dc2626 50%, #991b1b 100%)',
-              border: '1px solid rgba(255,255,255,0.3)',
-            }}
-          >
-            {[0.12, 0.35, 0.58, 0.82].map((_, idx) => (
-              <div key={idx} className="w-7 h-1.5 bg-zinc-300 border border-black rounded-sm shadow-sm" />
-            ))}
-            <span className="font-headline font-extrabold text-[8px] text-white tracking-widest [writing-mode:vertical-lr] uppercase">
-              RED CORNER
-            </span>
-          </div>
-
-          {/* Post base into apron */}
-          <div className="w-4 h-3 bg-zinc-700 border border-zinc-500 mt-0.5" />
-        </div>
-
-        {/* RIGHT CORNER POST (Blue Corner) */}
-        <div
-          className="absolute z-30 pointer-events-none flex flex-col items-center"
-          style={{ top: '12%', right: '6%', transform: 'translateX(50%)', height: '77%' }}
-        >
-          {/* Post top cap */}
-          <div className="w-5 h-5 rounded-full bg-blue-600 border-2 border-white/60 shadow-lg mb-1" />
-          
-          {/* Padded Turnbuckle Cushion */}
-          <div 
-            className="w-5 flex-1 rounded-sm shadow-2xl relative flex flex-col justify-between py-2 items-center"
-            style={{
-              background: 'linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #1d4ed8 100%)',
-              border: '1px solid rgba(255,255,255,0.3)',
-            }}
-          >
-            {[0.12, 0.35, 0.58, 0.82].map((_, idx) => (
-              <div key={idx} className="w-7 h-1.5 bg-zinc-300 border border-black rounded-sm shadow-sm" />
-            ))}
-            <span className="font-headline font-extrabold text-[8px] text-white tracking-widest [writing-mode:vertical-lr] uppercase">
-              BLUE CORNER
-            </span>
-          </div>
-
-          {/* Post base into apron */}
-          <div className="w-4 h-3 bg-zinc-700 border border-zinc-500 mt-0.5" />
-        </div>
+            {/* RIGHT CORNER POST (Blue Corner) */}
+            <div
+              className="absolute z-30 pointer-events-none flex flex-col items-center"
+              style={{ top: '12%', right: '6%', transform: 'translateX(50%)', height: '77%' }}
+            >
+              <div className="w-5 h-5 rounded-full bg-blue-600 border-2 border-white/60 shadow-lg mb-1" />
+              <div 
+                className="w-5 flex-1 rounded-sm shadow-2xl relative flex flex-col justify-between py-2 items-center"
+                style={{
+                  background: 'linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #1d4ed8 100%)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                }}
+              >
+                {[0.12, 0.35, 0.58, 0.82].map((_, idx) => (
+                  <div key={idx} className="w-7 h-1.5 bg-zinc-300 border border-black rounded-sm shadow-sm" />
+                ))}
+                <span className="font-headline font-extrabold text-[8px] text-white tracking-widest [writing-mode:vertical-lr] uppercase">
+                  BLUE CORNER
+                </span>
+              </div>
+              <div className="w-4 h-3 bg-zinc-700 border border-zinc-500 mt-0.5" />
+            </div>
+          </>
+        )}
 
         {/* LIVE badge */}
         {isLive && (
