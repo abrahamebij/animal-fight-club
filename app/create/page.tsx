@@ -6,7 +6,7 @@ import { FiPlusSquare } from 'react-icons/fi';
 import { useAccount } from 'wagmi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
 import { RouteGuard } from '@/components/wallet/RouteGuard';
-import { STAT_BUDGET, AVATAR_PRESETS } from '@/lib/constants/game';
+import { STAT_BUDGET } from '@/lib/constants/game';
 import { BeastStats, BoundAsset, Beast } from '@/lib/types';
 import { uploadImageToImgBB } from '@/lib/services/imageUploadService';
 import { useCreateBeastMutation } from '@/hooks/useBeasts';
@@ -15,6 +15,7 @@ import { StepAttributes } from '@/components/create/StepAttributes';
 import { StepPerks } from '@/components/create/StepPerks';
 import { StepDreamDex } from '@/components/create/StepDreamDex';
 import { toast } from 'sonner';
+import Img from '@/components/ui/Img';
 import gsap from 'gsap';
 
 export default function CreateBeastPage() {
@@ -25,7 +26,7 @@ export default function CreateBeastPage() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState<string>(AVATAR_PRESETS[0].imageUrl);
+  const [selectedAvatar, setSelectedAvatar] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -51,7 +52,8 @@ export default function CreateBeastPage() {
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
       tl.from('.forge-badge', { opacity: 0, y: -12, duration: 0.4 })
         .from('.forge-title', { opacity: 0, y: 28, duration: 0.55 }, '-=0.2')
-        .from('.forge-desc', { opacity: 0, y: 18, duration: 0.4 }, '-=0.2');
+        .from('.forge-desc', { opacity: 0, y: 18, duration: 0.4 }, '-=0.2')
+        .from('.forge-hero-img', { opacity: 0, scale: 0.96, x: 20, duration: 0.6, ease: 'power3.out' }, '-=0.4');
     }, headerRef);
     return () => ctx.revert();
   }, []);
@@ -123,6 +125,10 @@ export default function CreateBeastPage() {
       toast.error('Name required', { description: 'Please enter a name for your beast.' });
       return;
     }
+    if (!selectedAvatar) {
+      toast.error('Avatar required', { description: 'Please upload an avatar image for your beast.' });
+      return;
+    }
 
     requireAuth({
       actionTitle: `forge ${name.toUpperCase()}`,
@@ -133,7 +139,7 @@ export default function CreateBeastPage() {
             name: name.trim().toUpperCase(),
             description: description.trim() || `${name.trim().toUpperCase()} autonomous combatant.`,
             ownerAddress: address || '0x0000000000000000000000000000000000000000',
-            avatarUrl: selectedAvatar || AVATAR_PRESETS[0].imageUrl,
+            avatarUrl: selectedAvatar,
             stats,
             perks: selectedPerks,
             boundAsset: boundAsset === 'UNBOUND' ? null : boundAsset,
@@ -155,17 +161,25 @@ export default function CreateBeastPage() {
     <RouteGuard routeName="GENETIC FORGE">
       <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
         <section ref={headerRef} className="border-b border-divider bg-background pt-8 pb-8">
-          <div className="max-w-[1440px] mx-auto px-4 lg:px-10 space-y-3">
-            <div className="forge-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider">
-              <span className="w-2 h-2 bg-secondary" />
-              <span>GENETIC FORGE</span>
+          <div className="max-w-[1440px] mx-auto px-4 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-4">
+              <div className="forge-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
+                <span className="w-2 h-2 bg-secondary" />
+                <span>GENETIC FORGE</span>
+              </div>
+              <h1 className="forge-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
+                FORGE COMBATANT
+              </h1>
+              <p className="forge-desc font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
+                Construct an autonomous combat agent from baseline genetic parameters. Allocate 20 stat points, select up to 2 tactical perks, and bind to real-time DreamDEX market odds.
+              </p>
             </div>
-            <h1 className="forge-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
-              FORGE COMBATANT
-            </h1>
-            <p className="forge-desc font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
-              Construct an autonomous combat agent from baseline genetic parameters. Allocate 20 stat points, select up to 2 tactical perks, and bind to real-time DreamDEX market odds.
-            </p>
+
+            <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              <div className="forge-hero-img w-full">
+                <Img src="/forge-hero.png" alt="Genetic Forge Hero" />
+              </div>
+            </div>
           </div>
         </section>
 
