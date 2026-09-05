@@ -132,6 +132,7 @@ export interface BettorLeaderboardEntry {
 
 export interface LiveEventMarket {
   marketId: string;
+  marketAddress?: string;
   pool: string;
   symbol: string;
   asset: 'BTC' | 'ETH';

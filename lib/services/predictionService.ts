@@ -75,6 +75,13 @@ export const BINARY_POOL_ABI = [
     ],
     stateMutability: 'payable',
   },
+  {
+    type: 'function',
+    name: 'marketExpiryNs',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint64' }],
+    stateMutability: 'view',
+  },
 ] as const;
 
 /**
@@ -182,7 +189,7 @@ export async function placePredictionOrder(
   // Query on-chain status to confirm status === 1 (Trading). Never rely on stale client cache.
   try {
     const readClient = new SomniaMarkets({
-      indexerUrl: process.env.DREAMDEX_INDEXER_URL || process.env.NEXT_PUBLIC_DREAMDEX_INDEXER_URL || 'https://indexer.testnet.somnia.network/v1/graphql',
+      indexerUrl: process.env.DREAMDEX_INDEXER_URL || process.env.NEXT_PUBLIC_DREAMDEX_INDEXER_URL || 'https://dev.smk.somnia.host/v1/graphql',
       chain: somniaShannon,
       addresses: SOMNIA_TESTNET_ADDRESSES,
     });
@@ -199,8 +206,34 @@ export async function placePredictionOrder(
 
   const rawStake = parseUnits(stakeAmount.toString(), 6);
 
-  // 2. CHECK & HANDLE tUSDC ALLOWANCE TO THE POOL
-  const poolAddress = market.pool as `0x${string}`;
+  // 2. RESOLVE REAL POOL ADDRESS & HANDLE tUSDC ALLOWANCE
+  let poolAddress = market.pool as `0x${string}`;
+  if (
+    (!poolAddress || poolAddress.toLowerCase() === DREAMDEX_CONTRACTS.BinaryMarketsModule.toLowerCase()) &&
+    market.marketAddress
+  ) {
+    try {
+      const onchainPool = await publicClient.readContract({
+        address: market.marketAddress as `0x${string}`,
+        abi: [
+          {
+            type: 'function',
+            name: 'pool',
+            inputs: [],
+            outputs: [{ name: '', type: 'address' }],
+            stateMutability: 'view',
+          },
+        ],
+        functionName: 'pool',
+      });
+      if (onchainPool && onchainPool !== zeroAddress) {
+        poolAddress = onchainPool as `0x${string}`;
+      }
+    } catch (e) {
+      console.warn('Failed to resolve onchain pool from market contract:', e);
+    }
+  }
+
   const currentAllowance = await publicClient.readContract({
     address: TUSDC_ADDRESS,
     abi: TUSDC_ABI,
@@ -228,7 +261,7 @@ export async function placePredictionOrder(
   try {
     const exchange = new SomniaMarkets({
       chain: somniaShannon,
-      indexerUrl: process.env.DREAMDEX_INDEXER_URL || process.env.NEXT_PUBLIC_DREAMDEX_INDEXER_URL || 'https://indexer.testnet.somnia.network/v1/graphql',
+      indexerUrl: process.env.DREAMDEX_INDEXER_URL || process.env.NEXT_PUBLIC_DREAMDEX_INDEXER_URL || 'https://dev.smk.somnia.host/v1/graphql',
       wsRpcUrl: 'wss://dream-rpc.somnia.network/ws',
       addresses: SOMNIA_TESTNET_ADDRESSES,
       walletClient,
@@ -268,12 +301,24 @@ export async function placePredictionOrder(
     const priceUnits = parseUnits(executedPrice.toFixed(3), 6);
     // Quantity in raw 6-decimal units
     const quantity = rawStake;
-    // Expiry in nanoseconds: 10 minutes from now or market expiry
-    const nowSec = BigInt(Math.floor(Date.now() / 1000));
-    const expirySec = BigInt(Math.min(market.expiry, Number(nowSec) + 600));
-    const expiryNs = expirySec * BigInt(1000000000);
-    const orderType = 2; // ImmediateOrCancel (IOC)
 
+    let expiryNs: bigint;
+    try {
+      const poolExpiryNs = await publicClient.readContract({
+        address: poolAddress,
+        abi: BINARY_POOL_ABI,
+        functionName: 'marketExpiryNs',
+      });
+      expiryNs = poolExpiryNs;
+    } catch {
+      const nowSec = BigInt(Math.floor(Date.now() / 1000));
+      const expirySec = BigInt(Math.min(market.expiry, Number(nowSec) + 600));
+      expiryNs = expirySec * BigInt(1000000000);
+    }
+
+    // Direct write to the binary pool contract
+    // orderType: 0 (Limit order) - immediately fills against counterparty if liquidity is available,
+    // or rests on the book, preventing unnecessary ImmediateOrCancelNoFill reverts on testnet.
     const directHash = await walletClient.writeContract({
       address: poolAddress,
       abi: BINARY_POOL_ABI,
@@ -283,7 +328,7 @@ export async function placePredictionOrder(
         priceUnits,
         quantity,
         expiryNs,
-        orderType,
+        0, // Limit order
         0, // selfMatchingOption
         zeroAddress, // builder
         BigInt(0), // builderFeeBpsTimes1k
@@ -305,7 +350,7 @@ export async function placePredictionOrder(
     id: txHash || `pred_${Date.now()}`,
     userAddress,
     marketId: market.marketId,
-    poolAddress: market.pool,
+    poolAddress: poolAddress,
     asset: market.asset,
     side,
     symbol: market.symbol,

@@ -83,6 +83,7 @@ export async function GET() {
 
         liveMarkets.push({
           marketId: m.marketId,
+          marketAddress: m.marketAddress,
           pool,
           symbol,
           asset: asset as 'BTC' | 'ETH',
