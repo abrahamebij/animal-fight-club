@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useLayoutEffect } from 'react';
 import Link from 'next/link';
 import { FiPlusSquare, FiShield, FiTrendingUp } from 'react-icons/fi';
 import { useAccount, useBalance } from 'wagmi';
@@ -11,6 +11,7 @@ import { useUserBets } from '@/hooks/useBattles';
 import { DashboardChallengesPanel } from '@/components/dashboard/DashboardChallengesPanel';
 import { RouteGuard } from '@/components/wallet/RouteGuard';
 import Img from '@/components/ui/Img';
+import gsap from 'gsap';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
@@ -22,77 +23,117 @@ export default function DashboardPage() {
   const { data: myBeasts = [], isLoading: loadingBeasts } = useUserBeasts(address);
   const { data: myActiveBets = [], isLoading: loadingBets } = useUserBets(address);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
+      tl.from('.dash-badge', { opacity: 0, y: -12, duration: 0.4 })
+        .from('.dash-title', { opacity: 0, y: 28, duration: 0.55 }, '-=0.2')
+        .from('.dash-desc', { opacity: 0, y: 18, duration: 0.4 }, '-=0.2')
+        .from('.dash-btn', { opacity: 0, y: 15, duration: 0.35 }, '-=0.2')
+        .from('.dash-hero-img', { opacity: 0, scale: 0.96, x: 20, duration: 0.6, ease: 'power3.out' }, '-=0.4');
+
+      gsap.from('.dash-metric', {
+        opacity: 0,
+        y: 20,
+        duration: 0.45,
+        stagger: 0.08,
+        ease: 'power2.out',
+        delay: 0.2,
+      });
+
+      gsap.from('.dash-section', {
+        opacity: 0,
+        y: 28,
+        duration: 0.5,
+        stagger: 0.12,
+        ease: 'power2.out',
+        delay: 0.35,
+      });
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
+
   const displayAddress = isConnected && address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : 'NOT CONNECTED';
 
   return (
     <RouteGuard routeName="COMMAND CENTER">
-      <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
-      {/* Header */}
-      <section className="border-b border-divider bg-background pt-12 pb-8">
-        <div className="max-w-[1440px] mx-auto px-4 lg:px-10">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-3">
-            <span className="w-2 h-2 bg-secondary" />
-            <span>COMMAND CENTER TERMINAL</span>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-            <div>
-              <h1 className="font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
+      <div ref={containerRef} className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
+        {/* Header */}
+        <section className="border-b border-divider bg-background pt-8 pb-8">
+          <div className="max-w-[1440px] mx-auto px-4 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-4">
+              <div className="dash-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
+                <span className="w-2 h-2 bg-secondary" />
+                <span>COMMAND CENTER TERMINAL</span>
+              </div>
+              <h1 className="dash-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
                 COMMAND CENTER
               </h1>
-              <p className="font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
+              <p className="dash-desc font-sans text-sm sm:text-base text-secondary max-w-2xl leading-relaxed">
                 Manage your minted combatants, respond to duel challenges, and track active spectator wagers.
               </p>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Link
+                  href="/create"
+                  className="dash-btn px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors inline-flex items-center gap-2 cursor-pointer"
+                >
+                  <FiPlusSquare className="w-4 h-4" />
+                  <span>Forge New Beast</span>
+                </Link>
+              </div>
             </div>
 
-            <Link
-              href="/create"
-              className="px-6 py-3 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-background hover:text-primary border border-primary transition-colors inline-flex items-center gap-2 self-start sm:self-auto cursor-pointer"
-            >
-              <FiPlusSquare className="w-4 h-4" />
-              <span>Forge New Beast</span>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Account Metric Summary */}
-      <section className="border-b border-divider bg-background">
-        <div className="max-w-[1440px] mx-auto px-4 lg:px-10 py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-xs">
-            <div className="border border-divider p-4 bg-surface-container-low">
-              <span className="text-secondary block text-[10px] uppercase">CONNECTED ADDRESS</span>
-              <span className="font-bold text-sm text-primary">{displayAddress}</span>
-            </div>
-
-            <div className="border border-divider p-4 bg-surface-container-low">
-              <span className="text-secondary block text-[10px] uppercase">FORGED BEASTS</span>
-              <span className="font-headline font-extrabold text-2xl text-primary">{myBeasts.length}</span>
-            </div>
-
-            <div className="border border-divider p-4 bg-surface-container-low">
-              <span className="text-secondary block text-[10px] uppercase">ACTIVE WAGERS</span>
-              <span className="font-headline font-extrabold text-2xl text-primary">{myActiveBets.length}</span>
-            </div>
-
-            <div className="border border-divider p-4 bg-surface-container-low">
-              <span className="text-secondary block text-[10px] uppercase">NATIVE BALANCE</span>
-              <span className="font-headline font-extrabold text-2xl text-primary">
-                {formatBalance(balance, 2)}
-              </span>
+            <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              <div className="dash-hero-img w-full">
+                <Img src="/dashboard-hero.png" alt="Command Center Hero" />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Content Grid */}
-      <section className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10 space-y-12">
-        {/* 1. Challenge Control Matrix (Incoming & Outgoing with Accept / Decline actions) */}
-        <DashboardChallengesPanel address={address} />
+        {/* Account Metric Summary */}
+        <section className="border-b border-divider bg-background">
+          <div className="max-w-[1440px] mx-auto px-4 lg:px-10 py-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-xs">
+              <div className="dash-metric border border-divider p-4 bg-surface-container-low">
+                <span className="text-secondary block text-[10px] uppercase">CONNECTED ADDRESS</span>
+                <span className="font-bold text-sm text-primary">{displayAddress}</span>
+              </div>
 
-        {/* 2. My Beasts Roster */}
-        <div className="space-y-6">
+              <div className="dash-metric border border-divider p-4 bg-surface-container-low">
+                <span className="text-secondary block text-[10px] uppercase">FORGED BEASTS</span>
+                <span className="font-headline font-extrabold text-2xl text-primary">{myBeasts.length}</span>
+              </div>
+
+              <div className="dash-metric border border-divider p-4 bg-surface-container-low">
+                <span className="text-secondary block text-[10px] uppercase">ACTIVE WAGERS</span>
+                <span className="font-headline font-extrabold text-2xl text-primary">{myActiveBets.length}</span>
+              </div>
+
+              <div className="dash-metric border border-divider p-4 bg-surface-container-low">
+                <span className="text-secondary block text-[10px] uppercase">NATIVE BALANCE</span>
+                <span className="font-headline font-extrabold text-2xl text-primary">
+                  {formatBalance(balance, 2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Content Grid */}
+        <section className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 pt-10 space-y-12">
+          {/* 1. Challenge Control Matrix (Incoming & Outgoing with Accept / Decline actions) */}
+          <div className="dash-section">
+            <DashboardChallengesPanel address={address} />
+          </div>
+
+          {/* 2. My Beasts Roster */}
+          <div className="dash-section space-y-6">
 
           <div className="flex items-center justify-between border-b border-divider pb-3">
             <div className="flex items-center gap-2">
@@ -178,8 +219,8 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* 2. Active Wagers */}
-        <div className="space-y-6">
+        {/* 3. Active Wagers */}
+        <div className="dash-section space-y-6">
           <div className="flex items-center justify-between border-b border-divider pb-3">
             <div className="flex items-center gap-2">
               <FiTrendingUp className="w-5 h-5 text-primary" />
