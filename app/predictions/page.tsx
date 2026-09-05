@@ -12,7 +12,8 @@ import {
   FiAlertCircle, 
   FiArrowUpRight, 
   FiArrowDownRight,
-  FiX
+  FiX,
+  FiCopy
 } from 'react-icons/fi';
 import { useAccount } from 'wagmi';
 import { 
@@ -22,7 +23,7 @@ import {
   useClaimFaucetMutation, 
   usePlacePredictionMutation 
 } from '@/hooks/usePredictions';
-import { LiveEventMarket } from '@/lib/types';
+import { LiveEventMarket, EventPrediction } from '@/lib/types';
 import { ConnectButton } from '@/components/wallet/ConnectButton';
 import { toast } from 'sonner';
 
@@ -40,10 +41,18 @@ export default function PredictionsPage() {
   const [selectedSide, setSelectedSide] = useState<'UP' | 'DOWN'>('UP');
   const [stakeAmount, setStakeAmount] = useState<string>('10');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [copiedTx, setCopiedTx] = useState(false);
+  const [orderReceipt, setOrderReceipt] = useState<{
+    txHash: string;
+    orderId?: string;
+    prediction: EventPrediction;
+  } | null>(null);
 
   const handleOpenOrder = (market: LiveEventMarket, side: 'UP' | 'DOWN') => {
     setSelectedMarket(market);
     setSelectedSide(side);
+    setOrderReceipt(null);
+    setCopiedTx(false);
     setIsDrawerOpen(true);
   };
 
@@ -53,6 +62,15 @@ export default function PredictionsPage() {
       return;
     }
     claimFaucetMutation.mutate(1000);
+  };
+
+  const handleCopyTx = (tx: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(tx);
+      setCopiedTx(true);
+      toast.success('Tx Hash Copied to Clipboard');
+      setTimeout(() => setCopiedTx(false), 2000);
+    }
   };
 
   const handleConfirmOrder = async (e: React.FormEvent) => {
@@ -74,12 +92,12 @@ export default function PredictionsPage() {
     }
 
     try {
-      await placePredictionMutation.mutateAsync({
+      const result = await placePredictionMutation.mutateAsync({
         market: selectedMarket,
         side: selectedSide,
         stakeAmount: amount,
       });
-      setIsDrawerOpen(false);
+      setOrderReceipt(result);
     } catch {
       // Error handled by mutation toast
     }
@@ -226,6 +244,7 @@ export default function PredictionsPage() {
                     <th className="p-4">PRICE</th>
                     <th className="p-4">ORDER STATUS</th>
                     <th className="p-4">WINDOW STATUS</th>
+                    <th className="p-4">TX & MARKET</th>
                     <th className="p-4 text-right">OUTCOME</th>
                   </tr>
                 </thead>
@@ -265,6 +284,50 @@ export default function PredictionsPage() {
                             : 'Settling'}
                         </span>
                       </td>
+                      <td className="p-4">
+                        <div className="space-y-1">
+                          {pred.txHash ? (
+                            <a
+                              href={`https://shannon-explorer.somnia.network/tx/${pred.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-1 font-bold text-[11px]"
+                              title="View Transaction on Shannon Explorer"
+                            >
+                              <span>Tx: {pred.txHash.slice(0, 6)}...{pred.txHash.slice(-4)}</span>
+                              <FiExternalLink className="w-2.5 h-2.5 text-primary" />
+                            </a>
+                          ) : (
+                            <span className="text-secondary text-[10px]">—</span>
+                          )}
+                          <div className="flex items-center gap-2 text-[10px]">
+                            {pred.poolAddress && (
+                              <a
+                                href={`https://shannon-explorer.somnia.network/address/${pred.poolAddress}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-secondary hover:text-primary flex items-center gap-0.5"
+                                title="View Binary Pool Contract on Explorer"
+                              >
+                                <span>Pool</span>
+                                <FiExternalLink className="w-2 h-2" />
+                              </a>
+                            )}
+                            {pred.oracleQuestionId && (
+                              <a
+                                href={`https://prd.oracle.somnia.host/questions/${pred.oracleQuestionId}?view=graph`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-secondary hover:text-primary flex items-center gap-0.5"
+                                title="View Oracle Settlement Graph"
+                              >
+                                <span>Oracle</span>
+                                <FiExternalLink className="w-2 h-2" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </td>
                       <td className="p-4 text-right">
                         {pred.isResolved ? (
                           pred.isCorrect ? (
@@ -297,7 +360,7 @@ export default function PredictionsPage() {
             <div className="flex items-center justify-between border-b border-divider pb-3">
               <div className="space-y-0.5">
                 <div className="text-[10px] font-mono text-secondary uppercase">
-                  CONFIRM EVENT PREDICTION ORDER
+                  {orderReceipt ? 'PREDICTION ORDER RECEIPT' : 'CONFIRM EVENT PREDICTION ORDER'}
                 </div>
                 <h3 className="font-headline font-extrabold text-xl uppercase tracking-tight text-primary">
                   {selectedMarket.symbol}
@@ -305,111 +368,238 @@ export default function PredictionsPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setIsDrawerOpen(false)}
+                onClick={() => {
+                  setOrderReceipt(null);
+                  setIsDrawerOpen(false);
+                }}
                 className="p-1.5 border border-divider hover:bg-surface-container-low transition-colors text-secondary hover:text-primary cursor-pointer"
               >
                 <FiX className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleConfirmOrder} className="space-y-5 font-mono text-xs">
-              {/* Side Selection */}
-              <div>
-                <label className="block text-secondary text-[10px] uppercase mb-2">PREDICTED OUTCOME</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSide('UP')}
-                    className={`p-3 border font-headline font-bold text-sm uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors ${
-                      selectedSide === 'UP'
-                        ? 'bg-primary text-background border-primary'
-                        : 'bg-surface-container-low text-primary border-divider hover:border-primary'
-                    }`}
-                  >
-                    <FiArrowUpRight className="w-4 h-4" />
-                    <span>UP ({Math.round(selectedMarket.upOdds * 100)}%)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSide('DOWN')}
-                    className={`p-3 border font-headline font-bold text-sm uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors ${
-                      selectedSide === 'DOWN'
-                        ? 'bg-primary text-background border-primary'
-                        : 'bg-surface-container-low text-primary border-divider hover:border-primary'
-                    }`}
-                  >
-                    <FiArrowDownRight className="w-4 h-4" />
-                    <span>DOWN ({Math.round(selectedMarket.downOdds * 100)}%)</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Stake Input */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-secondary text-[10px] uppercase">STAKE AMOUNT (tUSDC)</label>
-                  <span className="text-secondary text-[10px]">
-                    BALANCE: <strong className="text-primary">{tUsdcBalance}</strong>
-                  </span>
-                </div>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={stakeAmount}
-                  onChange={(e) => setStakeAmount(e.target.value)}
-                  className="w-full bg-surface-container-low border border-divider p-3 font-bold text-base text-primary focus:outline-none"
-                  placeholder="10"
-                />
-                <div className="flex gap-2 pt-2">
-                  {['10', '50', '100', '250'].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => setStakeAmount(preset)}
-                      className="px-2.5 py-1 bg-surface-container-low border border-divider text-[10px] hover:border-primary transition-colors text-secondary hover:text-primary cursor-pointer"
+            {orderReceipt ? (
+              <div className="space-y-5 font-mono text-xs">
+                <div className="p-4 bg-surface-container-low border border-divider space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-secondary text-[10px] uppercase">ORDER STATUS</span>
+                    <span className="px-2 py-0.5 bg-primary text-background font-bold text-[10px] uppercase flex items-center gap-1">
+                      <FiCheck className="w-3 h-3" />
+                      <span>CONFIRMED ON-CHAIN</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-secondary text-[10px] uppercase">PREDICTION SIDE</span>
+                    <span
+                      className={`px-2 py-0.5 font-bold uppercase text-[11px] ${
+                        orderReceipt.prediction.side === 'UP'
+                          ? 'bg-primary text-background'
+                          : 'border border-primary text-primary'
+                      }`}
                     >
-                      +{preset}
+                      {orderReceipt.prediction.side} ({orderReceipt.prediction.symbol})
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-secondary text-[10px] uppercase">STAKE AMOUNT</span>
+                    <span className="font-bold text-primary text-sm">{orderReceipt.prediction.stakeAmount} tUSDC</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-secondary text-[10px] uppercase">EXECUTED PRICE</span>
+                    <span className="font-bold text-primary">{orderReceipt.prediction.price.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* On-chain Verification Box */}
+                <div className="p-4 border border-divider bg-background space-y-3">
+                  <div className="text-[10px] text-secondary uppercase font-bold tracking-wider">
+                    TRANSACTION & MARKET VERIFICATION
+                  </div>
+
+                  {orderReceipt.txHash && (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-secondary uppercase">TRANSACTION HASH</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyTx(orderReceipt.txHash)}
+                          className="text-[10px] text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <FiCopy className="w-2.5 h-2.5" />
+                          <span>{copiedTx ? 'COPIED' : 'COPY'}</span>
+                        </button>
+                      </div>
+                      <a
+                        href={`https://shannon-explorer.somnia.network/tx/${orderReceipt.txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-bold text-primary hover:underline flex items-center gap-1.5 break-all text-[11px]"
+                        title="View on Somnia Shannon Explorer"
+                      >
+                        <span>{orderReceipt.txHash}</span>
+                        <FiExternalLink className="w-3.5 h-3.5 shrink-0 text-primary" />
+                      </a>
+                    </div>
+                  )}
+
+                  {orderReceipt.prediction.poolAddress && (
+                    <div className="space-y-1 pt-2 border-t border-divider">
+                      <span className="text-[10px] text-secondary uppercase block">DREAMDEX BINARY POOL CONTRACT</span>
+                      <a
+                        href={`https://shannon-explorer.somnia.network/address/${orderReceipt.prediction.poolAddress}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-secondary hover:text-primary flex items-center gap-1.5 break-all text-[11px]"
+                        title="View Contract on Explorer"
+                      >
+                        <span>{orderReceipt.prediction.poolAddress}</span>
+                        <FiExternalLink className="w-3 h-3 shrink-0" />
+                      </a>
+                    </div>
+                  )}
+
+                  {selectedMarket.oracleQuestionId && (
+                    <div className="space-y-1 pt-2 border-t border-divider">
+                      <span className="text-[10px] text-secondary uppercase block">SOMNIA ORACLE RESOLUTION GRAPH</span>
+                      <a
+                        href={`https://prd.oracle.somnia.host/questions/${selectedMarket.oracleQuestionId}?view=graph`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-secondary hover:text-primary flex items-center gap-1.5 text-[11px]"
+                        title="View Settlement Graph"
+                      >
+                        <span>Verify Oracle Resolution Graph</span>
+                        <FiExternalLink className="w-3 h-3 shrink-0" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="space-y-2 pt-1">
+                  {orderReceipt.txHash && (
+                    <a
+                      href={`https://shannon-explorer.somnia.network/tx/${orderReceipt.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3 bg-primary text-background font-headline font-bold text-xs uppercase tracking-wider hover:bg-secondary transition-colors border border-primary text-center flex items-center justify-center gap-1.5 cursor-pointer block"
+                    >
+                      <span>VIEW TRANSACTION ON EXPLORER</span>
+                      <FiExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOrderReceipt(null);
+                      setIsDrawerOpen(false);
+                    }}
+                    className="w-full py-2.5 bg-surface-container-low text-primary font-headline font-bold text-xs uppercase tracking-wider hover:bg-surface-container transition-colors border border-divider text-center cursor-pointer block"
+                  >
+                    RETURN TO PREDICTION MARKETS
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleConfirmOrder} className="space-y-5 font-mono text-xs">
+                {/* Side Selection */}
+                <div>
+                  <label className="block text-secondary text-[10px] uppercase mb-2">PREDICTED OUTCOME</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSide('UP')}
+                      className={`p-3 border font-headline font-bold text-sm uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors ${
+                        selectedSide === 'UP'
+                          ? 'bg-primary text-background border-primary'
+                          : 'bg-surface-container-low text-primary border-divider hover:border-primary'
+                      }`}
+                    >
+                      <FiArrowUpRight className="w-4 h-4" />
+                      <span>UP ({Math.round(selectedMarket.upOdds * 100)}%)</span>
                     </button>
-                  ))}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSide('DOWN')}
+                      className={`p-3 border font-headline font-bold text-sm uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors ${
+                        selectedSide === 'DOWN'
+                          ? 'bg-primary text-background border-primary'
+                          : 'bg-surface-container-low text-primary border-divider hover:border-primary'
+                      }`}
+                    >
+                      <FiArrowDownRight className="w-4 h-4" />
+                      <span>DOWN ({Math.round(selectedMarket.downOdds * 100)}%)</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Execution Details */}
-              <div className="p-3 bg-surface-container-low border border-divider space-y-1.5 text-[11px]">
-                <div className="flex justify-between">
-                  <span className="text-secondary">ORDER TYPE</span>
-                  <span className="font-bold text-primary">IMMEDIATE-OR-CANCEL (IOC)</span>
+                {/* Stake Input */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-secondary text-[10px] uppercase">STAKE AMOUNT (tUSDC)</label>
+                    <span className="text-secondary text-[10px]">
+                      BALANCE: <strong className="text-primary">{tUsdcBalance}</strong>
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={stakeAmount}
+                    onChange={(e) => setStakeAmount(e.target.value)}
+                    className="w-full bg-surface-container-low border border-divider p-3 font-bold text-base text-primary focus:outline-none"
+                    placeholder="10"
+                  />
+                  <div className="flex gap-2 pt-2">
+                    {['10', '50', '100', '250'].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setStakeAmount(preset)}
+                        className="px-2.5 py-1 bg-surface-container-low border border-divider text-[10px] hover:border-primary transition-colors text-secondary hover:text-primary cursor-pointer"
+                      >
+                        +{preset}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-secondary">ESTIMATED PRICE</span>
-                  <span className="font-bold text-primary">
-                    {selectedSide === 'UP' ? selectedMarket.upOdds.toFixed(2) : selectedMarket.downOdds.toFixed(2)}
+
+                {/* Execution Details */}
+                <div className="p-3 bg-surface-container-low border border-divider space-y-1.5 text-[11px]">
+                  <div className="flex justify-between">
+                    <span className="text-secondary">ORDER TYPE</span>
+                    <span className="font-bold text-primary">IMMEDIATE-OR-CANCEL (IOC)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-secondary">ESTIMATED PRICE</span>
+                    <span className="font-bold text-primary">
+                      {selectedSide === 'UP' ? selectedMarket.upOdds.toFixed(2) : selectedMarket.downOdds.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-secondary">COLLATERAL</span>
+                    <span className="font-bold text-primary">tUSDC (6 Decimals)</span>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={placePredictionMutation.isPending}
+                  className="w-full py-3.5 bg-primary text-background font-headline font-extrabold text-base uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {placePredictionMutation.isPending ? (
+                    <FiRefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <FiCheck className="w-4 h-4" />
+                  )}
+                  <span>
+                    {placePredictionMutation.isPending
+                      ? 'CONFIRMING ORDER...'
+                      : `SUBMIT ${selectedSide} PREDICTION`}
                   </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-secondary">COLLATERAL</span>
-                  <span className="font-bold text-primary">tUSDC (6 Decimals)</span>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={placePredictionMutation.isPending}
-                className="w-full py-3.5 bg-primary text-background font-headline font-extrabold text-base uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {placePredictionMutation.isPending ? (
-                  <FiRefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <FiCheck className="w-4 h-4" />
-                )}
-                <span>
-                  {placePredictionMutation.isPending
-                    ? 'CONFIRMING ORDER...'
-                    : `SUBMIT ${selectedSide} PREDICTION`}
-                </span>
-              </button>
-            </form>
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}

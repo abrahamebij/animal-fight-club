@@ -2,7 +2,7 @@
 
 import React, { useRef, useLayoutEffect } from 'react';
 import Link from 'next/link';
-import { FiPlusSquare, FiShield, FiTrendingUp } from 'react-icons/fi';
+import { FiPlusSquare, FiShield, FiTrendingUp, FiExternalLink } from 'react-icons/fi';
 import { useAccount, useBalance } from 'wagmi';
 import { somniaShannon } from '@/lib/config/wagmi';
 import { formatBalance } from '@/lib/utils/format';
@@ -302,6 +302,7 @@ export default function DashboardPage() {
                   <th className="p-4">SIDE</th>
                   <th className="p-4">STAKE</th>
                   <th className="p-4">WINDOW STATUS</th>
+                  <th className="p-4">TX & MARKET</th>
                   <th className="p-4 text-right">RESOLUTION</th>
                 </tr>
               </thead>
@@ -334,6 +335,46 @@ export default function DashboardPage() {
                             : 'Settling'}
                         </span>
                       </td>
+                      <td className="p-4">
+                        <div className="space-y-1">
+                          {pred.txHash ? (
+                            <a
+                              href={`https://shannon-explorer.somnia.network/tx/${pred.txHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-1 font-bold text-[11px]"
+                              title="View Transaction on Shannon Explorer"
+                            >
+                              <span>Tx: {pred.txHash.slice(0, 6)}...{pred.txHash.slice(-4)}</span>
+                              <FiExternalLink className="w-2.5 h-2.5 text-primary" />
+                            </a>
+                          ) : (
+                            <span className="text-secondary text-[10px]">—</span>
+                          )}
+                          <div className="flex items-center gap-2 text-[10px]">
+                            <Link
+                              href="/predictions"
+                              className="text-secondary hover:text-primary flex items-center gap-0.5 underline font-bold"
+                              title="Go to Live Predictions Market"
+                            >
+                              <span>Market Page</span>
+                              <span>→</span>
+                            </Link>
+                            {pred.poolAddress && (
+                              <a
+                                href={`https://shannon-explorer.somnia.network/address/${pred.poolAddress}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-secondary hover:text-primary flex items-center gap-0.5"
+                                title="View Contract on Shannon Explorer"
+                              >
+                                <span>Pool</span>
+                                <FiExternalLink className="w-2 h-2" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </td>
                       <td className="p-4 text-right">
                         {pred.isResolved ? (
                           pred.isCorrect ? (
@@ -353,7 +394,7 @@ export default function DashboardPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-secondary font-mono text-xs">
+                    <td colSpan={7} className="p-8 text-center text-secondary font-mono text-xs">
                       No DreamDEX predictions placed yet. Visit the <Link href="/predictions" className="text-primary underline">Predictions</Link> page to place real orders on BTC/ETH event windows.
                     </td>
                   </tr>

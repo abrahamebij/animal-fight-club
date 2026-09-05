@@ -154,7 +154,9 @@ export interface EventPrediction {
   id: string;
   userAddress: string;
   marketId: string;
+  marketAddress?: string;
   poolAddress: string;
+  oracleQuestionId?: string;
   asset: 'BTC' | 'ETH';
   side: 'UP' | 'DOWN';
   symbol: string;

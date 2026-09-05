@@ -116,6 +116,13 @@ export function usePlacePredictionMutation() {
     onSuccess: (data, variables) => {
       toast.success('Prediction Placed on DreamDEX!', {
         description: `Staked ${variables.stakeAmount} tUSDC on ${variables.side} (${variables.market.symbol}).`,
+        action: data.txHash
+          ? {
+              label: 'View Tx ↗',
+              onClick: () =>
+                window.open(`https://shannon-explorer.somnia.network/tx/${data.txHash}`, '_blank'),
+            }
+          : undefined,
       });
       if (address) {
         queryClient.invalidateQueries({ queryKey: PREDICTION_KEYS.userPredictions(address) });

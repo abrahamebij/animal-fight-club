@@ -13,7 +13,7 @@ let marketsClient: SomniaMarkets | null = null;
 function getMarketsClient(): SomniaMarkets {
   if (!marketsClient) {
     marketsClient = new SomniaMarkets({
-      indexerUrl: process.env.DREAMDEX_INDEXER_URL || process.env.NEXT_PUBLIC_DREAMDEX_INDEXER_URL || 'https://indexer.testnet.somnia.network/v1/graphql',
+      indexerUrl: process.env.DREAMDEX_INDEXER_URL || process.env.NEXT_PUBLIC_DREAMDEX_INDEXER_URL || 'https://dev.smk.somnia.host/v1/graphql',
       chain: somniaShannon,
       wsRpcUrl: 'wss://dream-rpc.somnia.network/ws',
       addresses: SOMNIA_TESTNET_ADDRESSES,
