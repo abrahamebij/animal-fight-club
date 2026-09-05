@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useAccount, useChainId } from 'wagmi';
 import { somniaShannon } from '@/lib/config/wagmi';
 import { WalletModal } from './WalletModal';
@@ -18,6 +18,17 @@ export function WalletGateProvider({ children }: { children: React.ReactNode }) 
   const [modalOpen, setModalOpen] = useState(false);
   const [intentMessage, setIntentMessage] = useState<string>('');
   const [pendingCallback, setPendingCallback] = useState<(() => void) | null>(null);
+
+  // Automatically execute pending gated action callback upon successful connection to Somnia Shannon
+  useEffect(() => {
+    if (isConnected && chainId === somniaShannon.id && pendingCallback) {
+      const cb = pendingCallback;
+      setPendingCallback(null);
+      setModalOpen(false);
+      setIntentMessage('');
+      cb();
+    }
+  }, [isConnected, chainId, pendingCallback]);
 
   const requireAuth = useCallback(
     ({ actionTitle, onSuccess }: { actionTitle: string; onSuccess: () => void }) => {

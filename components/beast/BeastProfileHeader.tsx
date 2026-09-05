@@ -57,7 +57,7 @@ export function BeastProfileHeader({
         </div>
       </div>
 
-      {!isOwner && (
+      {!isOwner ? (
         <button
           onClick={onOpenChallenge}
           className="w-full py-4 bg-primary text-background font-headline font-bold text-base uppercase tracking-wider hover:bg-secondary transition-colors flex items-center justify-center gap-2 cursor-pointer"
@@ -65,6 +65,10 @@ export function BeastProfileHeader({
           <FiCrosshair className="w-5 h-5" />
           <span>CHALLENGE THIS BEAST</span>
         </button>
+      ) : (
+        <div className="w-full py-3.5 bg-surface-container-low border border-divider text-center font-mono text-xs uppercase text-secondary">
+          <span className="font-bold text-primary">YOUR COMBATANT</span> — Owned By Connected Wallet
+        </div>
       )}
     </div>
   );

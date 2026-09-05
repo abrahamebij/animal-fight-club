@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { FiArrowLeft } from 'react-icons/fi';
 import { useAccount } from 'wagmi';
 import { useBeast } from '@/hooks/useBeasts';
@@ -13,6 +13,7 @@ import { BeastMatchHistory } from '@/components/beast/BeastMatchHistory';
 import { ChallengeModal } from '@/components/arena/ChallengeModal';
 
 export default function BeastProfilePage() {
+  const router = useRouter();
   const params = useParams();
   const beastId = (params?.id as string) || '';
   const { address } = useAccount();
@@ -49,10 +50,21 @@ export default function BeastProfilePage() {
     <div className="flex flex-col w-full bg-background min-h-screen text-foreground pb-24">
       <div className="border-b border-divider bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
-          <p onClick={() => window.history.back()} className="flex items-center gap-1.5 cursor-pointer text-secondary hover:text-primary transition-colors">
+          <button
+            type="button"
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                router.push('/arena');
+              }
+            }}
+            className="flex items-center gap-1.5 cursor-pointer text-secondary hover:text-primary transition-colors focus:outline-none"
+            aria-label="Back to Arena"
+          >
             <FiArrowLeft className="w-4 h-4" />
             <span>BACK</span>
-          </p>
+          </button>
           <span className="text-secondary font-bold">AGENT GENOME: {beast.id}</span>
         </div>
       </div>

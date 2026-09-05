@@ -123,6 +123,7 @@ export function useBattleWager({
 
   const [betPlaced, setBetPlaced] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [isPlacingWager, setIsPlacingWager] = useState(false);
 
   const placeWager = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,6 +148,7 @@ export function useBattleWager({
       onSuccess: async () => {
         try {
           if (!address || !battle || isOwnerOfFighter) return;
+          setIsPlacingWager(true);
 
           if (ESCROW_CONTRACT_CONFIG.isConfigured) {
             try {
@@ -220,6 +222,8 @@ export function useBattleWager({
             }
           }
           toast.error('Wager Submission Failed', { description: errorMessage });
+        } finally {
+          setIsPlacingWager(false);
         }
       },
     });
@@ -256,6 +260,6 @@ export function useBattleWager({
     }
   };
 
-  return { placeWager, claimPayout, betPlaced, isClaiming };
+  return { placeWager, claimPayout, betPlaced, isClaiming, isPlacingWager };
 }
 

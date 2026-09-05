@@ -50,6 +50,18 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent, initialOpponen
     );
   }, [isOpen]);
 
+  // Handle Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -138,7 +150,10 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent, initialOpponen
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/80 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/80 backdrop-blur-xs p-4 animate-in fade-in duration-200"
+    >
       <div 
         ref={panelRef}
         className="w-full max-w-3xl bg-background border border-divider shadow-2xl p-6 relative flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
@@ -214,15 +229,32 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent, initialOpponen
                   </select>
                 </div>
               </div>
-            ) : (
-              <div className="py-8 text-center space-y-3">
-                <p className="font-mono text-xs text-secondary">You haven't forged any beasts yet.</p>
+            ) : !isConnected ? (
+              <div className="py-8 text-center space-y-3 font-mono">
+                <p className="text-xs text-secondary">Connect wallet to select your combatant.</p>
                 <button
+                  type="button"
+                  onClick={() => {
+                    requireAuth({
+                      actionTitle: 'select your combatant',
+                      onSuccess: () => {},
+                    });
+                  }}
+                  className="px-4 py-2 bg-primary text-background font-headline font-bold text-xs uppercase hover:bg-secondary transition-colors cursor-pointer"
+                >
+                  Connect Wallet
+                </button>
+              </div>
+            ) : (
+              <div className="py-8 text-center space-y-3 font-mono">
+                <p className="text-xs text-secondary">You haven't forged any beasts yet.</p>
+                <button
+                  type="button"
                   onClick={() => {
                     onClose();
                     router.push('/create');
                   }}
-                  className="px-4 py-2 bg-primary text-background font-headline font-bold text-xs uppercase"
+                  className="px-4 py-2 bg-primary text-background font-headline font-bold text-xs uppercase hover:bg-secondary transition-colors cursor-pointer"
                 >
                   Forge Beast First
                 </button>

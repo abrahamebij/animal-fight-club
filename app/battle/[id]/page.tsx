@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { FiArrowLeft } from 'react-icons/fi';
 import { useAccount } from 'wagmi';
 import { Battle, CombatTurn, Bet } from '@/lib/types';
-import { formatTimeRemaining } from '@/lib/utils/timer';
+import { useCountdown } from '@/hooks/useCountdown';
 import { useBattle, useUserBets } from '@/hooks/useBattles';
 import { useBattleCombat, useBattleWager } from '@/hooks/useBattleActions';
 import { BattleArenaRing } from '@/components/battle/BattleArenaRing';
@@ -19,6 +19,7 @@ import { SpectatorWageringPanel } from '@/components/battle/SpectatorWageringPan
 const REPLAY_SPEEDS: Record<number, number> = { 1: 1800, 2: 900, 3: 400 };
 
 export default function BattleViewPage() {
+  const router = useRouter();
   const params = useParams();
   const battleId = (params?.id as string) || '';
   const { address } = useAccount();
@@ -61,7 +62,7 @@ export default function BattleViewPage() {
     }
   }, [initialBattle, isSimulating]);
 
-  const { placeWager, claimPayout, betPlaced, isClaiming } = useBattleWager({
+  const { placeWager, claimPayout, betPlaced, isClaiming, isPlacingWager } = useBattleWager({
     battle,
     userBet,
     isOwnerOfFighter,
@@ -125,9 +126,7 @@ export default function BattleViewPage() {
   const lastTurn: CombatTurn | undefined = battle.combatLog[battle.combatLog.length - 1];
   const hpA = lastTurn?.beastAHp ?? 100;
   const hpB = lastTurn?.beastBHp ?? 100;
-  const countdown = battle.status === 'pending' && battle.bettingWindowClosesAt
-    ? formatTimeRemaining(battle.bettingWindowClosesAt)
-    : null;
+  const countdown = useCountdown(battle.status === 'pending' ? battle.bettingWindowClosesAt : null);
 
   // ── Derived replay values ─────────────────────────────────────────────────
   const isReplayActive   = replayIndex >= 0;
@@ -142,13 +141,21 @@ export default function BattleViewPage() {
       {/* Top breadcrumb + status bar */}
       <div className="border-b border-divider bg-background">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 h-14 flex items-center justify-between font-mono text-xs">
-          <p
-            onClick={() => window.history.back()}
-            className="flex items-center gap-1.5 text-secondary cursor-pointer hover:text-primary transition-colors"
+          <button
+            type="button"
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                router.push('/arena');
+              }
+            }}
+            className="flex items-center gap-1.5 text-secondary cursor-pointer hover:text-primary transition-colors focus:outline-none"
+            aria-label="Back to Arena"
           >
             <FiArrowLeft className="w-4 h-4" />
             <span>BACK</span>
-          </p>
+          </button>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span
@@ -256,6 +263,7 @@ export default function BattleViewPage() {
             onPlaceBet={placeWager}
             betPlaced={betPlaced}
             isClaiming={isClaiming}
+            isPlacingWager={isPlacingWager}
             onClaimPayout={claimPayout}
           />
         </div>

@@ -152,6 +152,25 @@
   background-color: #B91C1C;
 }
 
+/* Sleek custom scrollbars */
 ::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-container-low);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--divider);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--outline);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--divider) var(--surface-container-low);
 }

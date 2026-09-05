@@ -23,19 +23,27 @@ export function BettorsLeaderboardTable({ bettors }: BettorsLeaderboardTableProp
           </tr>
         </thead>
         <tbody className="divide-y divide-divider">
-          {bettors.map((bettor, idx) => (
-            <tr key={bettor.address} className="lb-row hover:bg-surface-container-low/50 transition-colors">
-              <td className="p-4 font-bold text-primary">#{idx + 1}</td>
-              <td className="p-4 text-secondary truncate max-w-[160px]">{bettor.address}</td>
-              <td className="p-4">{bettor.totalWagered} STT</td>
-              <td className="p-4 font-bold text-primary">{bettor.totalPayout} STT</td>
-              <td className={`p-4 font-bold ${bettor.netProfit >= 0 ? 'text-primary' : 'text-danger'}`}>
-                {bettor.netProfit >= 0 ? `+${bettor.netProfit}` : bettor.netProfit} STT
+          {bettors.length > 0 ? (
+            bettors.map((bettor, idx) => (
+              <tr key={bettor.address} className="lb-row hover:bg-surface-container-low/50 transition-colors">
+                <td className="p-4 font-bold text-primary">#{idx + 1}</td>
+                <td className="p-4 text-secondary truncate max-w-[160px]">{bettor.address}</td>
+                <td className="p-4">{bettor.totalWagered} STT</td>
+                <td className="p-4 font-bold text-primary">{bettor.totalPayout} STT</td>
+                <td className={`p-4 font-bold ${bettor.netProfit >= 0 ? 'text-primary' : 'text-danger'}`}>
+                  {bettor.netProfit >= 0 ? `+${bettor.netProfit}` : bettor.netProfit} STT
+                </td>
+                <td className="p-4">{bettor.betsCount}</td>
+                <td className="p-4 font-bold">{bettor.winRate}%</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={7} className="p-8 text-center text-secondary font-mono text-xs">
+                No spectator wagers recorded yet. Place bets during active arena wagering windows to rank on the leaderboard.
               </td>
-              <td className="p-4">{bettor.betsCount}</td>
-              <td className="p-4 font-bold">{bettor.winRate}%</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>

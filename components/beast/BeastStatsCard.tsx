@@ -38,17 +38,23 @@ export function BeastStatsCard({ beast }: BeastStatsCardProps) {
 
       <div className="border-t border-divider pt-4 space-y-2">
         <div className="font-mono text-xs text-secondary font-bold uppercase">ACTIVE PERKS</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {beast.perks.map((pId) => {
-            const p = AVAILABLE_PERKS.find((item) => item.id === pId);
-            return (
-              <div key={pId} className="border border-divider p-3 bg-surface-container-low font-mono text-xs">
-                <div className="font-bold text-primary uppercase">{p?.name || pId}</div>
-                <div className="text-[11px] text-secondary mt-0.5">{p?.description}</div>
-              </div>
-            );
-          })}
-        </div>
+        {beast.perks.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {beast.perks.map((pId) => {
+              const p = AVAILABLE_PERKS.find((item) => item.id === pId);
+              return (
+                <div key={pId} className="border border-divider p-3 bg-surface-container-low font-mono text-xs">
+                  <div className="font-bold text-primary uppercase">{p?.name || pId}</div>
+                  <div className="text-[11px] text-secondary mt-0.5">{p?.description}</div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="border border-dashed border-divider p-4 text-center font-mono text-xs text-secondary">
+            No tactical perks bound to this combatant genome.
+          </div>
+        )}
       </div>
     </div>
   );

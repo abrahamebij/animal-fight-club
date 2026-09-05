@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useLayoutEffect, useRef } from 'react';
+import React, { useState, useLayoutEffect, useRef, useEffect } from 'react';
 import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain, useBalance } from 'wagmi';
 import { 
   FiX, 
@@ -47,6 +47,18 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
     );
   }, [isOpen]);
 
+  // Handle Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const isWrongNetwork = isConnected && chainId !== somniaShannon.id;
@@ -60,7 +72,10 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/80 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/80 backdrop-blur-xs p-4 animate-in fade-in duration-200"
+    >
       <div 
         ref={panelRef}
         className="w-full max-w-md bg-background border border-divider shadow-2xl p-6 relative flex flex-col gap-6"

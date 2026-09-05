@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiClock, FiCrosshair } from 'react-icons/fi';
 import { Battle } from '@/lib/types';
-import { formatTimeRemaining } from '@/lib/utils/timer';
+import { useCountdown } from '@/hooks/useCountdown';
 import Img from '@/components/ui/Img';
 
 interface ArenaBattleCardProps {
@@ -15,9 +15,7 @@ interface ArenaBattleCardProps {
 export function ArenaBattleCard({ battle }: ArenaBattleCardProps) {
   const isLive = battle.status === 'live';
   const isPending = battle.status === 'pending';
-  const countdown = isPending && battle.bettingWindowClosesAt
-    ? formatTimeRemaining(battle.bettingWindowClosesAt)
-    : null;
+  const countdown = useCountdown(isPending ? battle.bettingWindowClosesAt : null);
 
   return (
     <div className="battle-card border border-divider p-6 bg-background space-y-6 flex flex-col justify-between">

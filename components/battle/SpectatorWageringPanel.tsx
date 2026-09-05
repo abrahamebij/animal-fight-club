@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { FiTrendingUp, FiAlertCircle, FiCheck, FiCrosshair } from 'react-icons/fi';
+import { FiTrendingUp, FiAlertCircle, FiCheck, FiCrosshair, FiRefreshCw } from 'react-icons/fi';
 import { Battle, Bet } from '@/lib/types';
 
 interface SpectatorWageringPanelProps {
@@ -16,6 +16,7 @@ interface SpectatorWageringPanelProps {
   onPlaceBet: (e: React.FormEvent) => void;
   betPlaced: boolean;
   isClaiming: boolean;
+  isPlacingWager?: boolean;
   onClaimPayout: () => void;
 }
 
@@ -31,6 +32,7 @@ export function SpectatorWageringPanel({
   onPlaceBet,
   betPlaced,
   isClaiming,
+  isPlacingWager = false,
   onClaimPayout,
 }: SpectatorWageringPanelProps) {
   const betBtnRef = useRef<HTMLButtonElement>(null);
@@ -221,11 +223,21 @@ export function SpectatorWageringPanel({
           <button
             ref={betBtnRef}
             type="submit"
-            disabled={!isPending && !isLive}
+            disabled={(!isPending && !isLive) || isPlacingWager}
             className="w-full py-4 bg-primary text-background font-headline font-extrabold text-lg uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
           >
-            <FiCrosshair className="w-4 h-4" />
-            <span>{betPlaced ? 'WAGER SUBMITTED TO ESCROW' : 'CONFIRM SPECTATOR WAGER'}</span>
+            {isPlacingWager ? (
+              <FiRefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <FiCrosshair className="w-4 h-4" />
+            )}
+            <span>
+              {betPlaced
+                ? 'WAGER SUBMITTED TO ESCROW'
+                : isPlacingWager
+                ? 'CONFIRMING ON-CHAIN...'
+                : 'CONFIRM SPECTATOR WAGER'}
+            </span>
           </button>
         </form>
       )}

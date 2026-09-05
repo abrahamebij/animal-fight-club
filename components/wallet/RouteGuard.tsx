@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useSyncExternalStore } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import Link from 'next/link';
-import { FiLock, FiShield, FiArrowLeft } from 'react-icons/fi';
+import { FiLock, FiShield, FiArrowLeft, FiAlertTriangle } from 'react-icons/fi';
+import { somniaShannon } from '@/lib/config/wagmi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
 import Img from '@/components/ui/Img';
 
@@ -16,6 +17,8 @@ const emptySubscribe = () => () => {};
 
 export function RouteGuard({ children, routeName = 'PROTECTED PROTOCOL ROUTE' }: RouteGuardProps) {
   const { isConnected, isConnecting, isReconnecting } = useAccount();
+  const chainId = useChainId();
+  const { switchChain, isPending: isSwitchingChain } = useSwitchChain();
   const { requireAuth } = useWalletGate();
 
   // useSyncExternalStore enables instant synchronous client-side rendering on navigation without unmounting/delaying children
@@ -85,6 +88,53 @@ export function RouteGuard({ children, routeName = 'PROTECTED PROTOCOL ROUTE' }:
           <Link
             href="/"
             className="px-8 py-4 bg-surface-container-low text-primary font-headline font-bold text-sm uppercase tracking-wider hover:bg-primary hover:text-background transition-colors border border-primary flex items-center gap-2"
+          >
+            <FiArrowLeft className="w-4 h-4" />
+            <span>Return to Landing</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // If connected to a network other than Somnia Shannon Testnet
+  if (isConnected && chainId !== somniaShannon.id) {
+    return (
+      <div className="max-w-[1440px] mx-auto w-full px-4 lg:px-10 py-24 flex flex-col items-center justify-center text-center space-y-6">
+        <div className="w-16 h-16 relative flex items-center justify-center overflow-hidden flex-shrink-0 mb-2">
+          <Img 
+            src="/logo.png" 
+            alt="Animal Fight Club Logo" 
+            className="w-16 h-16 object-contain"
+          />
+        </div>
+
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-warning text-foreground font-mono text-xs uppercase tracking-wider font-bold">
+          <FiAlertTriangle className="w-3.5 h-3.5" />
+          <span>WRONG NETWORK DETECTED</span>
+        </div>
+
+        <h1 className="font-headline font-extrabold text-4xl sm:text-5xl uppercase tracking-tight text-primary max-w-xl">
+          SWITCH TO SOMNIA SHANNON
+        </h1>
+
+        <p className="font-mono text-xs text-secondary max-w-md leading-relaxed">
+          {routeName} operates on Somnia Shannon Testnet (Chain ID {somniaShannon.id}). Please switch networks in your wallet to access this terminal.
+        </p>
+
+        <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+          <button
+            onClick={() => switchChain({ chainId: somniaShannon.id })}
+            disabled={isSwitchingChain}
+            className="px-8 py-4 bg-primary text-background font-headline font-bold text-sm uppercase tracking-wider hover:bg-neutral hover:text-primary transition-colors border-2 border-primary flex items-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            <FiShield className="w-4 h-4" />
+            <span>{isSwitchingChain ? 'SWITCHING NETWORK...' : 'SWITCH TO SOMNIA SHANNON'}</span>
+          </button>
+
+          <Link
+            href="/"
+            className="px-8 py-4 bg-surface-container-low text-primary font-headline font-bold text-sm uppercase tracking-wider hover:bg-primary hover:text-background transition-colors border border-primary flex items-center gap-2 cursor-pointer"
           >
             <FiArrowLeft className="w-4 h-4" />
             <span>Return to Landing</span>

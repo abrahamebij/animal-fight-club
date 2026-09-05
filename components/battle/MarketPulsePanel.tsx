@@ -29,7 +29,7 @@ export function MarketPulsePanel({ battle }: MarketPulsePanelProps) {
 
       <div className="space-y-4">
         {/* Asset A Pulse */}
-        {battle.marketPulseA && (
+        {battle.marketPulseA ? (
           <div className="border border-divider p-4 bg-surface-container-low space-y-3 font-mono text-xs">
             <div className="flex items-center justify-between">
               <div className="font-bold uppercase text-primary">
@@ -67,6 +67,10 @@ export function MarketPulsePanel({ battle }: MarketPulsePanelProps) {
                 </a>
               )}
             </div>
+          </div>
+        ) : (
+          <div className="border border-dashed border-divider p-4 text-center font-mono text-xs text-secondary">
+            {battle.beastA.name} is UNBOUND — No DreamDEX Market Pulse applied.
           </div>
         )}
 

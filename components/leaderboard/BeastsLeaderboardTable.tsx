@@ -26,33 +26,41 @@ export function BeastsLeaderboardTable({ beasts }: BeastsLeaderboardTableProps) 
           </tr>
         </thead>
         <tbody className="divide-y divide-divider">
-          {beasts.map((beast, idx) => {
-            const total = beast.record.wins + beast.record.losses;
-            const rate = total > 0 ? Math.round((beast.record.wins / total) * 100) : 0;
+          {beasts.length > 0 ? (
+            beasts.map((beast, idx) => {
+              const total = beast.record.wins + beast.record.losses;
+              const rate = total > 0 ? Math.round((beast.record.wins / total) * 100) : 0;
 
-            return (
-              <tr key={beast.id} className="lb-row hover:bg-surface-container-low/50 transition-colors">
-                <td className="p-4 font-bold text-primary">#{idx + 1}</td>
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-8 h-8 border border-divider overflow-hidden bg-zinc-900">
-                      <Img src={beast.avatarUrl} alt={beast.name} fill className="object-cover" />
+              return (
+                <tr key={beast.id} className="lb-row hover:bg-surface-container-low/50 transition-colors">
+                  <td className="p-4 font-bold text-primary">#{idx + 1}</td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-8 h-8 border border-divider overflow-hidden bg-zinc-900">
+                        <Img src={beast.avatarUrl} alt={beast.name} fill className="object-cover" />
+                      </div>
+                      <span className="font-bold uppercase text-primary">{beast.name}</span>
                     </div>
-                    <span className="font-bold uppercase text-primary">{beast.name}</span>
-                  </div>
-                </td>
-                <td className="p-4 text-secondary truncate max-w-[120px]">{beast.ownerAddress}</td>
-                <td className="p-4 font-bold">{beast.record.wins}W - {beast.record.losses}L</td>
-                <td className="p-4 font-bold text-primary">{rate}%</td>
-                <td className="p-4">{beast.boundAsset || 'UNBOUND'}</td>
-                <td className="p-4 text-right">
-                  <Link href={`/beast/${beast.id}`} className="text-primary underline font-bold hover:text-secondary">
-                    PROFILE
-                  </Link>
-                </td>
-              </tr>
-            );
-          })}
+                  </td>
+                  <td className="p-4 text-secondary truncate max-w-[120px]">{beast.ownerAddress}</td>
+                  <td className="p-4 font-bold">{beast.record.wins}W - {beast.record.losses}L</td>
+                  <td className="p-4 font-bold text-primary">{rate}%</td>
+                  <td className="p-4">{beast.boundAsset || 'UNBOUND'}</td>
+                  <td className="p-4 text-right">
+                    <Link href={`/beast/${beast.id}`} className="text-primary underline font-bold hover:text-secondary">
+                      PROFILE
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })
+          ) : (
+            <tr>
+              <td colSpan={7} className="p-8 text-center text-secondary font-mono text-xs">
+                No combatants ranked yet. Forge a beast and enter the arena to establish ranking telemetry.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
