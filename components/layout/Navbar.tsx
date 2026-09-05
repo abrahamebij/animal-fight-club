@@ -47,14 +47,14 @@ export function Navbar() {
           <div className="flex items-center gap-6 lg:gap-10 min-w-0">
             <Link 
               href="/" 
-              className="flex items-center gap-2 sm:gap-2.5 group flex-shrink-0"
+              className="flex items-center gap-2 sm:gap-2.5 flex-shrink-0"
               onClick={() => setMobileMenuOpen(false)}
             >
               <div className="w-8 h-8 relative flex items-center justify-center overflow-hidden flex-shrink-0">
                 <Img 
                   src="/logo.png" 
                   alt="Animal Fight Club Logo" 
-                  className="w-8 h-8 object-contain group-hover:scale-105 transition-transform"
+                  className="w-8 h-8 object-contain transition-transform"
                   priority
                 />
               </div>
