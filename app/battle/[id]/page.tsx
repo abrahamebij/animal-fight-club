@@ -39,6 +39,7 @@ export default function BattleViewPage() {
   const replayIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const battle = activeBattle || initialBattle || null;
+  const countdown = useCountdown(battle?.status === 'pending' ? battle.bettingWindowClosesAt : null);
   const userBet = userBets.find((b: Bet) => b.battleId === battleId) || null;
 
   const isOwnerOfFighter = Boolean(
@@ -126,7 +127,6 @@ export default function BattleViewPage() {
   const lastTurn: CombatTurn | undefined = battle.combatLog[battle.combatLog.length - 1];
   const hpA = lastTurn?.beastAHp ?? 100;
   const hpB = lastTurn?.beastBHp ?? 100;
-  const countdown = useCountdown(battle.status === 'pending' ? battle.bettingWindowClosesAt : null);
 
   // ── Derived replay values ─────────────────────────────────────────────────
   const isReplayActive   = replayIndex >= 0;

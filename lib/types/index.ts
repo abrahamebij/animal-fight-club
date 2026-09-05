@@ -129,3 +129,45 @@ export interface BettorLeaderboardEntry {
   winRate: number;
   totalBets: number;
 }
+
+export interface LiveEventMarket {
+  marketId: string;
+  pool: string;
+  symbol: string;
+  asset: 'BTC' | 'ETH';
+  cadence: '15-min' | '1-hour';
+  intervalSec: number;
+  expiry: number; // Unix timestamp in seconds
+  secondsLeft: number;
+  upSymbol: string;
+  downSymbol: string;
+  upOdds: number; // Implied probability 0..1
+  downOdds: number; // Implied probability 0..1
+  bestBid?: string;
+  bestAsk?: string;
+  oracleQuestionId?: string;
+  status: number; // 1 = Trading
+}
+
+export interface EventPrediction {
+  id: string;
+  userAddress: string;
+  marketId: string;
+  poolAddress: string;
+  asset: 'BTC' | 'ETH';
+  side: 'UP' | 'DOWN';
+  symbol: string;
+  cadence: '15-min' | '1-hour';
+  stakeAmount: number; // in tUSDC human units
+  price: number;
+  timeInForce: 'IOC';
+  status: 'open' | 'closed' | 'canceled';
+  marketExpiry: number;
+  txHash: string;
+  createdAt: number;
+  marketStatus?: number; // 1: Trading, 2: Locked, 4: Resolved
+  winningOutcome?: number; // 0: UP/YES, 1: DOWN/NO
+  isResolved?: boolean;
+  isCorrect?: boolean;
+}
+

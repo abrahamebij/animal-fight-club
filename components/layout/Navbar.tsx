@@ -9,13 +9,15 @@ import {
   FiAward, 
   FiGrid, 
   FiMenu,
-  FiX
+  FiX,
+  FiTrendingUp
 } from 'react-icons/fi';
 import { ConnectButton } from '@/components/wallet/ConnectButton';
 import Img from '@/components/ui/Img';
 
 const NAV_ITEMS = [
   { label: 'ARENA', href: '/arena', icon: FiCrosshair },
+  { label: 'PREDICTIONS', href: '/predictions', icon: FiTrendingUp },
   { label: 'CREATE BEAST', href: '/create', icon: FiPlusSquare },
   { label: 'LEADERBOARD', href: '/leaderboard', icon: FiAward },
   { label: 'DASHBOARD', href: '/dashboard', icon: FiGrid },

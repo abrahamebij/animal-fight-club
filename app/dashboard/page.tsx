@@ -8,6 +8,7 @@ import { somniaShannon } from '@/lib/config/wagmi';
 import { formatBalance } from '@/lib/utils/format';
 import { useUserBeasts } from '@/hooks/useBeasts';
 import { useUserBets } from '@/hooks/useBattles';
+import { useUserPredictions } from '@/hooks/usePredictions';
 import { DashboardChallengesPanel } from '@/components/dashboard/DashboardChallengesPanel';
 import { RouteGuard } from '@/components/wallet/RouteGuard';
 import Img from '@/components/ui/Img';
@@ -22,6 +23,7 @@ export default function DashboardPage() {
 
   const { data: myBeasts = [], isLoading: loadingBeasts } = useUserBeasts(address);
   const { data: myActiveBets = [], isLoading: loadingBets } = useUserBets(address);
+  const { data: myPredictions = [], isLoading: loadingPredictions } = useUserPredictions(address);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -265,6 +267,94 @@ export default function DashboardPage() {
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-secondary font-mono text-xs">
                       No active wagers placed yet. Explore the Arena to place spectator bets during 1-hour windows.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 4. DreamDEX Event Contract Predictions */}
+        <div className="dash-section space-y-6">
+          <div className="flex items-center justify-between border-b border-divider pb-3">
+            <div className="flex items-center gap-2">
+              <FiTrendingUp className="w-5 h-5 text-primary" />
+              <h2 className="font-headline font-bold text-2xl uppercase tracking-tight">
+                DREAMDEX EVENT CONTRACT PREDICTIONS
+              </h2>
+            </div>
+            <Link
+              href="/predictions"
+              className="font-mono text-xs text-primary hover:text-secondary flex items-center gap-1 uppercase font-bold"
+            >
+              <span>Explore Live Windows</span>
+              <span>→</span>
+            </Link>
+          </div>
+
+          <div className="border border-divider bg-background overflow-x-auto">
+            <table className="w-full text-left border-collapse font-mono text-xs">
+              <thead>
+                <tr className="border-b border-divider bg-surface-container-low text-secondary uppercase">
+                  <th className="p-4">ASSET</th>
+                  <th className="p-4">CADENCE</th>
+                  <th className="p-4">SIDE</th>
+                  <th className="p-4">STAKE</th>
+                  <th className="p-4">WINDOW STATUS</th>
+                  <th className="p-4 text-right">RESOLUTION</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-divider">
+                {myPredictions.length > 0 ? (
+                  myPredictions.map((pred) => (
+                    <tr key={pred.id} className="hover:bg-surface-container-low transition-colors">
+                      <td className="p-4 font-bold text-primary">{pred.asset}/USDso</td>
+                      <td className="p-4">{pred.cadence}</td>
+                      <td className="p-4">
+                        <span
+                          className={`px-2 py-0.5 text-[10px] font-bold uppercase ${
+                            pred.side === 'UP'
+                              ? 'bg-primary text-background'
+                              : 'border border-primary text-primary'
+                          }`}
+                        >
+                          {pred.side}
+                        </span>
+                      </td>
+                      <td className="p-4 font-bold">{pred.stakeAmount} tUSDC</td>
+                      <td className="p-4">
+                        <span className="text-[11px] uppercase">
+                          {pred.marketStatus === 1
+                            ? 'Trading (Open)'
+                            : pred.marketStatus === 2
+                            ? 'Locked (Resolving)'
+                            : pred.marketStatus === 4 || pred.isResolved
+                            ? 'Resolved'
+                            : 'Settling'}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        {pred.isResolved ? (
+                          pred.isCorrect ? (
+                            <span className="px-2 py-1 bg-primary/10 border border-primary text-primary font-bold text-[10px] uppercase">
+                              WON
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 bg-surface-container-low text-secondary text-[10px] uppercase">
+                              LOST
+                            </span>
+                          )
+                        ) : (
+                          <span className="text-secondary text-[10px] uppercase">PENDING</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-secondary font-mono text-xs">
+                      No DreamDEX predictions placed yet. Visit the <Link href="/predictions" className="text-primary underline">Predictions</Link> page to place real orders on BTC/ETH event windows.
                     </td>
                   </tr>
                 )}
