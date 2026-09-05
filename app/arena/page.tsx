@@ -44,10 +44,6 @@ function ArenaContent() {
       <section className="border-b border-divider bg-background pt-8 pb-8">
         <div className="max-w-[1440px] mx-auto px-4 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-7 space-y-4">
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
-              <span className="w-2 h-2 bg-secondary" />
-              <span>ARENA DISPATCH GRID</span>
-            </div>
             <h1 className="font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
               THE COMBAT ARENA
             </h1>

@@ -11,8 +11,7 @@ export function HeroSection() {
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-      tl.from('.hero-badge', { opacity: 0, y: -16, duration: 0.5 })
-        .from('.hero-line', { opacity: 0, y: 48, duration: 0.7, stagger: 0.12 }, '-=0.2')
+      tl.from('.hero-line', { opacity: 0, y: 48, duration: 0.7, stagger: 0.12 })
         .from('.hero-desc', { opacity: 0, y: 24, duration: 0.5 }, '-=0.3')
         .from('.hero-cta', { opacity: 0, y: 20, duration: 0.4, stagger: 0.1 }, '-=0.2')
         .from('.hero-panel', { opacity: 0, x: 60, duration: 0.7, ease: 'power2.out' }, '-=0.6');
@@ -25,11 +24,6 @@ export function HeroSection() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border border-divider p-6 lg:p-12 bg-background">
         <div className="lg:col-span-7 flex flex-col justify-between gap-8">
           <div className="space-y-6">
-            <div className="hero-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider">
-              <span className="w-2 h-2 bg-secondary" />
-              <span>SOMNIA SHANNON TESTNET - AGENTIC COMBAT PROTOCOL</span>
-            </div>
-
             <h1 className="font-headline font-extrabold text-5xl sm:text-7xl lg:text-8xl leading-[0.9] tracking-tighter uppercase text-primary">
               <span className="hero-line block">CREATE YOUR BEAST.</span>
               <span className="hero-line block">WATCH IT FIGHT.</span>

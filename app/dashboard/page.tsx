@@ -28,8 +28,7 @@ export default function DashboardPage() {
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-      tl.from('.dash-badge', { opacity: 0, y: -12, duration: 0.4 })
-        .from('.dash-title', { opacity: 0, y: 28, duration: 0.55 }, '-=0.2')
+      tl.from('.dash-title', { opacity: 0, y: 28, duration: 0.55 })
         .from('.dash-desc', { opacity: 0, y: 18, duration: 0.4 }, '-=0.2')
         .from('.dash-btn', { opacity: 0, y: 15, duration: 0.35 }, '-=0.2')
         .from('.dash-hero-img', { opacity: 0, scale: 0.96, x: 20, duration: 0.6, ease: 'power3.out' }, '-=0.4');
@@ -66,10 +65,6 @@ export default function DashboardPage() {
         <section className="border-b border-divider bg-background pt-8 pb-8">
           <div className="max-w-[1440px] mx-auto px-4 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 space-y-4">
-              <div className="dash-badge inline-flex items-center gap-2 px-2.5 py-0.5 bg-primary text-background font-mono text-[11px] uppercase tracking-wider mb-1">
-                <span className="w-2 h-2 bg-secondary" />
-                <span>COMMAND CENTER TERMINAL</span>
-              </div>
               <h1 className="dash-title font-headline font-extrabold text-4xl sm:text-6xl uppercase tracking-tight text-primary">
                 COMMAND CENTER
               </h1>
