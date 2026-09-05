@@ -357,8 +357,31 @@ export async function POST(req: NextRequest) {
     const winningBeast = winner === 'beastA' ? battle.beastA : battle.beastB;
     const losingBeast = winner === 'beastA' ? battle.beastB : battle.beastA;
 
+    const winBeastRef = doc(db, 'beasts', winningBeast.id);
+    const loseBeastRef = doc(db, 'beasts', losingBeast.id);
+
+    const updatedWinningRecord = {
+      wins: (winningBeast.record?.wins || 0) + 1,
+      losses: winningBeast.record?.losses || 0,
+    };
+    const updatedLosingRecord = {
+      wins: losingBeast.record?.wins || 0,
+      losses: (losingBeast.record?.losses || 0) + 1,
+    };
+
+    const resolvedBeastA: Beast = {
+      ...battle.beastA,
+      record: winner === 'beastA' ? updatedWinningRecord : updatedLosingRecord,
+    };
+    const resolvedBeastB: Beast = {
+      ...battle.beastB,
+      record: winner === 'beastB' ? updatedWinningRecord : updatedLosingRecord,
+    };
+
     const resolvedBattle: Battle = {
       ...battle,
+      beastA: resolvedBeastA,
+      beastB: resolvedBeastB,
       status: 'completed',
       winner,
       combatLog: turns,
@@ -372,13 +395,12 @@ export async function POST(req: NextRequest) {
           status: 'completed',
           winner,
           combatLog: turns,
+          beastA: resolvedBeastA,
+          beastB: resolvedBeastB,
         });
 
         // Update Beast records
-        const winBeastRef = doc(db, 'beasts', winningBeast.id);
         await updateDoc(winBeastRef, { 'record.wins': increment(1) });
-
-        const loseBeastRef = doc(db, 'beasts', losingBeast.id);
         await updateDoc(loseBeastRef, { 'record.losses': increment(1) });
 
         // Resolve on-chain in escrow contract

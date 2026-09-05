@@ -15,7 +15,9 @@ import {
   getEscrowPublicClient, 
   EscrowBattleStatus 
 } from '@/lib/services/escrowService';
-import { usePlaceBetMutation, useClaimPayoutMutation } from './useBattles';
+import { usePlaceBetMutation, useClaimPayoutMutation, BATTLE_KEYS } from './useBattles';
+import { BEAST_KEYS } from './useBeasts';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 export function useBattleCombat({
@@ -30,6 +32,7 @@ export function useBattleCombat({
   onBattleUpdate: (updater: (prev: Battle | null) => Battle | null) => void;
 }) {
   const [isSimulating, setIsSimulating] = useState(false);
+  const queryClient = useQueryClient();
 
   const executeCombat = async () => {
     if (!battle || isSimulating || battle.status === 'completed') return;
@@ -63,16 +66,29 @@ export function useBattleCombat({
       for (let i = 0; i < allTurns.length; i++) {
         await new Promise((resolve) => setTimeout(resolve, 1100));
         const partialTurns = allTurns.slice(0, i + 1);
+        const isFinished = i === allTurns.length - 1;
         onBattleUpdate((prev) => {
           if (!prev) return prev;
           return {
             ...prev,
-            status: i === allTurns.length - 1 ? 'completed' : 'live',
-            winner: i === allTurns.length - 1 ? data.winner : undefined,
+            status: isFinished ? 'completed' : 'live',
+            winner: isFinished ? data.winner : undefined,
             combatLog: partialTurns,
+            ...(isFinished && data.battle ? {
+              beastA: data.battle.beastA,
+              beastB: data.battle.beastB,
+            } : {}),
           };
         });
       }
+
+      // Invalidate React Query caches so all components receive the fresh database truth
+      if (battle?.id) {
+        queryClient.invalidateQueries({ queryKey: BATTLE_KEYS.detail(battle.id) });
+      }
+      queryClient.invalidateQueries({ queryKey: BATTLE_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: BEAST_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
     } catch (err) {
       console.error('Error during combat execution:', err);
     } finally {

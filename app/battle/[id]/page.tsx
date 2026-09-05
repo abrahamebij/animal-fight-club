@@ -37,12 +37,6 @@ export default function BattleViewPage() {
   const [replayReset, setReplayReset] = useState(0);      // increment to snap ring back
   const replayIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    if (initialBattle && !activeBattle) {
-      setActiveBattle(initialBattle);
-    }
-  }, [initialBattle, activeBattle]);
-
   const battle = activeBattle || initialBattle || null;
   const userBet = userBets.find((b: Bet) => b.battleId === battleId) || null;
 
@@ -60,6 +54,12 @@ export default function BattleViewPage() {
     address,
     onBattleUpdate: setActiveBattle,
   });
+
+  useEffect(() => {
+    if (initialBattle && (!activeBattle || !isSimulating)) {
+      setActiveBattle(initialBattle);
+    }
+  }, [initialBattle, isSimulating]);
 
   const { placeWager, claimPayout, betPlaced, isClaiming } = useBattleWager({
     battle,

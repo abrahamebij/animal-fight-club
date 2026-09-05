@@ -8,30 +8,22 @@ import {
   where, 
   orderBy 
 } from 'firebase/firestore';
+import { getAddress, isAddress } from 'viem';
 import { db } from '@/lib/firebase';
 import { Beast } from '@/lib/types';
 
-const LOCAL_STORAGE_KEY = 'afc_custom_beasts';
-
-function getLocalCustomBeasts(): Beast[] {
-  if (typeof window === 'undefined') return [];
+function getAddressVariants(address: string): string[] {
+  if (!address) return [];
+  const lower = address.toLowerCase();
+  const variants = [address, lower];
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (isAddress(address)) {
+      variants.push(getAddress(address));
+    }
   } catch {
-    return [];
+    // Ignore invalid address error
   }
-}
-
-function saveLocalCustomBeast(beast: Beast): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const current = getLocalCustomBeasts();
-    const updated = [beast, ...current.filter((b) => b.id !== beast.id)];
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
-  } catch {
-    // Ignore storage quota errors
-  }
+  return Array.from(new Set(variants));
 }
 
 /**
@@ -51,44 +43,25 @@ export async function createBeast(
     },
   };
 
-  saveLocalCustomBeast(newBeast);
-
-  try {
-    const beastDocRef = doc(db, 'beasts', id);
-    await setDoc(beastDocRef, newBeast);
-  } catch (error) {
-    console.warn('Firestore write error:', error);
-  }
+  const beastDocRef = doc(db, 'beasts', id);
+  await setDoc(beastDocRef, newBeast);
 
   return newBeast;
 }
 
 /**
- * Persists an existing or constructed Beast into Firestore and local cache
+ * Persists an existing or constructed Beast into Firestore
  */
 export async function saveBeast(beast: Beast): Promise<Beast> {
-  saveLocalCustomBeast(beast);
-
-  try {
-    const beastDocRef = doc(db, 'beasts', beast.id);
-    await setDoc(beastDocRef, beast);
-  } catch (error) {
-    console.warn('Firestore write error:', error);
-  }
-
+  const beastDocRef = doc(db, 'beasts', beast.id);
+  await setDoc(beastDocRef, beast);
   return beast;
 }
 
 /**
- * Fetches a single beast by ID from Firestore (with local cache fallback)
+ * Fetches a single beast by ID directly from Firestore
  */
 export async function getBeastById(id: string): Promise<Beast | null> {
-  // Check local cache
-  const localList = getLocalCustomBeasts();
-  const localMatch = localList.find((b) => b.id === id);
-  if (localMatch) return localMatch;
-
-  // Check Firestore
   try {
     const docRef = doc(db, 'beasts', id);
     const snap = await getDoc(docRef);
@@ -103,24 +76,17 @@ export async function getBeastById(id: string): Promise<Beast | null> {
 }
 
 /**
- * Fetches all beasts belonging to a specific wallet address from Firestore
+ * Fetches all beasts belonging to a specific wallet address directly from Firestore
  */
 export async function getBeastsByOwner(ownerAddress: string): Promise<Beast[]> {
   if (!ownerAddress) return [];
-  const normalizedOwner = ownerAddress.toLowerCase();
+  const variants = getAddressVariants(ownerAddress);
   const results: Beast[] = [];
 
-  // Local beasts
-  const localList = getLocalCustomBeasts().filter(
-    (b) => b.ownerAddress?.toLowerCase() === normalizedOwner
-  );
-  results.push(...localList);
-
-  // Firestore query
   try {
     const q = query(
       collection(db, 'beasts'),
-      where('ownerAddress', '==', ownerAddress)
+      where('ownerAddress', 'in', variants)
     );
     const snap = await getDocs(q);
     snap.forEach((d) => {
@@ -133,23 +99,20 @@ export async function getBeastsByOwner(ownerAddress: string): Promise<Beast[]> {
     console.warn('Error querying beasts from Firestore:', error);
   }
 
-  return results;
+  return results.sort((a, b) => b.createdAt - a.createdAt);
 }
 
 /**
- * Fetches all live beasts for the Arena and Leaderboards from Firestore
+ * Fetches all live beasts for the Arena and Leaderboards directly from Firestore
  */
 export async function getAllBeasts(): Promise<Beast[]> {
-  const results: Beast[] = [...getLocalCustomBeasts()];
+  const results: Beast[] = [];
 
   try {
     const q = query(collection(db, 'beasts'), orderBy('createdAt', 'desc'));
     const snap = await getDocs(q);
     snap.forEach((d) => {
-      const b = d.data() as Beast;
-      if (!results.some((r) => r.id === b.id)) {
-        results.push(b);
-      }
+      results.push(d.data() as Beast);
     });
   } catch (error) {
     console.warn('Error fetching all beasts from Firestore:', error);

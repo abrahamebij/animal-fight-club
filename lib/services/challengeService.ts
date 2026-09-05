@@ -13,8 +13,6 @@ import { db } from '@/lib/firebase';
 import { Challenge, Beast, Battle } from '@/lib/types';
 import { createBattle } from '@/lib/services/battleService';
 
-const LOCAL_STORAGE_CHALLENGES = 'afc_custom_challenges';
-
 function getAddressVariants(address: string): string[] {
   if (!address) return [];
   const lower = address.toLowerCase();
@@ -27,27 +25,6 @@ function getAddressVariants(address: string): string[] {
     // Ignore invalid address error
   }
   return Array.from(new Set(variants));
-}
-
-function getLocalChallenges(): Challenge[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_CHALLENGES);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveLocalChallenge(challenge: Challenge): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const current = getLocalChallenges();
-    const updated = [challenge, ...current.filter((c) => c.id !== challenge.id)];
-    localStorage.setItem(LOCAL_STORAGE_CHALLENGES, JSON.stringify(updated));
-  } catch {
-    // Ignore storage quota error
-  }
 }
 
 /**
@@ -82,14 +59,8 @@ export async function createChallenge(
     createdAt: now,
   };
 
-  try {
-    const challengeDocRef = doc(db, 'challenges', id);
-    await setDoc(challengeDocRef, newChallenge);
-    saveLocalChallenge(newChallenge);
-  } catch (error) {
-    console.warn('Firestore challenge write error, saved locally:', error);
-    saveLocalChallenge(newChallenge);
-  }
+  const challengeDocRef = doc(db, 'challenges', id);
+  await setDoc(challengeDocRef, newChallenge);
 
   return newChallenge;
 }
@@ -99,7 +70,6 @@ export async function createChallenge(
  */
 export async function getIncomingChallenges(walletAddress: string): Promise<Challenge[]> {
   if (!walletAddress) return [];
-  const normalized = walletAddress.toLowerCase();
   const variants = getAddressVariants(walletAddress);
 
   try {
@@ -113,15 +83,10 @@ export async function getIncomingChallenges(walletAddress: string): Promise<Chal
       results.push(d.data() as Challenge);
     });
 
-    // Sync to local cache so stale entries are updated with database truth
-    results.forEach(saveLocalChallenge);
-
     return results.sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
-    console.warn('Error querying incoming challenges from Firestore, falling back to local cache:', error);
-    return getLocalChallenges()
-      .filter((c) => c.challengedAddress && c.challengedAddress.toLowerCase() === normalized)
-      .sort((a, b) => b.createdAt - a.createdAt);
+    console.warn('Error querying incoming challenges from Firestore:', error);
+    return [];
   }
 }
 
@@ -130,7 +95,6 @@ export async function getIncomingChallenges(walletAddress: string): Promise<Chal
  */
 export async function getOutgoingChallenges(walletAddress: string): Promise<Challenge[]> {
   if (!walletAddress) return [];
-  const normalized = walletAddress.toLowerCase();
   const variants = getAddressVariants(walletAddress);
 
   try {
@@ -144,14 +108,10 @@ export async function getOutgoingChallenges(walletAddress: string): Promise<Chal
       results.push(d.data() as Challenge);
     });
 
-    results.forEach(saveLocalChallenge);
-
     return results.sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
-    console.warn('Error querying outgoing challenges from Firestore, falling back to local cache:', error);
-    return getLocalChallenges()
-      .filter((c) => c.challengerAddress && c.challengerAddress.toLowerCase() === normalized)
-      .sort((a, b) => b.createdAt - a.createdAt);
+    console.warn('Error querying outgoing challenges from Firestore:', error);
+    return [];
   }
 }
 
@@ -183,16 +143,12 @@ export async function getOpenChallenges(): Promise<Challenge[]> {
     snap.forEach((d) => {
       results.push(d.data() as Challenge);
     });
-    results.forEach(saveLocalChallenge);
     return results.sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
-    console.warn('Error querying open challenges from Firestore, falling back to local cache:', error);
-    return getLocalChallenges()
-      .filter((c) => c.status === 'awaiting_response')
-      .sort((a, b) => b.createdAt - a.createdAt);
+    console.warn('Error querying open challenges from Firestore:', error);
+    return [];
   }
 }
-
 
 /**
  * Accepts a challenge:
@@ -204,25 +160,13 @@ export async function acceptChallenge(
   challengeId: string,
   defenderAddress: string
 ): Promise<{ challenge: Challenge; battle: Battle }> {
-  // Retrieve challenge from Firestore database first
-  let targetChallenge: Challenge | null = null;
-
-  try {
-    const snap = await getDoc(doc(db, 'challenges', challengeId));
-    if (snap.exists()) {
-      targetChallenge = snap.data() as Challenge;
-    }
-  } catch (err) {
-    console.warn('Error fetching challenge from Firestore for acceptance:', err);
-  }
-
-  if (!targetChallenge) {
-    targetChallenge = getLocalChallenges().find((c) => c.id === challengeId) || null;
-  }
-
-  if (!targetChallenge) {
+  // Retrieve challenge from Firestore database
+  const snap = await getDoc(doc(db, 'challenges', challengeId));
+  if (!snap.exists()) {
     throw new Error('Challenge not found');
   }
+
+  const targetChallenge = snap.data() as Challenge;
 
   // Security check: Only the challenged beast's owner can accept
   if (targetChallenge.challengedAddress.toLowerCase() !== defenderAddress.toLowerCase()) {
@@ -258,8 +202,6 @@ export async function acceptChallenge(
     console.warn('Error updating accepted challenge in Firestore:', error);
   }
 
-  saveLocalChallenge(updatedChallenge);
-
   return { challenge: updatedChallenge, battle };
 }
 
@@ -273,21 +215,13 @@ export async function declineChallenge(
   challengeId: string,
   defenderAddress: string
 ): Promise<Challenge> {
-  // Retrieve challenge from Firestore database first
-  let targetChallenge: Challenge | null = null;
-
-  try {
-    const snap = await getDoc(doc(db, 'challenges', challengeId));
-    if (snap.exists()) {
-      targetChallenge = snap.data() as Challenge;
-    }
-  } catch (err) {
-    console.warn('Error fetching challenge from Firestore for declining:', err);
+  // Retrieve challenge from Firestore database
+  const snap = await getDoc(doc(db, 'challenges', challengeId));
+  if (!snap.exists()) {
+    throw new Error('Challenge not found');
   }
 
-  if (!targetChallenge) {
-    targetChallenge = getLocalChallenges().find((c) => c.id === challengeId) || null;
-  }
+  const targetChallenge = snap.data() as Challenge;
 
   // Security check: Only the challenged beast's owner can decline
   if (targetChallenge.challengedAddress.toLowerCase() !== defenderAddress.toLowerCase()) {
@@ -303,8 +237,6 @@ export async function declineChallenge(
     status: 'declined',
     respondedAt: Date.now(),
   };
-
-  saveLocalChallenge(updatedChallenge);
 
   try {
     const docRef = doc(db, 'challenges', challengeId);

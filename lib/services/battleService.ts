@@ -14,51 +14,6 @@ import { db } from '@/lib/firebase';
 import { Battle, Beast, Bet, BattleStatus } from '@/lib/types';
 import { lockMarketPulseForBattle } from '@/lib/services/marketPulseService';
 
-const LOCAL_STORAGE_BATTLES = 'afc_custom_battles';
-const LOCAL_STORAGE_BETS = 'afc_custom_bets';
-
-function getLocalBattles(): Battle[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_BATTLES);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveLocalBattle(battle: Battle): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const current = getLocalBattles();
-    const updated = [battle, ...current.filter((b) => b.id !== battle.id)];
-    localStorage.setItem(LOCAL_STORAGE_BATTLES, JSON.stringify(updated));
-  } catch {
-    // Ignore storage quota error
-  }
-}
-
-function getLocalBets(): Bet[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_BETS);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveLocalBet(bet: Bet): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const current = getLocalBets();
-    const updated = [bet, ...current.filter((b) => b.id !== bet.id)];
-    localStorage.setItem(LOCAL_STORAGE_BETS, JSON.stringify(updated));
-  } catch {
-    // Ignore storage quota error
-  }
-}
-
 /**
  * Creates a new pending battle in Firestore with a 1-hour betting countdown window
  */
@@ -83,11 +38,8 @@ export async function createBattle(beastA: Beast, beastB: Beast): Promise<Battle
     createdAt: now,
   };
 
-
   // Lock in live DreamDEX market pulse modifiers
   const newBattle = await lockMarketPulseForBattle(baseBattle);
-
-  saveLocalBattle(newBattle);
 
   try {
     const battleDocRef = doc(db, 'battles', id);
@@ -109,14 +61,14 @@ export async function createBattle(beastA: Beast, beastB: Beast): Promise<Battle
       });
     }
   } catch (error) {
-    console.warn('Firestore write failed, falling back to local cache:', error);
+    console.warn('Firestore write failed:', error);
   }
 
   return newBattle;
 }
 
 /**
- * Fetches a single battle by ID from Firestore, dynamically calculating pools from existing bets
+ * Fetches a single battle by ID from Firestore, dynamically hydrating live career records & bet pools
  */
 export async function getBattleById(id: string): Promise<Battle | null> {
   try {
@@ -124,6 +76,32 @@ export async function getBattleById(id: string): Promise<Battle | null> {
     const snap = await getDoc(docRef);
     if (snap.exists()) {
       const battleData = snap.data() as Battle;
+
+      // Hydrate live career records directly from beasts collection
+      if (battleData.beastA?.id && battleData.beastB?.id) {
+        try {
+          const [snapA, snapB] = await Promise.all([
+            getDoc(doc(db, 'beasts', battleData.beastA.id)),
+            getDoc(doc(db, 'beasts', battleData.beastB.id)),
+          ]);
+          if (snapA.exists()) {
+            const liveA = snapA.data() as Beast;
+            battleData.beastA = {
+              ...battleData.beastA,
+              record: liveA.record || { wins: 0, losses: 0 },
+            };
+          }
+          if (snapB.exists()) {
+            const liveB = snapB.data() as Beast;
+            battleData.beastB = {
+              ...battleData.beastB,
+              record: liveB.record || { wins: 0, losses: 0 },
+            };
+          }
+        } catch (beastErr) {
+          console.warn('Error hydrating live beast records:', beastErr);
+        }
+      }
 
       // Query real existing bets in Firestore to dynamically calculate accurate pools
       try {
@@ -142,20 +120,17 @@ export async function getBattleById(id: string): Promise<Battle | null> {
         console.warn('Error computing live bet pools:', err);
       }
 
-      saveLocalBattle(battleData);
       return battleData;
     }
   } catch (error) {
-    console.warn('Error fetching battle from Firestore, falling back to cache:', error);
+    console.warn('Error fetching battle from Firestore:', error);
   }
 
-  // Offline fallback
-  const localList = getLocalBattles();
-  return localList.find((b) => b.id === id) || null;
+  return null;
 }
 
 /**
- * Fetches all battles across all statuses from Firestore
+ * Fetches all battles across all statuses directly from Firestore
  */
 export async function getAllBattles(): Promise<Battle[]> {
   try {
@@ -165,19 +140,15 @@ export async function getAllBattles(): Promise<Battle[]> {
     snap.forEach((d) => {
       results.push(d.data() as Battle);
     });
-    if (typeof window !== 'undefined' && results.length > 0) {
-      localStorage.setItem(LOCAL_STORAGE_BATTLES, JSON.stringify(results));
-    }
     return results;
   } catch (error) {
-    console.warn('Error fetching all battles from Firestore, falling back to cache:', error);
+    console.warn('Error fetching all battles from Firestore:', error);
+    return [];
   }
-
-  return getLocalBattles();
 }
 
 /**
- * Places a spectator wager on a pending battle
+ * Places a spectator wager on a pending battle directly in Firestore
  */
 export async function placeBet(
   battleId: string,
@@ -190,12 +161,12 @@ export async function placeBet(
   // Check if a bet already exists for this bettor on this battle
   let existingBet: Bet | null = null;
   try {
-    const q = query(
+    const betsQuery = query(
       collection(db, 'bets'),
       where('battleId', '==', battleId),
       where('bettorAddress', '==', normalized)
     );
-    const snap = await getDocs(q);
+    const snap = await getDocs(betsQuery);
     if (!snap.empty) {
       existingBet = snap.docs[0].data() as Bet;
     }
@@ -220,20 +191,6 @@ export async function placeBet(
     placedAt: existingBet ? existingBet.placedAt : Date.now(),
   };
 
-  saveLocalBet(newBet);
-
-  // Update local battle pool
-  const localBattles = getLocalBattles();
-  const targetBattle = localBattles.find((b) => b.id === battleId);
-  if (targetBattle) {
-    if (beastPicked === 'beastA') {
-      targetBattle.totalPoolA = (targetBattle.totalPoolA || 0) + amount;
-    } else {
-      targetBattle.totalPoolB = (targetBattle.totalPoolB || 0) + amount;
-    }
-    saveLocalBattle(targetBattle);
-  }
-
   try {
     const betDocRef = doc(db, 'bets', betId);
     await setDoc(betDocRef, newBet);
@@ -250,7 +207,7 @@ export async function placeBet(
 }
 
 /**
- * Fetches all bets placed by a specific wallet address from Firestore
+ * Fetches all bets placed by a specific wallet address directly from Firestore
  */
 export async function getBetsByBettor(bettorAddress: string): Promise<Bet[]> {
   if (!bettorAddress) return [];
@@ -279,61 +236,38 @@ export async function getBetsByBettor(bettorAddress: string): Promise<Bet[]> {
       });
     }
 
-    if (typeof window !== 'undefined') {
-      // Sync local cache with current Firestore bets
-      const allLocal = getLocalBets().filter((b) => b.bettorAddress.toLowerCase() !== normalized);
-      localStorage.setItem(LOCAL_STORAGE_BETS, JSON.stringify([...results, ...allLocal]));
-    }
-
     return results.sort((a, b) => b.placedAt - a.placedAt);
   } catch (error) {
-    console.warn('Error fetching bets from Firestore, falling back to cache:', error);
+    console.warn('Error fetching bets from Firestore:', error);
+    return [];
   }
-
-  // Offline fallback
-  const localBets = getLocalBets().filter(
-    (b) => b.bettorAddress.toLowerCase() === normalized
-  );
-  return localBets.sort((a, b) => b.placedAt - a.placedAt);
 }
 
 /**
- * Fetches all bets across all users (for global bettor leaderboards)
+ * Fetches all bets across all users directly from Firestore
  */
 export async function getAllBets(): Promise<Bet[]> {
-  const results: Bet[] = [...getLocalBets()];
-
   try {
     const q = query(collection(db, 'bets'), orderBy('placedAt', 'desc'));
     const snap = await getDocs(q);
+    const results: Bet[] = [];
     snap.forEach((d) => {
-      const b = d.data() as Bet;
-      if (!results.some((r) => r.id === b.id)) {
-        results.push(b);
-      }
+      results.push(d.data() as Bet);
     });
+    return results;
   } catch (error) {
     console.warn('Error fetching all bets from Firestore:', error);
+    return [];
   }
-
-  return results;
 }
 
 /**
- * Marks a bet as claimed and saves the payout amount
+ * Marks a bet as claimed and saves the payout amount in Firestore
  */
 export async function claimBetPayout(
   betId: string,
   payoutAmount: number
 ): Promise<void> {
-  const localBets = getLocalBets();
-  const target = localBets.find((b) => b.id === betId);
-  if (target) {
-    target.status = 'claimed';
-    target.payoutAmount = payoutAmount;
-    saveLocalBet(target);
-  }
-
   try {
     const betDocRef = doc(db, 'bets', betId);
     await updateDoc(betDocRef, {
