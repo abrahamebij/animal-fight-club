@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
-import { FiUploadCloud, FiRefreshCw, FiCheck } from 'react-icons/fi';
+import React, { useState } from 'react';
+import { FiUploadCloud, FiRefreshCw, FiCheck, FiLayers } from 'react-icons/fi';
 import Img from '@/components/ui/Img';
+import { PresetModal } from './PresetModal';
 
 interface StepIdentityProps {
   name: string;
@@ -35,6 +36,8 @@ export function StepIdentity({
   onFileInputChange,
   fileInputRef,
 }: StepIdentityProps) {
+  const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
+
   return (
     <div className="forge-panel border border-divider p-6 bg-background space-y-6">
       <div className="flex items-center justify-between border-b border-divider pb-3">
@@ -72,11 +75,14 @@ export function StepIdentity({
           />
         </div>
 
-        {/* Combatant Avatar Upload */}
+        {/* Combatant Avatar (Preset or Custom) */}
         <div className="space-y-3">
-          <label className="block font-mono text-xs uppercase tracking-wider text-primary font-bold">
-            COMBATANT AVATAR (UPLOAD CUSTOM IMAGE) *
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="block font-mono text-xs uppercase tracking-wider text-primary font-bold">
+              COMBATANT AVATAR *
+            </label>
+           
+          </div>
 
           <input
             ref={fileInputRef}
@@ -91,7 +97,7 @@ export function StepIdentity({
               <div className="relative aspect-square w-24 h-24 border border-divider overflow-hidden bg-zinc-900 flex-shrink-0">
                 <Img
                   src={selectedAvatar}
-                  alt="Custom Avatar Preview"
+                  alt="Avatar Preview"
                   fill
                   className="object-cover"
                 />
@@ -99,27 +105,35 @@ export function StepIdentity({
               <div className="flex-1 font-mono text-center sm:text-left space-y-2">
                 <div className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-primary font-bold uppercase">
                   <FiCheck className="w-4 h-4 text-primary" />
-                  <span>Custom Avatar Uploaded</span>
+                  <span>AVATAR SELECTED</span>
                 </div>
                 <p className="text-[11px] text-secondary">
-                  Combatant image stored and ready for arena deployment.
+                  Combatant image selected and ready for arena deployment.
                 </p>
-                <div className="flex items-center justify-center sm:justify-start gap-3 pt-1">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsPresetModalOpen(true)}
+                    className="px-3 py-1.5 bg-primary text-background text-xs font-bold uppercase hover:bg-secondary transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <FiLayers className="w-3.5 h-3.5" />
+                    <span>SELECT PRESET</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="px-3 py-1.5 bg-primary text-background text-xs font-bold uppercase hover:bg-secondary transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                    className="px-3 py-1.5 border border-divider text-xs text-primary font-bold uppercase hover:border-primary transition-colors cursor-pointer inline-flex items-center gap-1.5 bg-background"
                   >
                     {isUploading ? (
                       <>
-                        <FiRefreshCw className="w-3 h-3 animate-spin" />
-                        <span>Uploading...</span>
+                        <FiRefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>UPLOADING...</span>
                       </>
                     ) : (
                       <>
-                        <FiUploadCloud className="w-3.5 h-3.5" />
-                        <span>Replace Image</span>
+                        <FiUploadCloud className="w-3.5 h-3.5 text-secondary" />
+                        <span>UPLOAD CUSTOM</span>
                       </>
                     )}
                   </button>
@@ -127,36 +141,63 @@ export function StepIdentity({
                     type="button"
                     onClick={() => onSelectAvatar('')}
                     disabled={isUploading}
-                    className="px-3 py-1.5 border border-divider text-xs text-secondary hover:text-primary hover:border-primary transition-colors cursor-pointer"
+                    className="px-3 py-1.5 border border-divider text-xs text-secondary hover:text-danger hover:border-danger transition-colors cursor-pointer"
                   >
-                    Remove
+                    REMOVE
                   </button>
                 </div>
               </div>
             </div>
           ) : (
-            <div
-              onDragEnter={onDrag}
-              onDragLeave={onDrag}
-              onDragOver={onDrag}
-              onDrop={onDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`border-2 border-dashed p-8 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 relative overflow-hidden bg-surface-container-low ${
-                dragActive ? 'border-primary bg-primary/5' : 'border-divider hover:border-primary'
-              }`}
-            >
-              {isUploading ? (
-                <FiRefreshCw className="w-8 h-8 text-primary animate-spin" />
-              ) : (
-                <FiUploadCloud className="w-8 h-8 text-secondary" />
-              )}
-              <div className="font-mono text-center">
-                <p className="text-xs text-primary font-bold uppercase">
-                  {isUploading ? 'UPLOADING TO IMGBB...' : 'CLICK OR DRAG AVATAR TO UPLOAD *'}
-                </p>
-                <p className="text-[11px] text-secondary mt-1">
-                  Supports PNG, JPG, WEBP (Square format recommended)
-                </p>
+            <div className="space-y-3">
+              {/* Preset Selector Card */}
+              <button
+                type="button"
+                onClick={() => setIsPresetModalOpen(true)}
+                className="w-full border-2 border-dashed border-primary/50 hover:border-primary bg-primary/5 hover:bg-primary/10 p-5 text-left cursor-pointer transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 border border-primary/40 bg-background flex items-center justify-center text-primary group-hover:scale-105 transition-transform flex-shrink-0">
+                    <FiLayers className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="font-headline font-bold text-sm text-primary uppercase tracking-wide">
+                      SELECT PRESET
+                    </div>
+                    <div className="font-mono text-[11px] text-secondary mt-0.5">
+                      Choose an image from presets
+                    </div>
+                  </div>
+                </div>
+                <span className="hidden sm:inline-block font-mono text-xs font-bold text-primary uppercase border border-primary px-3 py-1 bg-background group-hover:bg-primary group-hover:text-background transition-colors">
+                  CHOOSE PRESET &rarr;
+                </span>
+              </button>
+
+              {/* Upload Dropzone */}
+              <div
+                onDragEnter={onDrag}
+                onDragLeave={onDrag}
+                onDragOver={onDrag}
+                onDrop={onDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed p-6 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 relative overflow-hidden bg-surface-container-low ${
+                  dragActive ? 'border-primary bg-primary/5' : 'border-divider hover:border-primary'
+                }`}
+              >
+                {isUploading ? (
+                  <FiRefreshCw className="w-6 h-6 text-primary animate-spin" />
+                ) : (
+                  <FiUploadCloud className="w-6 h-6 text-secondary" />
+                )}
+                <div className="font-mono text-center">
+                  <p className="text-xs text-primary font-bold uppercase">
+                    {isUploading ? 'UPLOADING TO IMGBB...' : 'OR UPLOAD CUSTOM AVATAR IMAGE'}
+                  </p>
+                  <p className="text-[10px] text-secondary mt-0.5">
+                    Click or drag image file (PNG, JPG, WEBP)
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -166,6 +207,13 @@ export function StepIdentity({
           )}
         </div>
       </div>
+
+      <PresetModal
+        isOpen={isPresetModalOpen}
+        onClose={() => setIsPresetModalOpen(false)}
+        selectedAvatar={selectedAvatar}
+        onSelectImage={(imagePath) => onSelectAvatar(imagePath)}
+      />
     </div>
   );
 }

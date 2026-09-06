@@ -15,6 +15,7 @@ export interface PerkDefinition {
   effectSummary: string;
 }
 
+
 export interface Beast {
   id: string;
   ownerAddress: string;

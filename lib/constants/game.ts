@@ -75,33 +75,20 @@ export const AVAILABLE_PERKS: PerkDefinition[] = [
   },
 ];
 
-export const AVATAR_PRESETS = [
-  {
-    id: 'cyber_gorilla',
-    name: 'Apex Mecha-Kong',
-    imageUrl: '/assets/stitch/home/asset_1.jpg',
-  },
-  {
-    id: 'plasma_wolf',
-    name: 'Fenrir Vector-9',
-    imageUrl: '/assets/stitch/home/asset_2.jpg',
-  },
-  {
-    id: 'titan_rhino',
-    name: 'Goliath Vanguard',
-    imageUrl: '/assets/stitch/home/asset_3.jpg',
-  },
-  {
-    id: 'shadow_panther',
-    name: 'Spectre Night-Stalker',
-    imageUrl: '/assets/stitch/home/asset_4.jpg',
-  },
-  {
-    id: 'dread_bear',
-    name: 'Ursus Demolisher',
-    imageUrl: '/assets/stitch/home/asset_5.jpg',
-  },
-];
+export const PRESET_IMAGES = [
+  '/presets/bear.jpg',
+  '/presets/bugs_bunny.jpg',
+  '/presets/elephant.jpg',
+  '/presets/kurama.jpg',
+  '/presets/lion.jpg',
+  '/presets/neko.jpg',
+  '/presets/po.jpg',
+  '/presets/sheep.jpg',
+  '/presets/tai_lung.jpg',
+  '/presets/tigger.jpg',
+] as const;
+
+export const AVATAR_PRESETS = PRESET_IMAGES;
 
 export const BOUND_ASSET_OPTIONS = [
   {
