@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FiActivity, FiExternalLink, FiShield, FiCheckCircle } from 'react-icons/fi';
+import { FiActivity, FiShield, FiCheckCircle } from 'react-icons/fi';
 import { Battle, MarketPulse } from '@/lib/types';
 
 interface MarketPulsePanelProps {
@@ -16,9 +16,6 @@ function MarketPulseCard({
   pulse: MarketPulse;
 }) {
   const upPercent = Math.round(pulse.upProbability * 100);
-  const auditUrl = pulse.oracleQuestionId
-    ? `https://prd.oracle.somnia.host/questions/${pulse.oracleQuestionId}?view=graph`
-    : 'https://prd.oracle.somnia.host/questions/?view=graph';
 
   return (
     <div className="border border-divider p-5 bg-surface-container-low space-y-4 font-mono text-xs">
@@ -70,45 +67,6 @@ function MarketPulseCard({
             {pulse.modifier.description}
           </span>
         </div>
-      </div>
-
-      {/* Prominent Somnia OracleHub Consensus Audit Card */}
-      <div className="border border-primary bg-background p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-primary font-bold text-xs">
-            <FiShield className="w-4 h-4 text-primary" />
-            <span className="tracking-wider uppercase">SOMNIA ORACLEHUB CONSENSUS PROOF</span>
-          </div>
-          <span className="text-[10px] bg-primary text-background px-2 py-0.5 font-bold uppercase flex items-center gap-1">
-            <FiCheckCircle className="w-3 h-3" />
-            <span>VERIFIED ON-CHAIN</span>
-          </span>
-        </div>
-
-        <p className="text-[11px] text-secondary leading-relaxed font-sans">
-          Decentralized consensus trail: verified median calculated from multi-source price feeds on Somnia Shannon testnet.
-        </p>
-
-        {pulse.oracleQuestionId && (
-          <div className="flex items-center justify-between text-[11px] font-mono text-secondary bg-surface-container-low px-2.5 py-1.5 border border-divider">
-            <span className="text-[10px] uppercase">QUESTION ID:</span>
-            <span className="font-bold text-primary">
-              {pulse.oracleQuestionId.length > 22
-                ? `${pulse.oracleQuestionId.slice(0, 10)}...${pulse.oracleQuestionId.slice(-8)}`
-                : pulse.oracleQuestionId}
-            </span>
-          </div>
-        )}
-
-        <a
-          href={auditUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="w-full py-2.5 bg-primary text-background font-headline font-bold text-xs uppercase tracking-wider hover:bg-secondary transition-colors flex items-center justify-center gap-2 border border-primary block text-center"
-        >
-          <span>AUDIT RESOLUTION ON SOMNIA ORACLEHUB</span>
-          <FiExternalLink className="w-3.5 h-3.5" />
-        </a>
       </div>
     </div>
   );
