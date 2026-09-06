@@ -16,38 +16,47 @@ function MarketPulseCard({
   pulse: MarketPulse;
 }) {
   const upPercent = Math.round(pulse.upProbability * 100);
+  const downPercent = 100 - upPercent;
+  const isBullish = upPercent >= 50;
 
   return (
     <div className="border border-divider p-5 bg-surface-container-low space-y-4 font-mono text-xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-divider pb-2.5">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 bg-primary flex-shrink-0" />
+          <span className={`w-2 h-2 flex-shrink-0 ${isBullish ? 'bg-emerald-500' : 'bg-rose-500'}`} />
           <span className="font-bold uppercase text-primary text-sm">
             {beastName} ({pulse.symbol})
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 bg-primary/10 border border-divider text-primary text-[11px] font-bold">
-            PROBABILITY: {upPercent}% UP
+          <span className="px-2 py-0.5 bg-surface-container-high border border-divider text-[11px] font-bold">
+            PROBABILITY:{' '}
+            <span>
+              {upPercent}% UP
+            </span>
           </span>
         </div>
       </div>
 
       {/* Dual Probability Bar */}
-      <div className="space-y-1">
-        <div className="w-full h-3 bg-neutral flex overflow-hidden border border-divider">
+      <div className="space-y-1.5">
+        <div className="w-full h-2.5 bg-neutral flex overflow-hidden border border-divider">
           <div 
-            className="h-full bg-primary transition-all duration-500" 
+            className="h-full bg-emerald-500 transition-all duration-500" 
             style={{ width: `${pulse.upProbability * 100}%` }} 
           />
           <div 
-            className="h-full bg-secondary transition-all duration-500" 
+            className="h-full bg-rose-500 transition-all duration-500" 
             style={{ width: `${(1 - pulse.upProbability) * 100}%` }} 
           />
         </div>
-        <div className="flex justify-between text-[10px] text-secondary">
-          <span>BULLISH BIAS ({upPercent}%)</span>
-          <span>BEARISH BIAS ({100 - upPercent}%)</span>
+        <div className="flex justify-between text-[10px]">
+          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+            BULLISH BIAS ({upPercent}%)
+          </span>
+          <span className="text-rose-600 dark:text-rose-400 font-bold">
+            BEARISH BIAS ({downPercent}%)
+          </span>
         </div>
       </div>
 

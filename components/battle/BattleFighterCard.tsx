@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { FiTrendingUp } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { Beast, MarketPulse } from '@/lib/types';
 import { truncateAddress } from '@/lib/utils/format';
 import gsap from 'gsap';
@@ -121,7 +121,11 @@ export function BattleFighterCard({
         {marketPulse?.modifier && (
           <div className="border border-divider bg-surface-container-low p-3 font-mono text-xs space-y-1">
             <div className="flex items-center gap-1.5 text-primary font-bold uppercase">
-              <FiTrendingUp className="w-3.5 h-3.5" />
+              {marketPulse.upProbability >= 0.5 ? (
+                <FiTrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+              ) : (
+                <FiTrendingDown className="w-3.5 h-3.5 text-rose-500" />
+              )}
               <span>LOCKED MARKET PULSE:</span>
             </div>
             <div className="text-primary font-bold">
