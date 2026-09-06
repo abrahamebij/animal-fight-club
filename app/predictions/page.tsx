@@ -257,13 +257,14 @@ export default function PredictionsPage() {
                       </td>
                       <td className="p-4">
                         <span
-                          className={`px-2 py-0.5 text-[10px] font-bold uppercase ${
+                          className={`px-2.5 py-0.5 text-[10px] font-bold uppercase rounded-xs inline-flex items-center gap-1 ${
                             pred.side === 'UP'
-                              ? 'bg-primary text-background'
-                              : 'border border-primary text-primary'
+                              ? 'bg-emerald-500/15 border border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-rose-500/15 border border-rose-500 text-rose-600 dark:text-rose-400'
                           }`}
                         >
-                          {pred.side}
+                          {pred.side === 'UP' ? <FiArrowUpRight className="w-3 h-3" /> : <FiArrowDownRight className="w-3 h-3" />}
+                          <span>{pred.side}</span>
                         </span>
                       </td>
                       <td className="p-4 font-bold">{pred.stakeAmount} tUSDC</td>
@@ -274,15 +275,24 @@ export default function PredictionsPage() {
                         </span>
                       </td>
                       <td className="p-4">
-                        <span className="text-[11px] uppercase">
-                          {pred.marketStatus === 1
-                            ? 'Trading (Open)'
-                            : pred.marketStatus === 2
-                            ? 'Locked (Resolving)'
-                            : pred.marketStatus === 4 || pred.isResolved
-                            ? 'Resolved'
-                            : 'Settling'}
-                        </span>
+                        {pred.marketStatus === 1 ? (
+                          <span className="text-[11px] uppercase font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                            <span>Trading (Open)</span>
+                          </span>
+                        ) : pred.marketStatus === 2 ? (
+                          <span className="text-[11px] uppercase font-bold text-amber-500">
+                            Locked (Resolving)
+                          </span>
+                        ) : pred.marketStatus === 4 || pred.isResolved ? (
+                          <span className="text-[11px] uppercase text-secondary">
+                            Resolved
+                          </span>
+                        ) : (
+                          <span className="text-[11px] uppercase text-secondary">
+                            Settling
+                          </span>
+                        )}
                       </td>
                       <td className="p-4">
                         <div className="space-y-1">
@@ -331,16 +341,18 @@ export default function PredictionsPage() {
                       <td className="p-4 text-right">
                         {pred.isResolved ? (
                           pred.isCorrect ? (
-                            <span className="px-2 py-1 bg-primary/10 border border-primary text-primary font-bold text-[10px] uppercase">
-                              WON
+                            <span className="px-2.5 py-1 bg-emerald-500/20 border border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] uppercase inline-flex items-center gap-1 rounded-xs">
+                              <FiCheck className="w-3 h-3" />
+                              <span>WON</span>
                             </span>
                           ) : (
-                            <span className="px-2 py-1 bg-surface-container-low text-secondary text-[10px] uppercase">
-                              LOST
+                            <span className="px-2.5 py-1 bg-rose-500/20 border border-rose-500 text-rose-600 dark:text-rose-400 font-bold text-[10px] uppercase inline-flex items-center gap-1 rounded-xs">
+                              <FiX className="w-3 h-3" />
+                              <span>LOST</span>
                             </span>
                           )
                         ) : (
-                          <span className="text-secondary text-[10px] uppercase">PENDING</span>
+                          <span className="px-2 py-0.5 bg-surface-container-low border border-divider text-secondary text-[10px] uppercase">PENDING</span>
                         )}
                       </td>
                     </tr>
@@ -383,7 +395,7 @@ export default function PredictionsPage() {
                 <div className="p-4 bg-surface-container-low border border-divider space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-secondary text-[10px] uppercase">ORDER STATUS</span>
-                    <span className="px-2 py-0.5 bg-primary text-background font-bold text-[10px] uppercase flex items-center gap-1">
+                    <span className="px-2.5 py-0.5 bg-emerald-500/15 border border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] uppercase flex items-center gap-1 rounded-xs">
                       <FiCheck className="w-3 h-3" />
                       <span>CONFIRMED ON-CHAIN</span>
                     </span>
@@ -391,13 +403,14 @@ export default function PredictionsPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-secondary text-[10px] uppercase">PREDICTION SIDE</span>
                     <span
-                      className={`px-2 py-0.5 font-bold uppercase text-[11px] ${
+                      className={`px-2.5 py-0.5 font-bold uppercase text-[11px] rounded-xs inline-flex items-center gap-1 ${
                         orderReceipt.prediction.side === 'UP'
-                          ? 'bg-primary text-background'
-                          : 'border border-primary text-primary'
+                          ? 'bg-emerald-500/15 border border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-rose-500/15 border border-rose-500 text-rose-600 dark:text-rose-400'
                       }`}
                     >
-                      {orderReceipt.prediction.side} ({orderReceipt.prediction.symbol})
+                      {orderReceipt.prediction.side === 'UP' ? <FiArrowUpRight className="w-3.5 h-3.5" /> : <FiArrowDownRight className="w-3.5 h-3.5" />}
+                      <span>{orderReceipt.prediction.side} ({orderReceipt.prediction.symbol})</span>
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -482,7 +495,7 @@ export default function PredictionsPage() {
                       href={`https://shannon-explorer.somnia.network/tx/${orderReceipt.txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full py-3 bg-primary text-background font-headline font-bold text-xs uppercase tracking-wider hover:bg-secondary transition-colors border border-primary text-center flex items-center justify-center gap-1.5 cursor-pointer block"
+                      className="w-full py-3 bg-primary text-background font-headline font-bold text-xs uppercase tracking-wider hover:bg-secondary transition-colors border border-primary text-center flex items-center justify-center gap-1.5 cursor-pointer block shadow-sm"
                     >
                       <span>VIEW TRANSACTION ON EXPLORER</span>
                       <FiExternalLink className="w-3.5 h-3.5" />
@@ -509,10 +522,10 @@ export default function PredictionsPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedSide('UP')}
-                      className={`p-3 border font-headline font-bold text-sm uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors ${
+                      className={`p-3 border font-headline font-bold text-sm uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors rounded-xs ${
                         selectedSide === 'UP'
-                          ? 'bg-primary text-background border-primary'
-                          : 'bg-surface-container-low text-primary border-divider hover:border-primary'
+                          ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+                          : 'bg-surface-container-low text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:border-emerald-500'
                       }`}
                     >
                       <FiArrowUpRight className="w-4 h-4" />
@@ -521,10 +534,10 @@ export default function PredictionsPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedSide('DOWN')}
-                      className={`p-3 border font-headline font-bold text-sm uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors ${
+                      className={`p-3 border font-headline font-bold text-sm uppercase flex items-center justify-center gap-2 cursor-pointer transition-colors rounded-xs ${
                         selectedSide === 'DOWN'
-                          ? 'bg-primary text-background border-primary'
-                          : 'bg-surface-container-low text-primary border-divider hover:border-primary'
+                          ? 'bg-rose-600 text-white border-rose-500 shadow-sm'
+                          : 'bg-surface-container-low text-rose-600 dark:text-rose-400 border-rose-500/30 hover:border-rose-500'
                       }`}
                     >
                       <FiArrowDownRight className="w-4 h-4" />
@@ -585,7 +598,11 @@ export default function PredictionsPage() {
                 <button
                   type="submit"
                   disabled={placePredictionMutation.isPending}
-                  className="w-full py-3.5 bg-primary text-background font-headline font-extrabold text-base uppercase tracking-wider hover:bg-secondary transition-colors border border-primary disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                  className={`w-full py-3.5 font-headline font-extrabold text-base uppercase tracking-wider text-white transition-colors border disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shadow-md rounded-xs ${
+                    selectedSide === 'UP'
+                      ? 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500'
+                      : 'bg-rose-600 hover:bg-rose-500 border-rose-500'
+                  }`}
                 >
                   {placePredictionMutation.isPending ? (
                     <FiRefreshCw className="w-4 h-4 animate-spin" />
@@ -653,12 +670,18 @@ function MarketCard({
       {/* Implied Odds Progress Bar */}
       <div className="space-y-1.5">
         <div className="flex justify-between text-[11px] font-bold">
-          <span className="text-primary">UP: {upPercent}%</span>
-          <span className="text-secondary">DOWN: {downPercent}%</span>
+          <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+            <FiArrowUpRight className="w-3.5 h-3.5" />
+            <span>UP: {upPercent}%</span>
+          </span>
+          <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">
+            <span>DOWN: {downPercent}%</span>
+            <FiArrowDownRight className="w-3.5 h-3.5" />
+          </span>
         </div>
-        <div className="w-full h-2.5 bg-divider flex overflow-hidden">
-          <div className="bg-primary h-full transition-all duration-300" style={{ width: `${upPercent}%` }} />
-          <div className="bg-surface-container-low border-l border-divider h-full transition-all duration-300" style={{ width: `${downPercent}%` }} />
+        <div className="w-full h-2.5 bg-divider flex overflow-hidden rounded-xs">
+          <div className="bg-emerald-500 h-full transition-all duration-300" style={{ width: `${upPercent}%` }} />
+          <div className="bg-rose-500 h-full transition-all duration-300" style={{ width: `${downPercent}%` }} />
         </div>
         <div className="flex justify-between text-[10px] text-secondary">
           <span>BID: {market.bestBid || '0.50'}</span>
@@ -671,7 +694,7 @@ function MarketCard({
         <button
           type="button"
           onClick={() => onPredict(market, 'UP')}
-          className="py-2.5 bg-primary text-background font-headline font-bold text-xs uppercase tracking-wider hover:bg-secondary transition-colors border border-primary flex items-center justify-center gap-1 cursor-pointer"
+          className="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-headline font-bold text-xs uppercase tracking-wider transition-colors border border-emerald-500 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm rounded-xs"
         >
           <FiArrowUpRight className="w-3.5 h-3.5" />
           <span>PREDICT UP</span>
@@ -679,7 +702,7 @@ function MarketCard({
         <button
           type="button"
           onClick={() => onPredict(market, 'DOWN')}
-          className="py-2.5 bg-surface-container-low text-primary font-headline font-bold text-xs uppercase tracking-wider hover:bg-primary hover:text-background transition-colors border border-primary flex items-center justify-center gap-1 cursor-pointer"
+          className="py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-headline font-bold text-xs uppercase tracking-wider transition-colors border border-rose-500 flex items-center justify-center gap-1.5 cursor-pointer shadow-sm rounded-xs"
         >
           <FiArrowDownRight className="w-3.5 h-3.5" />
           <span>PREDICT DOWN</span>

@@ -2,7 +2,7 @@
 
 import React, { useRef, useLayoutEffect } from 'react';
 import Link from 'next/link';
-import { FiPlusSquare, FiShield, FiTrendingUp, FiExternalLink } from 'react-icons/fi';
+import { FiPlusSquare, FiShield, FiTrendingUp, FiExternalLink, FiArrowUpRight, FiArrowDownRight, FiCheck, FiX } from 'react-icons/fi';
 import { useAccount, useBalance } from 'wagmi';
 import { somniaShannon } from '@/lib/config/wagmi';
 import { formatBalance } from '@/lib/utils/format';
@@ -314,26 +314,36 @@ export default function DashboardPage() {
                       <td className="p-4">{pred.cadence}</td>
                       <td className="p-4">
                         <span
-                          className={`px-2 py-0.5 text-[10px] font-bold uppercase ${
+                          className={`px-2.5 py-0.5 text-[10px] font-bold uppercase rounded-xs inline-flex items-center gap-1 ${
                             pred.side === 'UP'
-                              ? 'bg-primary text-background'
-                              : 'border border-primary text-primary'
+                              ? 'bg-emerald-500/15 border border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-rose-500/15 border border-rose-500 text-rose-600 dark:text-rose-400'
                           }`}
                         >
-                          {pred.side}
+                          {pred.side === 'UP' ? <FiArrowUpRight className="w-3 h-3" /> : <FiArrowDownRight className="w-3 h-3" />}
+                          <span>{pred.side}</span>
                         </span>
                       </td>
                       <td className="p-4 font-bold">{pred.stakeAmount} tUSDC</td>
                       <td className="p-4">
-                        <span className="text-[11px] uppercase">
-                          {pred.marketStatus === 1
-                            ? 'Trading (Open)'
-                            : pred.marketStatus === 2
-                            ? 'Locked (Resolving)'
-                            : pred.marketStatus === 4 || pred.isResolved
-                            ? 'Resolved'
-                            : 'Settling'}
-                        </span>
+                        {pred.marketStatus === 1 ? (
+                          <span className="text-[11px] uppercase font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                            <span>Trading (Open)</span>
+                          </span>
+                        ) : pred.marketStatus === 2 ? (
+                          <span className="text-[11px] uppercase font-bold text-amber-500">
+                            Locked (Resolving)
+                          </span>
+                        ) : pred.marketStatus === 4 || pred.isResolved ? (
+                          <span className="text-[11px] uppercase text-secondary">
+                            Resolved
+                          </span>
+                        ) : (
+                          <span className="text-[11px] uppercase text-secondary">
+                            Settling
+                          </span>
+                        )}
                       </td>
                       <td className="p-4">
                         <div className="space-y-1">
@@ -378,16 +388,18 @@ export default function DashboardPage() {
                       <td className="p-4 text-right">
                         {pred.isResolved ? (
                           pred.isCorrect ? (
-                            <span className="px-2 py-1 bg-primary/10 border border-primary text-primary font-bold text-[10px] uppercase">
-                              WON
+                            <span className="px-2.5 py-1 bg-emerald-500/20 border border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] uppercase inline-flex items-center gap-1 rounded-xs">
+                              <FiCheck className="w-3 h-3" />
+                              <span>WON</span>
                             </span>
                           ) : (
-                            <span className="px-2 py-1 bg-surface-container-low text-secondary text-[10px] uppercase">
-                              LOST
+                            <span className="px-2.5 py-1 bg-rose-500/20 border border-rose-500 text-rose-600 dark:text-rose-400 font-bold text-[10px] uppercase inline-flex items-center gap-1 rounded-xs">
+                              <FiX className="w-3 h-3" />
+                              <span>LOST</span>
                             </span>
                           )
                         ) : (
-                          <span className="text-secondary text-[10px] uppercase">PENDING</span>
+                          <span className="px-2 py-0.5 bg-surface-container-low border border-divider text-secondary text-[10px] uppercase">PENDING</span>
                         )}
                       </td>
                     </tr>
