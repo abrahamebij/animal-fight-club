@@ -2,8 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { FiClock, FiCrosshair } from 'react-icons/fi';
 import { Battle } from '@/lib/types';
 import { useCountdown } from '@/hooks/useCountdown';
 import Img from '@/components/ui/Img';

@@ -11,7 +11,7 @@ import {
   increment
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Battle, Beast, Bet, BattleStatus } from '@/lib/types';
+import { Battle, Beast, Bet } from '@/lib/types';
 import { lockMarketPulseForBattle } from '@/lib/services/marketPulseService';
 
 /**

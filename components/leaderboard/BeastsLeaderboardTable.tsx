@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Beast } from '@/lib/types';
 import Img from '@/components/ui/Img';
 

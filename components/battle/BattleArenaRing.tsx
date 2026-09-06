@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useLayoutEffect, useEffect } from 'react';
-import { FiTerminal, FiShield, FiZap } from 'react-icons/fi';
+import { FiTerminal, FiShield } from 'react-icons/fi';
 import { Battle, CombatTurn } from '@/lib/types';
 import gsap from 'gsap';
 
@@ -170,7 +170,6 @@ export function BattleArenaRing({
       idleTlRef.current?.kill();
       idleTlBRef.current?.kill();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── replayReset: snap fighters back to standing position ──────────────────
@@ -192,7 +191,6 @@ export function BattleArenaRing({
     if (hpBarBRef.current) {
       gsap.to(hpBarBRef.current, { width: '100%', backgroundColor: hpColor(100), duration: 0.4 });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [replayReset]);
 
   // ── HP bar animations (driven by displayHpA/B) ────────────────────────────
@@ -267,7 +265,6 @@ export function BattleArenaRing({
     }
     prevLogLen.current = curLen;
     fireAttackAnimation(lastTurn);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battle.combatLog.length, lastTurn]);
 
   // ── Attack animation — replay turns ───────────────────────────────────────
@@ -276,7 +273,6 @@ export function BattleArenaRing({
     if (replayTurn.turnNumber === prevReplayTurnNo.current) return;
     prevReplayTurnNo.current = replayTurn.turnNumber;
     fireAttackAnimation(replayTurn);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [replayTurn]);
 
   // ── Death collapse (driven by displayHpA/B) ────────────────────────────────

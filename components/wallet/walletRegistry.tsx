@@ -554,6 +554,7 @@ export function WalletIconRenderer({
   if (iconUrl && (iconUrl.startsWith('data:') || iconUrl.startsWith('http'))) {
     const pixelSize = typeof size === 'number' ? `${size}px` : size;
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={iconUrl}
         alt={name || 'Wallet icon'}

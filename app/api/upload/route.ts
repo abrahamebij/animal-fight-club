@@ -51,10 +51,11 @@ export async function POST(req: NextRequest) {
       success: true,
       url: imageUrl,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Server upload error:', error);
+    const message = error instanceof Error ? error.message : 'Internal server error during image upload';
     return NextResponse.json(
-      { error: error?.message || 'Internal server error during image upload' },
+      { error: message },
       { status: 500 }
     );
   }

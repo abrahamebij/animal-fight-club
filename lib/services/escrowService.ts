@@ -1,4 +1,4 @@
-import { keccak256, stringToBytes, parseEther, formatEther, createPublicClient, http } from 'viem';
+import { keccak256, stringToBytes, createPublicClient, http } from 'viem';
 import { somniaShannon } from '@/lib/config/wagmi';
 import { ESCROW_ABI } from '@/lib/contracts/escrowAbi';
 import { ESCROW_CONTRACT_CONFIG } from '@/lib/constants/game';
@@ -118,33 +118,7 @@ export async function fetchOnChainWager(
 }
 
 function getAdminPrivateKey(): `0x${string}` | null {
-  let key = process.env.METAMASK_PRIVATE_KEY || process.env.PRIVATE_KEY;
-  if (!key && typeof window === 'undefined') {
-    try {
-      const fs = require('fs');
-      const path = require('path');
-      const envPath = path.resolve('.env.local');
-      if (fs.existsSync(envPath)) {
-        const lines = fs.readFileSync(envPath, 'utf8').split('\n');
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith('#')) continue;
-          const eqIdx = trimmed.indexOf('=');
-          if (eqIdx !== -1) {
-            const k = trimmed.slice(0, eqIdx).trim();
-            const v = trimmed.slice(eqIdx + 1).trim();
-            if (k === 'METAMASK_PRIVATE_KEY' || k === 'PRIVATE_KEY') {
-              key = v;
-              break;
-            }
-          }
-        }
-      }
-    } catch {
-      // Ignore file read error
-    }
-  }
-
+  const key = process.env.METAMASK_PRIVATE_KEY || process.env.PRIVATE_KEY;
   if (!key) return null;
   return (key.startsWith('0x') ? key : `0x${key}`) as `0x${string}`;
 }

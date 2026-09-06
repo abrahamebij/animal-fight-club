@@ -7,7 +7,6 @@ import {
   FiCopy, 
   FiCheck, 
   FiLogOut, 
-  FiShield, 
   FiAlertTriangle, 
   FiExternalLink,
   FiActivity
@@ -231,7 +230,7 @@ export function WalletModal({ isOpen, onClose, actionIntentMessage }: WalletModa
                           <WalletIconRenderer
                             name={connector.name}
                             id={connector.id}
-                            iconUrl={(connector as any).icon}
+                            iconUrl={(connector as { icon?: string }).icon}
                             size={20}
                           />
                         </div>

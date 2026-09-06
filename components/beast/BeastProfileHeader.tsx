@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { FiCrosshair } from 'react-icons/fi';
 import { Beast } from '@/lib/types';
 import Img from '@/components/ui/Img';

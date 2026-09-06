@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAccount, useChainId, useBalance } from 'wagmi';
-import { FiUser, FiShield, FiAlertTriangle } from 'react-icons/fi';
+import { FiUser, FiAlertTriangle } from 'react-icons/fi';
 import { somniaShannon } from '@/lib/config/wagmi';
 import { WalletModal } from './WalletModal';
 

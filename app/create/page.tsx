@@ -82,8 +82,8 @@ export default function CreateBeastPage() {
       setUploadError(null);
       const url = await uploadImageToImgBB(file);
       setSelectedAvatar(url);
-    } catch (err: any) {
-      setUploadError(err?.message || 'Failed to upload image. Please try again.');
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : 'Failed to upload image. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -149,7 +149,7 @@ export default function CreateBeastPage() {
           await createMutation.mutateAsync(newBeast);
           toast.success(`Beast ${newBeast.name} Forged!`, { description: 'Your autonomous combat agent is now registered.' });
           router.push(`/beast/${newBeast.id}`);
-        } catch (err) {
+        } catch {
           toast.error('Creation failed', { description: 'Failed to mint beast profile. Please try again.' });
         }
       },

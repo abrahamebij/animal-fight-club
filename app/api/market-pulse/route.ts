@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
 
       return NextResponse.json({ success: true, pulse });
     }
-  } catch (err) {
+  } catch {
     // Graceful fallback when indexer is between windows or offline
   }
 

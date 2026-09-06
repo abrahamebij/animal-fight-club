@@ -6,13 +6,10 @@ import { useRouter } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { 
   FiX, 
-  FiShield, 
-  FiCrosshair, 
-  FiPlusSquare, 
-  FiAlertTriangle 
+  FiCrosshair
 } from 'react-icons/fi';
 import { useWalletGate } from '@/components/wallet/useWalletGate';
-import { getBeastsByOwner, getAllBeasts } from '@/lib/services/beastService';
+import { getAllBeasts } from '@/lib/services/beastService';
 import { createChallenge } from '@/lib/services/challengeService';
 import { Beast } from '@/lib/types';
 import { toast } from 'sonner';
@@ -247,7 +244,7 @@ export function ChallengeModal({ isOpen, onClose, targetOpponent, initialOpponen
               </div>
             ) : (
               <div className="py-8 text-center space-y-3 font-mono">
-                <p className="text-xs text-secondary">You haven't forged any beasts yet.</p>
+                <p className="text-xs text-secondary">You haven&apos;t forged any beasts yet.</p>
                 <button
                   type="button"
                   onClick={() => {

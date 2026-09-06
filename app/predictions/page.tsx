@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { 
   FiTrendingUp, 
   FiClock, 
@@ -9,7 +8,6 @@ import {
   FiDollarSign, 
   FiRefreshCw, 
   FiCheck, 
-  FiAlertCircle, 
   FiArrowUpRight, 
   FiArrowDownRight,
   FiX,
@@ -31,7 +29,7 @@ export default function PredictionsPage() {
   const { address, isConnected } = useAccount();
 
   const { data: markets = [], isLoading: loadingMarkets, refetch: refetchMarkets } = useLivePredictionMarkets();
-  const { data: userPredictions = [], isLoading: loadingHistory } = useUserPredictions(address);
+  const { data: userPredictions = [] } = useUserPredictions(address);
   const { data: tUsdcBalance = '0.00' } = useTUsdcBalance(address);
 
   const claimFaucetMutation = useClaimFaucetMutation();

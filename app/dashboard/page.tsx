@@ -22,8 +22,8 @@ export default function DashboardPage() {
   });
 
   const { data: myBeasts = [], isLoading: loadingBeasts } = useUserBeasts(address);
-  const { data: myActiveBets = [], isLoading: loadingBets } = useUserBets(address);
-  const { data: myPredictions = [], isLoading: loadingPredictions } = useUserPredictions(address);
+  const { data: myActiveBets = [] } = useUserBets(address);
+  const { data: myPredictions = [] } = useUserPredictions(address);
 
   const containerRef = useRef<HTMLDivElement>(null);
 

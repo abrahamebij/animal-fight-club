@@ -249,7 +249,6 @@ function simulateDeterministicCombat(battle: Battle): { turns: CombatTurn[]; win
     const defender = attackerSide === 'beastA' ? battle.beastB : battle.beastA;
     const atkStats = attackerSide === 'beastA' ? statsA : statsB;
     const defStats = attackerSide === 'beastA' ? statsB : statsA;
-    const atkHp = attackerSide === 'beastA' ? hpA : hpB;
     const defHp = attackerSide === 'beastA' ? hpB : hpA;
     const atkPulse = attackerSide === 'beastA' ? battle.marketPulseA : battle.marketPulseB;
 

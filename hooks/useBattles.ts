@@ -1,4 +1,4 @@
-﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getAllBattles, 
   getBattleById, 
@@ -10,7 +10,6 @@ import {
   fetchOnChainBattle, 
   fetchOnChainWager 
 } from '@/lib/services/escrowService';
-import { Battle, Bet } from '@/lib/types';
 
 export const BATTLE_KEYS = {
   all: ['battles'] as const,

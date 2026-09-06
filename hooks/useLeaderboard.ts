@@ -1,7 +1,6 @@
-﻿import { useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getAllBeasts } from '@/lib/services/beastService';
 import { getAllBets } from '@/lib/services/battleService';
-import { Beast, Bet } from '@/lib/types';
 
 export interface BettorLeaderboardEntry {
   address: string;

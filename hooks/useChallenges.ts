@@ -6,7 +6,7 @@ import {
   acceptChallenge, 
   declineChallenge 
 } from '@/lib/services/challengeService';
-import { Beast, Challenge } from '@/lib/types';
+import { Beast } from '@/lib/types';
 import { BATTLE_KEYS } from './useBattles';
 
 export const CHALLENGE_KEYS = {

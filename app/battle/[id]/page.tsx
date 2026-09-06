@@ -58,8 +58,8 @@ export default function BattleViewPage() {
   });
 
   useEffect(() => {
-    if (initialBattle && (!activeBattle || !isSimulating)) {
-      setActiveBattle(initialBattle);
+    if (initialBattle && !isSimulating) {
+      setActiveBattle((curr) => (curr?.id === initialBattle.id && curr?.status === initialBattle.status && curr?.combatLog?.length === initialBattle.combatLog?.length ? curr : initialBattle));
     }
   }, [initialBattle, isSimulating]);
 
