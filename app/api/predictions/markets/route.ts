@@ -20,14 +20,26 @@ const marketAbi = parseAbi([
 const INDEXER_URL = process.env.DREAMDEX_INDEXER_URL || process.env.NEXT_PUBLIC_DREAMDEX_INDEXER_URL || 'https://dev.smk.somnia.host/v1/graphql';
 
 export async function GET() {
+  const nowSec = Math.floor(Date.now() / 1000);
+
   try {
-    const query = `
-      query GetMarkets {
-        Market(where: { marketType: { _eq: "BINARY" } }, order_by: { createdAtTimestamp: desc }, limit: 25) {
+    // 1. First query active binary markets where expiry is in the future
+    const activeQuery = `
+      query GetActiveMarkets {
+        Market(
+          where: {
+            marketType: { _eq: "BINARY" },
+            expiry: { _gt: "${nowSec}" },
+            asset: { _in: ["BTC", "ETH"] }
+          },
+          order_by: { expiry: asc },
+          limit: 30
+        ) {
           id
           marketId
           marketAddress
           poolAddress
+          binaryPoolAddress
           asset
           question
           expiry
@@ -36,20 +48,59 @@ export async function GET() {
       }
     `;
 
-    const res = await fetch(INDEXER_URL, {
+    let res = await fetch(INDEXER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query: activeQuery }),
     });
 
     const { data } = await res.json();
-    const rawMarkets = data?.Market || [];
+    let rawMarkets = data?.Market || [];
+
+    // Fallback query if no markets returned from expiry-filtered query
+    if (rawMarkets.length === 0) {
+      const recentQuery = `
+        query GetRecentMarkets {
+          Market(
+            where: {
+              marketType: { _eq: "BINARY" },
+              asset: { _in: ["BTC", "ETH"] }
+            },
+            order_by: { createdAtTimestamp: desc },
+            limit: 50
+          ) {
+            id
+            marketId
+            marketAddress
+            poolAddress
+            binaryPoolAddress
+            asset
+            question
+            expiry
+            intervalSec
+          }
+        }
+      `;
+      res = await fetch(INDEXER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: recentQuery }),
+      });
+      const recentData = await res.json();
+      rawMarkets = recentData?.data?.Market || [];
+    }
+
     const liveMarkets: LiveEventMarket[] = [];
-    const nowSec = Math.floor(Date.now() / 1000);
 
     for (const m of rawMarkets) {
       const asset = (m.asset || '').toUpperCase();
       if (asset !== 'BTC' && asset !== 'ETH') continue;
+
+      const expirySec = Number(m.expiry || 0);
+      const secondsLeft = expirySec - nowSec;
+
+      // Skip expired markets strictly
+      if (secondsLeft <= 0) continue;
 
       try {
         const status = await client.readContract({
@@ -65,18 +116,23 @@ export async function GET() {
           address: m.marketAddress,
           abi: marketAbi,
           functionName: 'pool',
-        });
-
-        const expirySec = Number(m.expiry || 0);
-        const secondsLeft = expirySec - nowSec;
+        }).catch(() => null);
 
         const intervalSec = Number(m.intervalSec || 900);
         const cadence: '15-min' | '1-hour' = intervalSec <= 1800 ? '15-min' : '1-hour';
 
-        const pool = onchainPool || m.poolAddress;
-        const symbol = `${asset}/USDso-${cadence === '15-min' ? '15M' : '1H'}`;
-        const upSymbol = `${symbol}#YES`;
-        const downSymbol = `${symbol}#NO`;
+        const pool = (m.binaryPoolAddress || onchainPool || m.poolAddress) as string;
+        
+        // Derive outcome symbols compatible with SomniaMarkets SDK: {ASSET}-0-{DDMMMYY}/tUSDC
+        const expDate = new Date(expirySec * 1000);
+        const dayStr = String(expDate.getUTCDate()).padStart(2, '0');
+        const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        const monthStr = months[expDate.getUTCMonth()];
+        const yearStr = String(expDate.getUTCFullYear()).slice(-2);
+        const sdkFormatSymbol = `${asset}-0-${dayStr}${monthStr}${yearStr}/tUSDC`;
+
+        const upSymbol = `${sdkFormatSymbol}#YES`;
+        const downSymbol = `${sdkFormatSymbol}#NO`;
 
         // Baseline probabilities
         const baseOdds = asset === 'BTC' ? 0.62 : 0.48;
@@ -85,7 +141,7 @@ export async function GET() {
           marketId: m.marketId,
           marketAddress: m.marketAddress,
           pool,
-          symbol,
+          symbol: sdkFormatSymbol,
           asset: asset as 'BTC' | 'ETH',
           cadence,
           intervalSec,
@@ -105,10 +161,10 @@ export async function GET() {
       }
     }
 
-    // Sort: BTC first, then ETH
+    // Sort: BTC first, then ETH, prioritizing earliest closing windows
     liveMarkets.sort((a, b) => {
       if (a.asset !== b.asset) return a.asset === 'BTC' ? -1 : 1;
-      return b.secondsLeft - a.secondsLeft;
+      return a.secondsLeft - b.secondsLeft;
     });
 
     if (liveMarkets.length > 0) {
@@ -118,20 +174,20 @@ export async function GET() {
     console.error('Error fetching live prediction markets:', error);
   }
 
-  // If between window rolls, return realistic next upcoming windows
-  const now = Math.floor(Date.now() / 1000);
+  // Active verified fallback markets on Somnia Shannon testnet (contracts verified status === 1)
   const fallbackMarkets: LiveEventMarket[] = [
     {
-      marketId: '0x000000000000000000000000000000000000000000000000000000000001448c',
-      pool: '0x3432a120f36f8c6016643968edaddccc2cd9493d',
-      symbol: 'BTC/USDso-15M',
+      marketId: '0x0000000000000000000000000000000000000000000000000000000000015778',
+      marketAddress: '0xf026968932596f287d0124b480ef659e7a62a247',
+      pool: '0xb0b05fbc768388e5c5b6880084e64fe7a26c363b',
+      symbol: 'BTC-0-08SEP26/tUSDC',
       asset: 'BTC',
-      cadence: '15-min',
-      intervalSec: 900,
-      expiry: now + 720,
-      secondsLeft: 720,
-      upSymbol: 'BTC/USDso-15M#YES',
-      downSymbol: 'BTC/USDso-15M#NO',
+      cadence: '1-hour',
+      intervalSec: 86400,
+      expiry: 1788825600,
+      secondsLeft: Math.max(0, 1788825600 - nowSec),
+      upSymbol: 'BTC-0-08SEP26/tUSDC#YES',
+      downSymbol: 'BTC-0-08SEP26/tUSDC#NO',
       upOdds: 0.62,
       downOdds: 0.38,
       bestBid: '0.60',
@@ -139,16 +195,17 @@ export async function GET() {
       status: 1,
     },
     {
-      marketId: '0x000000000000000000000000000000000000000000000000000000000001448d',
-      pool: '0x3f7df92f1b73a0de7be9d51b031ace9769f7a6a1',
-      symbol: 'ETH/USDso-15M',
+      marketId: '0x0000000000000000000000000000000000000000000000000000000000015779',
+      marketAddress: '0xe1dddbf1a945df686d09bd3c8fcf09ffb952bf50',
+      pool: '0x06b0c35e61c7cef10689b48500fc374867e33df4',
+      symbol: 'ETH-0-08SEP26/tUSDC',
       asset: 'ETH',
-      cadence: '15-min',
-      intervalSec: 900,
-      expiry: now + 540,
-      secondsLeft: 540,
-      upSymbol: 'ETH/USDso-15M#YES',
-      downSymbol: 'ETH/USDso-15M#NO',
+      cadence: '1-hour',
+      intervalSec: 86400,
+      expiry: 1788825600,
+      secondsLeft: Math.max(0, 1788825600 - nowSec),
+      upSymbol: 'ETH-0-08SEP26/tUSDC#YES',
+      downSymbol: 'ETH-0-08SEP26/tUSDC#NO',
       upOdds: 0.48,
       downOdds: 0.52,
       bestBid: '0.46',

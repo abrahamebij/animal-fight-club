@@ -193,9 +193,33 @@ export async function placePredictionOrder(
       chain: somniaShannon,
       addresses: SOMNIA_TESTNET_ADDRESSES,
     });
-    const onchain = await readClient.client.getMarketOnchain(market.marketId as `0x${string}`);
-    if (!onchain || onchain.status !== 1) {
-      throw new Error(`Market is not open for trading (on-chain status: ${onchain?.status ?? 'unknown'}). The window may have locked or expired.`);
+    const onchain = await readClient.client.getMarketOnchain(market.marketId as `0x${string}`).catch(() => null);
+    let marketStatus = onchain?.status;
+
+    // If getMarketOnchain was null, check direct onchain contract status
+    if (marketStatus === undefined && market.marketAddress) {
+      try {
+        const directStatus = await publicClient.readContract({
+          address: market.marketAddress as `0x${string}`,
+          abi: [
+            {
+              type: 'function',
+              name: 'status',
+              inputs: [],
+              outputs: [{ name: '', type: 'uint8' }],
+              stateMutability: 'view',
+            },
+          ],
+          functionName: 'status',
+        });
+        marketStatus = directStatus;
+      } catch (e) {
+        console.warn('Failed to read direct status from contract:', e);
+      }
+    }
+
+    if (marketStatus !== 1) {
+      throw new Error(`Market is not open for trading (on-chain status: ${marketStatus ?? 'unknown'}). The window may have locked or expired.`);
     }
   } catch (statusErr: unknown) {
     if (statusErr instanceof Error && statusErr.message.includes('Market is not open')) {
@@ -268,9 +292,16 @@ export async function placePredictionOrder(
     });
 
     // Make sure markets are loaded for unified pricing
-    await exchange.loadMarkets(false);
+    const loaded = await exchange.loadMarkets(false);
 
-    const tradableSymbol = side === 'UP' ? market.upSymbol : market.downSymbol;
+    // Look up exact SDK symbol matching this marketId
+    const sdkMarket = Object.values(loaded).find(
+      (lm) => lm.info && (lm.info as { marketId?: string }).marketId?.toLowerCase() === market.marketId.toLowerCase()
+    );
+
+    const tradableSymbol = side === 'UP'
+      ? (sdkMarket?.outcomes?.[0]?.symbol || market.upSymbol)
+      : (sdkMarket?.outcomes?.[1]?.symbol || market.downSymbol);
 
     // Place IOC order crossing the touch
     // For IOC buy: place slightly through the ask (+ 2% slippage protection)
